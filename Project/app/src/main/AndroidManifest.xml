@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.zehava.cityforest">
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/cf_small_logo"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <service android:name="com.mapbox.mapboxsdk.telemetry.TelemetryService" />
+
+        <activity
+            android:name=".CreateNewCoordinateActivity"
+            android:screenOrientation="portrait"/>
+        <!--android:label="New Coordinate"-->
+
+
+        <activity
+            android:name=".EditorPanelActivity"
+            android:screenOrientation="portrait"/>
+        <!--android:label="Editor Panel"-->
+
+        <activity
+            android:name=".EditCoordinateActivity"
+            android:screenOrientation="portrait"/>
+        <!--android:label="Edit Coordinate"-->
+
+        <activity
+            android:name=".CreateNewTrackActivity"
+            android:screenOrientation="portrait"/>
+        <!--android:label="New Track"-->
+
+        <activity
+            android:name=".EditTracksActivity"
+            android:screenOrientation="portrait"/>
+        <!--android:label="Edit Tracks"-->
+
+        <activity
+            android:name=".EditTrackActivity"
+            android:screenOrientation="portrait"/>
+        <!--android:label="Edit Track"-->
+
+        <activity android:name=".Home"
+            android:screenOrientation="portrait">
+
+            <!--<intent-filter>-->
+            <!--<action android:name="android.intent.action.MAIN" />-->
+
+            <!--<category android:name="android.intent.category.LAUNCHER" />-->
+            <!--</intent-filter>-->
+        </activity>
+
+        <activity
+            android:name=".SplashActivity"
+            android:theme="@style/SplashTheme"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".AdvancedSearchTracksActivity"
+            android:screenOrientation="portrait"/>
+        <!--android:label="חיפוש מתקדם"-->
+
+        <activity
+            android:name=".SearchTracksResultsActivity"
+            android:screenOrientation="portrait"/>
+        <!--android:label="תוצאות חיפוש"-->
+
+        <activity
+            android:name=".SelectedTrackActivity"
+            android:screenOrientation="portrait"/>
+
+        <activity
+            android:name=".MakeOwnTrackActivity"
+            android:screenOrientation="portrait"/>
+        <!--android:label="יצירת מסלול חדש"-->
+
+        <activity
+            android:name=".AboutUsActivity"
+            android:screenOrientation="portrait"/>
+        <!--android:label="אודות"-->
+
+
+
+        <activity
+            android:name=".ContactUsActivity"
+            android:screenOrientation="portrait"/>
+        <!--android:label="צור קשר"-->
+
+        <activity
+            android:name=".UserGuideActivity"
+            android:screenOrientation="portrait"/>
+        <!--android:label="מדריך למשתמש"-->
+
+        <activity
+            android:name=".TracksActivity"
+            android:screenOrientation="portrait"/>
+        <!--android:label="רשימת מסלולים"-->
+
+        <activity
+            android:name=".SignInActivity"
+            android:screenOrientation="portrait">
+            <!--<intent-filter>-->
+            <!--<action android:name="android.intent.action.MAIN" />-->
+
+            <!--<category android:name="android.intent.category.LAUNCHER" />-->
+            <!--</intent-filter>-->
+        </activity>
+
+        <activity
+            android:name=".EditorHomeActivity"
+            android:screenOrientation="portrait"/>
+
+        <activity
+            android:name=".CreateUserUpdateActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Dialog"/>
+
+        <activity
+            android:name=".MoveablePointActivity"
+            android:screenOrientation="portrait">
+            <!--<intent-filter>-->
+            <!--<action android:name="android.intent.action.MAIN" />-->
+
+            <!--<category android:name="android.intent.category.LAUNCHER" />-->
+            <!--</intent-filter>-->
+        </activity>
+        <!--android:label="רשימת מסלולים"-->
+        <service
+            android:name=".UpdatesManagerService"
+            android:exported="false" />
+        <!--android:label=""-->
+    </application>
+
+</manifest>

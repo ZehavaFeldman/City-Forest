@@ -1,0 +1,161 @@
+<resources>
+    <string name="app_name">עיר יער</string>
+    <string name="cityforest_logo">לוגו עיר יער</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_add_new_coordinate">הוסף קורדינטיה במיקום זה?</string>
+    <string name="dialog_ok">אישור</string>
+    <string name="dialog_cancel">ביטול</string>
+    <string name="dialog_delete_coordinate">מחק קורדינטיה?</string>
+    <string name="dialog_edit_coordinate">ערוך פרטי קורדינטיה?</string>
+    <string name="dialog_delete_track">מחק מסלול זה?</string>
+    <string name="dialog_exit_app_title">יציאה מעיר יער</string>
+    <string name="dialog_exit_app_body">האם הנך בטוח אתה רוצה לעזוב את האפליקציה</string>
+    <string name="dialog_yes">כן</string>
+    <!--End of dialogs -->
+
+
+    <string name="summary_txt">תקציר</string>
+    <string name="title_txt">כותרת</string>
+    <string name="cancel_butt">ביטול</string>
+    <string name="save_butt">שמור</string>
+    <string name="add_coordinates_button">הוספת קורדינטות</string>
+    <string name="add_track_button">הוספת מסלול</string>
+    <string name="cancel_add_track_butt">ביטול הוספת מסלול</string>
+    <string name="delete_coordinates_button">מחק קורדינטות</string>
+    <string name="edit_coordinates_button">ערוך קורדינטות</string>
+    <string name="update_butt">עדכן</string>
+    <string name="read_more_butt">קרא עוד</string>
+    <string name="not_here_butt">לא נמצא פה</string>
+    <string name="coordinates_selected_txt">קורדינטות בחורים: </string>
+    <string name="reached_limit_of_coordinates">הגעת למקסימום נקודות שניתן להוסיף למסלול</string>
+    <string name="not_enough_coordinates_selected">מסלול חייב להכיל לפחות שתי נקודות</string>
+    <string name="distance_km_txt">מרחק (קמ)</string>
+    <string name="duration_hour_txt">זמן (שעה)</string>
+    <string name="ending_point_txt">נקודת סיום</string>
+    <string name="has_water_txt">מסלול עם מים?</string>
+    <string name="is_romantic_txt">רומנטי?</string>
+    <string name="season_txt">עונה</string>
+    <string name="starting_point_txt">נקודת התחלה</string>
+    <string name="suitable_for_bikes_txt">מתאים לאופנים?</string>
+    <string name="suitable_for_dogs_txt">מתאים לכלבים?</string>
+    <string name="suitable_for_families_txt">מתאים למשפחות?</string>
+    <string name="track_level_txt">רמת קושי מסלול</string>
+    <string name="track_name_txt">שם המסלול</string>
+    <string name="track_summary_txt">תאור קצר על המסלול</string>
+    <string name="choose_a_station">בחר תחנה</string>
+    <string name="choose_type_of_point">בחר סוג</string>
+    <string name="choose_a_level">בחר רמת קושי למסלול</string>
+    <string name="choose_station_empty">אנא בחר נקודת התחלה וסיום למסלול</string>
+    <string name="choose_distance_empty">אנא הוסף מרחק למסלול</string>
+    <string name="choose_level_empty">אנא בחר רמת קושי של המסלול</string>
+    <string name="title_field_empty">שקול להוסיף כותרת לנקודה שלך</string>
+    <string name="choose_type_of_point_empty">אנא בחר את סוג הנקודה שלך</string>
+    <string name="toast_starting_point">מסלול חייב להסתיים בתחנת רכבת</string>
+    <string name="toast_ending_point">מסלול חייב להתחיל בתחנת רכבת</string>
+    <string name="continue_edit_butt">המשך עריכה</string>
+    <string name="finish_editing_track_butt">סיים עריכת מסלול</string>
+    <string name="save_track_butt">שמור מסלול</string>
+    <string name="track_level">רמת קושי</string>
+    <string name="strating_point_txt">התחלה -</string>
+    <string name="distance_txt">מרחק (קילומטרים)</string>
+    <string name="ending_point_txt_heb">סיום -</string>
+    <string name="no_track_name">-ללא שם-</string>
+    <string name="update_button">עדכן</string>
+
+    <string-array name="train_stations">
+        <item>בחר תחנה</item>
+        <item>הר הרצל</item>
+        <item>יפה נוף</item>
+        <item>כיכר דניה</item>
+        <item>החלוץ</item>
+        <item>קרית משה</item>
+        <item>התחנה המרכזית</item>
+        <item>הטורים</item>
+        <item>מחנה יהודה</item>
+        <item>הדוידקה</item>
+        <item>יפו מרכז</item>
+        <item>העירייה</item>
+        <item>שער שכם</item>
+        <item>שבטי ישראל</item>
+        <item>שמעון הצדיק</item>
+        <item>גבעת התחמושת</item>
+        <item>גבעת המיבתר</item>
+        <item>א-סהל</item>
+        <item>שועפאט</item>
+        <item>בית חנינא</item>
+        <item>יקותיאל אדם</item>
+        <item>פסגת זאב מרכז</item>
+        <item>סיירת דוכיפת</item>
+        <item>חיל האוויר</item>
+    </string-array>
+
+    <string-array name="track_level">
+        <item>בחר רמת קושי מסלול</item>
+        <item>קל</item>
+        <item>בינוני</item>
+        <item>מיטיבי לכת</item>
+    </string-array>
+
+    <string-array name="season">
+        <item>כל השנה</item>
+        <item>קיץ</item>
+        <item>חורף</item>
+        <item>סתיו</item>
+        <item>אביב</item>
+    </string-array>
+
+    <string-array name="points_of_interest">
+        <item>בחר סוג</item>
+        <item>תחנת רכבת</item>
+        <item>תחנת אוטובוס</item>
+        <item>אתר היסטורי</item>
+        <item>בית קפה</item>
+        <item>אחר</item>
+    </string-array>
+
+
+    <string name="edit_options_see_on_map">הצג מסלול על המפה</string>
+    <string name="edit_options_edit_track">ערוך מסלול</string>
+    <string name="edit_options_delete_track">מחק מסלול</string>
+    <string name="edit_options_choose_track">הצג פרטי מסלול</string>
+
+    <string name="title_activity_home">בית</string>
+    <string name="home_action">בית</string>
+    <string name="menu_home">דף הבית</string>
+    <string name="menu_about_us">אודות</string>
+    <string name="menu_adv_search">חיפוש מתקדם</string>
+    <string name="menu_user_guide">מדריך למשתמש</string>
+    <string name="menu_tracks">מסלולים</string>
+    <string name="menu_contact_us">צור קשר</string>
+    <string name="advanced_search_butt">חיפוש מתקדם</string>
+    <string name="search_button">חיפוש</string>
+    <string name="suitable_for_bikes_heb">התאמה לאופניים</string>
+    <string name="suitable_for_dogs_heb">התאמה לכלבים</string>
+    <string name="suitable_for_families_heb">התאמה למשפחות</string>
+    <string name="has_water_heb">מסלול עם מים</string>
+    <string name="starting_point_hebrew">נקודת התחלה</string>
+    <string name="ending_point_hebrew">נקודת סיום</string>
+    <string name="is_romantic_heb">רומנטי</string>
+    <string name="make_own_track_butt">בניית מסלול אישי</string>
+    <string name="make_own_track_txt">מעוניין לבנות מסלול הליכה אישי?</string>
+    <string name="Make_own_track_menu">צור מסלול חדש</string>
+    <string name="tracks_txt">רשימת מסלולים</string>
+    <string name="tracks_menu">רשימת מסלולים</string>
+    <string name="edit_tracks_button">עריכת מסלולים</string>
+    <string name="sign_out_action">התנתק</string>
+    <string name="language">שפה</string>
+
+    <string name="home_button">בית</string>
+    <string name="editor_panel_button">פורצי דרכים</string>
+    <string name="app_title_txt">עיר יער</string>
+    <string name="what_are_you_up_to_today_txt">מה בכוונתך לעשות היום?</string>
+    <string name="point_of_interest_txt">נקודת ענין?</string>
+    <string name="title_activity_main">ראשי</string>
+    <string name="welcome_back">"ברוך שובך, "</string>
+    <string name="hello">שלום</string>
+    <string name="new_update">עדכון חדש</string>
+    <string name="send_update">שלח</string>
+    <string name="at">ב</string>
+    <string name="created_by">פורסם ע\"י</string>
+</resources>

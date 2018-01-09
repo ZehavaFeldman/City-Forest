@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+
+    android:background="@color/colorPrimaryDark"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="5dp"
+        android:paddingBottom="10dp"
+        >
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/main_content"
+            android:layout_centerHorizontal="true"
+            android:paddingEnd="65dp"
+            android:paddingStart="15dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            tools:ignore="HardcodedText,RtlHardcoded"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingEnd="65dp"
+            android:paddingStart="15dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:textSize="20sp"
+            android:id="@+id/minor_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/main_content"
+            tools:ignore="HardcodedText"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/minor_content"
+            android:layout_marginEnd="70dp"
+            android:layout_alignParentEnd="true"
+            android:text="@string/read_more_butt"
+            android:id="@+id/read_more"
+            android:background="@color/colorPrimaryDark"/>
+        <RatingBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/ratingBar"
+            android:numStars="5"
+            android:isIndicator="false"
+            style="@style/Base.Widget.AppCompat.RatingBar.Indicator"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="10dp"
+            android:layout_below="@+id/read_more"
+            android:visibility="gone"
+            />
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+            android:orientation="horizontal"
+            android:layout_below="@+id/read_more"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:id="@+id/like_wrp"
+            android:gravity="center"
+            android:visibility="gone"
+            >
+
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@color/colorPrimaryDark"
+                android:contentDescription="@string/delete_coordinates_button"
+                app:srcCompat="@drawable/like"
+                android:id="@+id/likes"
+                />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12dp"
+                android:layout_gravity="end|center"
+                android:layout_marginStart="10dp"
+                android:id="@+id/like_count"
+                />
+        </LinearLayout>
+
+        <GridLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:paddingEnd="5dp"
+            android:layout_alignParentEnd="true"
+            android:columnCount="1">
+
+            <ImageButton
+                android:id="@+id/deleteCoordinateButt"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_margin="5dp"
+                android:background="@color/colorPrimaryDark"
+                android:contentDescription="@string/delete_coordinates_button"
+                app:srcCompat="@mipmap/ic_delete_forever_black_48dp" />
+
+            <ImageButton
+                android:id="@+id/editCoordinateButt"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_margin="5dp"
+                android:background="@color/colorPrimaryDark"
+                android:contentDescription="@string/edit_coordinates_button"
+                app:srcCompat="@mipmap/ic_location_on_black_48dp" />
+
+
+            <!--<ImageButton-->
+                <!--android:id="@+id/editTrackButton"-->
+                <!--android:layout_width="40dp"-->
+                <!--android:layout_height="40dp"-->
+                <!--android:layout_margin="5dp"-->
+                <!--android:background="@color/colorPrimaryDark"-->
+                <!--android:contentDescription="@string/edit_tracks_button"-->
+                <!--app:srcCompat="@mipmap/ic_edit_black_48dp" />-->
+
+        </GridLayout>
+    </RelativeLayout>
+</LinearLayout>

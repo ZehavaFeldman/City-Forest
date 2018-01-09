@@ -1,0 +1,170 @@
+<resources>
+    <string name="app_name">City Forest</string>
+    <string name="cityforest_logo">CF logo</string>
+    <string name="access_token" translatable="false">pk.eyJ1IjoiZG9yaWFudHMiLCJhIjoiY2owODMzdm9kMDAxZTMyc2Jwam9rbGVxNSJ9.XYFTdmoxupXYITEOHS-HrA</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_add_new_coordinate">Add new coordinate in this location?</string>
+    <string name="dialog_ok">Ok</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_delete_coordinate">Delete this coordinate?</string>
+    <string name="dialog_edit_coordinate">Edit this coordinate info?</string>
+    <string name="dialog_delete_track">Delete this track?</string>
+    <string name="dialog_exit_app_title">Exit CityForest</string>
+    <string name="dialog_exit_app_body">Are you sure you want to exit the app?</string>
+    <string name="dialog_yes">Yes</string>
+    <!--End of dialogs -->
+
+
+    <string name="summary_txt">Summary</string>
+    <string name="title_txt">Title</string>
+    <string name="cancel_butt">Cancel</string>
+    <string name="save_butt">Save</string>
+    <string name="add_coordinates_button">Add Coordinates</string>
+    <string name="add_track_button">Add Track</string>
+    <string name="cancel_add_track_butt">Cancel adding track</string>
+    <string name="delete_coordinates_button">Delete Coordinates</string>
+    <string name="edit_coordinates_button">Edit Coordinates</string>
+    <string name="update_butt">Update</string>
+    <string name="read_more_butt">Read More</string>
+    <string name="not_here_butt">Not Here</string>
+    <string name="coordinates_selected_txt">Coordinates selected: </string>
+    <string name="reached_limit_of_coordinates">You have reached the limit of selected coordinates to build a track.</string>
+    <string name="not_enough_coordinates_selected">Track can be calculated with at least 2 coordinates</string>
+    <string name="distance_km_txt">Distance (km)</string>
+    <string name="duration_hour_txt">Duration (hour)</string>
+    <string name="ending_point_txt">Ending Point</string>
+    <string name="has_water_txt">Has water?</string>
+    <string name="is_romantic_txt">Is Romantic?</string>
+    <string name="season_txt">Season</string>
+    <string name="starting_point_txt">Starting Point</string>
+    <string name="suitable_for_bikes_txt">Suitable For Bikes?</string>
+    <string name="suitable_for_dogs_txt">Suitable For Dogs?</string>
+    <string name="suitable_for_families_txt">Suitable For Families?</string>
+    <string name="track_level_txt">Track Level</string>
+    <string name="track_name_txt">Track Name</string>
+    <string name="track_summary_txt">Track Summary</string>
+    <string name="choose_a_station">Choose a station</string>
+    <string name="choose_type_of_point">Choose type</string>
+    <string name="choose_a_level">Choose track level</string>
+    <string name="choose_station_empty">Please choose starting and ending train stations</string>
+    <string name="choose_distance_empty">Please add the distance of this track</string>
+    <string name="choose_level_empty">Please choose the level of this track</string>
+    <string name="title_field_empty">Consider adding a title to your point</string>
+    <string name="choose_type_of_point_empty">Please choose the type of your point</string>
+    <string name="toast_starting_point">Track must start with by a train station</string>
+    <string name="toast_ending_point">Track must end with by a train station</string>
+    <string name="continue_edit_butt">Continue Edit</string>
+    <string name="finish_editing_track_butt">Finish Editing Track</string>
+    <string name="save_track_butt">Save Track</string>
+    <string name="track_level">Level</string>
+    <string name="strating_point_txt">- Beginning</string>
+    <string name="distance_txt">Distance (km)</string>
+    <string name="ending_point_txt_heb">- End</string>
+    <string name="no_track_name">-No Name-</string>
+    <string name="update_button">Update</string>
+    <string name="welcome_back">"Welcome back,  "</string>
+    <string name="hello">hello</string>
+    <string name="created_by">Created by</string>
+    <string name="at">At</string>
+    <string-array name="train_stations">
+        <item>Choose a station</item>
+        <item>הר הרצל</item>
+        <item>יפה נוף</item>
+        <item>כיכר דניה</item>
+        <item>החלוץ</item>
+        <item>קרית משה</item>
+        <item>התחנה המרכזית</item>
+        <item>הטורים</item>
+        <item>מחנה יהודה</item>
+        <item>הדוידקה</item>
+        <item>יפו מרכז</item>
+        <item>העירייה</item>
+        <item>שער שכם</item>
+        <item>שבטי ישראל</item>
+        <item>שמעון הצדיק</item>
+        <item>גבעת התחמושת</item>
+        <item>גבעת המיבתר</item>
+        <item>א-סהל</item>
+        <item>שועפאט</item>
+        <item>בית חנינא</item>
+        <item>יקותיאל אדם</item>
+        <item>פסגת זאב מרכז</item>
+        <item>סיירת דוכיפת</item>
+        <item>חיל האוויר</item>
+    </string-array>
+
+    <string-array name="spinner_list_item_array">
+        <item>התנתק</item>
+        <item>פרוצי דרכים</item>
+    </string-array>
+
+    <string-array name="track_level">
+        <item>Choose track level</item>
+        <item>Easy</item>
+        <item>Medium</item>
+        <item>Hard</item>
+    </string-array>
+
+    <string-array name="season">
+        <item>All Year</item>
+        <item>Summer</item>
+        <item>Winter</item>
+        <item>Autumn</item>
+        <item>Spring</item>
+    </string-array>
+
+    <string-array name="points_of_interest">
+        <item>Choose type</item>
+        <item>Train Station</item>
+        <item>Bus Station</item>
+        <item>Historic Site</item>
+        <item>Coffee Shop</item>
+        <item>Other</item>
+    </string-array>
+
+
+    <string name="edit_options_see_on_map">See on the map</string>
+    <string name="edit_options_edit_track">Edit track</string>
+    <string name="edit_options_delete_track">Delete track</string>
+    <string name="edit_options_choose_track">See track details</string>
+    <string name="title_activity_main">MainActivity</string>
+
+    <string name="new_update">new update</string>
+    <string name="send_update">send</string>
+
+
+    <string name="title_activity_home">Home</string>
+    <string name="home_action">Home</string>
+    <string name="menu_home">Home Page</string>
+    <string name="menu_about_us">About Us</string>
+    <string name="menu_adv_search">Advanced Search</string>
+    <string name="menu_user_guide">User Guide</string>
+    <string name="menu_tracks">Tracks</string>
+    <string name="menu_contact_us">Contact Us</string>
+    <string name="advanced_search_butt">Advanced Search</string>
+    <string name="search_button">Search</string>
+    <string name="suitable_for_bikes_heb">Suitable For Bikes</string>
+    <string name="suitable_for_dogs_heb">Suitable for Dogs</string>
+    <string name="suitable_for_families_heb">Suitable For Families</string>
+    <string name="has_water_heb">Track with Aater</string>
+    <string name="starting_point_hebrew">Starting Point</string>
+    <string name="ending_point_hebrew">Endind Point</string>
+    <string name="is_romantic_heb">Romantic</string>
+    <string name="make_own_track_butt">Create own track</string>
+    <string name="make_own_track_txt">Want to build your own track?</string>
+    <string name="Make_own_track_menu">Create New Track</string>
+    <string name="tracks_txt">Tracks list</string>
+    <string name="tracks_menu">Tracks list</string>
+    <string name="edit_tracks_button">Edit Tracks</string>
+    <string name="sign_out_action">Log Out</string>
+    <string name="language">language</string>
+
+    <string name="permitted_editor" translatable="false">1UGTxtDh7UaO9WFi70CnG3njfE02</string>
+    <string name="permitted_editor2" translatable="false">CIWYd1t3qVY1Kg63vmVPDUoTv903</string>
+    <string name="home_button">Home</string>
+    <string name="editor_panel_button">Editor Panel</string>
+    <string name="app_title_txt">City Forest</string>
+    <string name="what_are_you_up_to_today_txt">What are you up to today?</string>
+    <string name="point_of_interest_txt">Point Of Interest?</string>
+</resources>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:weightSum="11"
+    >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1.2"
+        android:gravity="center"
+
+        >
+
+        <TextView
+            android:id="@+id/wahts_the_problem"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="17.5sp"
+            android:textColor="#454552"
+            android:lineSpacingExtra="0sp"
+            android:gravity="center_horizontal"
+            android:text="@string/new_update"
+            android:clickable="false"
+
+            />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="7.8"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingBottom="20dp"
+        android:paddingEnd="26dp"
+        android:paddingStart="28dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="vertical"
+            android:gravity="center">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="250dp">
+
+                <EditText
+                    android:id="@+id/snippetTxt"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:textSize="17.5sp"
+                    android:textColorHint="#92929c"
+                    android:textColor="#454552"
+                    android:lineSpacingExtra="0sp"
+                    android:gravity="end"
+                    android:paddingEnd="21dp"
+                    android:paddingStart="21dp"
+                    android:paddingTop="17dp"
+                    android:paddingBottom="17dp"
+                    android:layout_marginTop="15dp"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/end_report_btn_wrp"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:layout_weight="1.2">
+        <Button
+
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="17.5sp"
+            android:textColor="#ffffff"
+            android:letterSpacing="-0.02"
+            android:lineSpacingExtra="-1.6sp"
+            android:gravity="center"
+            android:text="@string/send_update"
+            android:id="@+id/end_report"
+            />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:layout_weight="0.8">
+        <!--<ImageView-->
+            <!--android:layout_marginLeft="3dp"-->
+            <!--android:layout_width="7dp"-->
+            <!--android:layout_height="7dp"-->
+            <!--android:background="@drawable/circle_gray"/>-->
+        <!--<ImageView-->
+            <!--android:layout_marginRight="3dp"-->
+            <!--android:layout_width="7dp"-->
+            <!--android:layout_height="7dp"-->
+            <!--android:background="@drawable/circle_orange"/>-->
+    </LinearLayout>
+</LinearLayout>

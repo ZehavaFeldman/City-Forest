@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="300dp"
+    android:layoutDirection="rtl"
+    android:gravity="center_horizontal"
+    android:background="#fff"
+    >
+    <LinearLayout
+        android:paddingLeft="2dp"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+
+        >
+        <ViewFlipper xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/vf"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <include android:id="@+id/page1" layout="@layout/notifications"/>
+            <include android:id="@+id/page2" layout="@layout/single_notification" />
+
+        </ViewFlipper>
+    </LinearLayout>
+
+
+</RelativeLayout>
+

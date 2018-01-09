@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "169060522979",
+    "project_id": "firebase-cityforest"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:169060522979:android:753a094e49efca3d",
+        "android_client_info": {
+          "package_name": "com.zehava.cityforest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "169060522979-q1i6drmvmtsrgoglqeo7m6eg2n7egm4c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zehava.cityforest",
+            "certificate_hash": "5f57ecc6a937020d3e45646eb76c7d92c4885497"
+          }
+        },
+        {
+          "client_id": "169060522979-qum712vkt6nmbin9qjrcidva6he47uhq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCt-nCvryF8XzNqytmMRxE2E9pUKZ8UXJ0"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
