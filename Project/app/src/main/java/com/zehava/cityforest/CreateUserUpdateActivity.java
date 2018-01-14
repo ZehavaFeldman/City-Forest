@@ -18,6 +18,7 @@ import android.widget.ViewFlipper;
 import android.widget.Button;
 
 
+import com.google.firebase.database.DatabaseError;
 import com.zehava.cityforest.Models.UserUpdate;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -132,7 +133,24 @@ public class CreateUserUpdateActivity extends AppCompatActivity {
 
         Map<String, Object> childUpdates = new HashMap<>();
         childUpdates.put(key, coordinateMap);
-        user_updates.updateChildren(childUpdates);
+        user_updates.updateChildren(childUpdates, new DatabaseReference.CompletionListener() {
+            @Override
+            public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                if (databaseError != null) {
+                    System.out.println("Data could not be saved " + databaseError.getMessage());
+                } else {
+
+                    Intent intent = getIntent();
+                    intent.putExtra(CREATED_UPDATE_FOR_ZOOM, castLatLngToJson(chosenCoordinateLatLng));
+                    intent.putExtra("id",i1);
+                    setResult(USER_UPDATE_CREATED, intent);
+                    finish();
+                }
+            }
+        });
+
+
+
     }
 
 
@@ -156,11 +174,7 @@ public class CreateUserUpdateActivity extends AppCompatActivity {
 
                 writeNewUserUpdate();
 
-                Intent intent = getIntent();
-                intent.putExtra(CREATED_UPDATE_FOR_ZOOM, castLatLngToJson(chosenCoordinateLatLng));
-                intent.putExtra("id",i1);
-                setResult(USER_UPDATE_CREATED, intent);
-                finish();
+//
             }
             else if(v instanceof TextView) {
                 type = ((TextView) v).getText().toString();

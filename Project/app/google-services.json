@@ -1,7 +1,9 @@
 {
   "project_info": {
     "project_number": "169060522979",
-    "project_id": "firebase-cityforest"
+    "firebase_url": "https://fir-cityforest.firebaseio.com",
+    "project_id": "firebase-cityforest",
+    "storage_bucket": "firebase-cityforest.appspot.com"
   },
   "client": [
     {
@@ -12,6 +14,10 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "169060522979-93dvqbkv010bv9shr68q9use80bqltqk.apps.googleusercontent.com",
+          "client_type": 3
+        },
         {
           "client_id": "169060522979-q1i6drmvmtsrgoglqeo7m6eg2n7egm4c.apps.googleusercontent.com",
           "client_type": 1,
@@ -35,11 +41,16 @@
           "status": 1
         },
         "appinvite_service": {
-          "status": 1,
-          "other_platform_oauth_client": []
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "169060522979-93dvqbkv010bv9shr68q9use80bqltqk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         },
         "ads_service": {
-          "status": 1
+          "status": 2
         }
       }
     }

@@ -167,4 +167,8 @@
     <string name="app_title_txt">City Forest</string>
     <string name="what_are_you_up_to_today_txt">What are you up to today?</string>
     <string name="point_of_interest_txt">Point Of Interest?</string>
+
+    <string name="ALGOLIA_APP_ID">23AHHRJOBU</string>
+    <string name="ALGOLIA_SEARCH_API_KEY">8fd54c914d7dd05b7a87265beb57cad4</string>
+    <string name="ALGOLIA_INDEX_NAME">tracks</string>
 </resources>

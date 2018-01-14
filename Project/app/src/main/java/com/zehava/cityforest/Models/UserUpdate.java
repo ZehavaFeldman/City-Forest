@@ -11,10 +11,9 @@ import java.util.Map;
  * Created by avigail on 10/12/17.
  */
 
-public class UserUpdate extends Coordinate{
+public class UserUpdate extends PointOfInterest{
 
-    private String type;
-    private long logo;
+
     private long updated_time;
     private long update_time_space;
     private String uid;
@@ -28,15 +27,13 @@ public class UserUpdate extends Coordinate{
 
     public UserUpdate(String uid, String uname,int id, String type, String snippet, double coX, double coY){
 
-        super(coX, coY, type, snippet);
+        super(coX, coY, type, snippet, type);
 
-        this.type = type;
         this.uid = uid;
         this.uname = uname;
         this.id=id;
         this.updated_time = System.currentTimeMillis()/1000;
 
-        setLogo(type);
         setTimeSpace(type);
     }
 
@@ -62,44 +59,6 @@ public class UserUpdate extends Coordinate{
     public void setType(String type){
         this.type = type;
         setLogo(type);
-    }
-
-    public long getLogo(){
-        return this.logo;
-    }
-
-    public void setLogo(int logo){
-        this.logo = logo;
-    }
-    public void setLogo(String type){
-        if(type.equalsIgnoreCase("מזג אויר")){
-            logo = R.drawable.ic_cloud_1;
-        }
-        else if(type.equalsIgnoreCase("אין כניסה")){
-            logo = R.drawable.ic_key;
-        }
-        else if(type.equalsIgnoreCase("אין תצפית")){
-            logo = R.drawable.ic_no_vision;
-        }
-
-        else logo = -1;
-    }
-
-    public static int whatIsTheLogoForType(String type){
-
-        if(type.equals("מזג אויר")){
-            return R.drawable.ic_cloud_1;
-        }
-        else if(type.equals("אין כניסה")){
-            return  R.drawable.ic_key;
-        }
-        else if(type.equals("אין תצפית")){
-            return R.drawable.ic_no_vision;
-        }
-
-
-        else  return  -1;
-
     }
 
 
@@ -132,7 +91,6 @@ public class UserUpdate extends Coordinate{
             return 2;
         }
 
-
         else  return  -1;
 
     }
@@ -142,14 +100,14 @@ public class UserUpdate extends Coordinate{
             update_time_space = 1000*60*15;
         }
         else if(type.equalsIgnoreCase("אין כניסה")){
-            update_time_space = 1000*60*5;
+            update_time_space = 1000*60*25;
         }
         else if(type.equalsIgnoreCase("אין תצפית")){
             update_time_space = 1000*60*60*2;
         }
 
         //default is 10 minutes
-        else logo = 1000*60*10;
+        else update_time_space = 1000*60*10;
     }
 
     private void setUpdated_time(long new_update){

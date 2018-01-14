@@ -1,14 +1,17 @@
 package com.zehava.cityforest;
 
 import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Build;
+import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -41,6 +44,8 @@ import android.widget.Spinner;
 import android.widget.AdapterView.OnItemSelectedListener;
 
 import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.plugins.cluster.clustering.ClusterItem;
+import com.mapbox.mapboxsdk.plugins.cluster.clustering.ClusterManagerPlugin;
 import com.zehava.cityforest.Models.Coordinate;
 import com.zehava.cityforest.Models.Track;
 import com.zehava.cityforest.Models.UserUpdate;
@@ -86,6 +91,11 @@ import com.mapbox.services.commons.models.Position;
 
 import com.mapbox.services.directions.v5.models.DirectionsRoute;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.InputStream;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -93,6 +103,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Scanner;
 
 
 import static com.zehava.cityforest.Constants.CREATED_UPDATE_FOR_ZOOM;
@@ -113,7 +124,7 @@ import static com.zehava.cityforest.Constants.ZOOM_LEVEL_CURRENT_LOCATION;
 import static com.zehava.cityforest.Constants.ZOOM_LEVEL_MARKER_CLICK;
 import static com.mapbox.services.android.telemetry.location.AndroidLocationEngine.getLocationEngine;
 
-public class Home extends AppCompatActivity implements PermissionsListener {
+public class Home extends AppCompatActivity implements PermissionsListener, ICallback {
 
     private FloatingActionButton floatingActionButton;
     private LocationEngine locationEngine;
@@ -142,6 +153,11 @@ public class Home extends AppCompatActivity implements PermissionsListener {
     private RelativeLayout mRelativeLayout;
 
     String uid,uname;
+
+    private ClusterManagerPlugin<MyItem> clusterManagerPlugin;
+
+    Intent serviceIntent;
+    UpdatesManagerService myService;
 
 
     @Override
@@ -174,7 +190,7 @@ public class Home extends AppCompatActivity implements PermissionsListener {
         tracks = database.getReference("tracks");
         user_updates = database.getReference("user_updates");
 
-        /*Buttons for different edit map modes*/
+
         mRelativeLayout = (RelativeLayout) findViewById(R.id.mapLayout);
 
         SHOW_DETAILS_POPUP = false;
@@ -218,6 +234,13 @@ public class Home extends AppCompatActivity implements PermissionsListener {
         });
         loading_map_progress_bar.setVisibility(View.VISIBLE);
 
+        serviceIntent = new Intent(Home.this, UpdatesManagerService.class);
+
+        startService(serviceIntent); //Starting the service
+        bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE); //Binding to the service!
+
+//        myService.startCounter();
+
     }
 
     /*In order to be able to sign out from the logged in account, I have to
@@ -231,25 +254,10 @@ public class Home extends AppCompatActivity implements PermissionsListener {
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
         mGoogleApiClient.connect();
-//        uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-//        String userName = FirebaseAuth.getInstance().getCurrentUser().getDisplayName();
-//        String welcome_message = getResources().getString(R.string.hello) + ", "+userName;
-//        setTitle(welcome_message);
+
+
+
         super.onStart();
-    }
-
-
-    private void toggleLanguage() {
-
-        SharedPreferences languagepref = getSharedPreferences(LANGUAGE,MODE_PRIVATE);
-        SharedPreferences.Editor editor = languagepref.edit();
-
-        String currLanguage = languagepref.getString(LANGUAGE_TO_LOAD,"");
-        String languageToLoad = currLanguage.equalsIgnoreCase(HEBREW)?ENGLISH:HEBREW;
-
-        editor.putString(LANGUAGE_TO_LOAD,languageToLoad );
-        editor.apply();
-
     }
 
 
@@ -271,13 +279,10 @@ public class Home extends AppCompatActivity implements PermissionsListener {
             ArrayList<String> temp = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.spinner_list_item_array)));
 
             String userUid = currentUser.getUid();
-            if(userUid.equals(getResources().getString(R.string.permitted_editor)) ||
-                    userUid.equals(getResources().getString(R.string.permitted_editor2))||(userUid.equals("64xkNhmPOvXlmJaXeleTI5XT1zA2"))) {
-            }
-
-             else
+            if(!userUid.equals(getResources().getString(R.string.permitted_editor)) &&
+                    !userUid.equals(getResources().getString(R.string.permitted_editor2))&&!(userUid.equals("TNHu1lOD4vfz9SY8EEf4bsiQQuG2"))) {
                 temp.remove(1);
-
+            }
 
             uname = currentUser.getDisplayName();
             uid = currentUser.getUid();
@@ -343,7 +348,7 @@ public class Home extends AppCompatActivity implements PermissionsListener {
                 return true;
 
             case R.id.searchTracksActivity:
-                i = new Intent(this, AdvancedSearchTracksActivity.class);
+                i = new Intent(this, AlgoliaSearchActivity.class);
                 startActivity(i);
                 return true;
 
@@ -410,11 +415,16 @@ public class Home extends AppCompatActivity implements PermissionsListener {
         }
     }
 
+    @Override
+    public void onDraggableNotify(DRAGGABLE_CALSS draggableIcall) {
 
+    }
 
-
-
-
+    @Override
+    public void onUserUpdateNotify(USER_UPDATES_CLASS userUpdatesClass, int id) {
+        //Toast.makeText(this , "id: "+id, Toast.LENGTH_SHORT).show();
+       // Log.d("testingggg","testing");
+    }
 
 
     private class myOnMapReadyCallback implements OnMapReadyCallback {
@@ -425,12 +435,209 @@ public class Home extends AppCompatActivity implements PermissionsListener {
             map.setOnMarkerClickListener(new MyOnMarkerClickListener());
             map.setStyleUrl(Style.OUTDOORS);
             showDefaultLocation();
-            //  showAllCoordinates();
             showAllUserUpdates();
             showAllPointsOfInterest();
             showAllTracks();
+
+            clusterManagerPlugin = new ClusterManagerPlugin<>(Home.this, map);
+
+            initCameraListener();
+
+            myService.startCounter();
         }
     }
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            //Toast.makeText(Home.this, "onServiceConnected called", Toast.LENGTH_SHORT).show();
+            // We've binded to LocalService, cast the IBinder and get LocalService instance
+            UpdatesManagerService.LocalBinder binder = (UpdatesManagerService.LocalBinder) service;
+            myService = binder.getServiceInstance(); //Get instance of your service!
+            myService.registerClient(Home.this); //Activity register in the service as client for callabcks!
+
+
+
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+           // Toast.makeText(Home.this, "onServiceDisconnected called", Toast.LENGTH_SHORT).show();
+        }
+    };
+
+
+    private void showAllTracks() {
+        tracks.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Map<String, Object> tracksMap = (Map<String, Object>)dataSnapshot.getValue();
+                if(tracksMap == null) {
+                    loading_map_progress_bar.setVisibility(View.INVISIBLE);
+                    return;
+                }
+
+                /*Iterating all the coordinates in the list*/
+                for (Map.Entry<String, Object> entry : tracksMap.entrySet()) {
+                    /*For each coordinate in the database, we want to create a new marker
+                    * for it and to show the marker on the map*/
+                    Map<String, Object> track = ((Map<String, Object>) entry.getValue());
+
+                    String route_st = (String)track.get("route");
+                    DirectionsRoute route = retrieveRouteFromJson(route_st);
+                    drawRoute(route);
+                }
+                loading_map_progress_bar.setVisibility(View.INVISIBLE);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                loading_map_progress_bar.setVisibility(View.INVISIBLE);
+            }
+        });
+    }
+
+    private void showAllPointsOfInterest() {
+        /*Reading one time from the database, we get the points of interest map list*/
+        points_of_interest.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
+                if(pointsMap == null) {
+                    loading_map_progress_bar.setVisibility(View.INVISIBLE);
+                    return;
+                }
+                /*Iterating all the coordinates in the list*/
+                for (Map.Entry<String, Object> entry : pointsMap.entrySet())
+                {
+                    /*For each coordinate in the database, we want to create a new marker
+                    * for it and to show the marker on the map*/
+                    Map<String, Object> point = ((Map<String, Object>) entry.getValue());
+                    /*Now the object 'cor' holds a *map* for a specific coordinate*/
+                    String positionJSON = (String) point.get("position");
+                    Position position = retrievePositionFromJson(positionJSON);
+
+                    /*Creating the marker on the map*/
+                    LatLng latlng = new LatLng(
+                            position.getLongitude(),
+                            position.getLatitude());
+
+                    long logo = (long)point.get("logo");
+                    addMarkerForPointOfInterest(latlng, (String)point.get("title"), (String)point.get("snippet"), (int) logo);
+                }
+                loading_map_progress_bar.setVisibility(View.INVISIBLE);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                loading_map_progress_bar.setVisibility(View.INVISIBLE);
+            }
+
+        });
+    }
+
+    private void showAllUserUpdates() {
+        /*Reading one time from the database, we get the points of interest map list*/
+        user_updates.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
+                if(pointsMap == null) {
+                    loading_map_progress_bar.setVisibility(View.INVISIBLE);
+                    return;
+                }
+                /*Iterating all the coordinates in the list*/
+                for (Map.Entry<String, Object> entry : pointsMap.entrySet())
+                {
+                    /*For each coordinate in the database, we want to create a new marker
+                    * for it and to show the marker on the map*/
+                    Map<String, Object> point = ((Map<String, Object>) entry.getValue());
+                    /*Now the object 'cor' holds a *map* for a specific coordinate*/
+                    String positionJSON = (String) point.get("position");
+                    Position position = retrievePositionFromJson(positionJSON);
+
+                    /*Creating the marker on the map*/
+                    LatLng latlng = new LatLng(
+                            position.getLongitude(),
+                            position.getLatitude());
+
+                    String type = point.get("type").toString();
+                    addMarkerForUserUpdate(latlng, (String)point.get("title"), (String)point.get("snippet"), (int)(long)UserUpdate.whatIsTheLogoForType(type));
+                }
+                loading_map_progress_bar.setVisibility(View.INVISIBLE);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                loading_map_progress_bar.setVisibility(View.INVISIBLE);
+            }
+
+        });
+    }
+
+
+
+    private void drawRoute(DirectionsRoute route) {
+        // Convert LineString coordinates into LatLng[]
+        LineString lineString = LineString.fromPolyline(route.getGeometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
+        List<Position> coordinates = lineString.getCoordinates();
+        LatLng[] points = new LatLng[coordinates.size()];
+        for (int i = 0; i < coordinates.size(); i++) {
+            points[i] = new LatLng(
+                    coordinates.get(i).getLatitude(),
+                    coordinates.get(i).getLongitude());
+        }
+
+        // Draw Points on MapView
+        routeLine = new PolylineOptions()
+                .add(points)
+                .color(Color.RED)
+                .width(ROUTE_LINE_WIDTH);
+        map.addPolyline(routeLine);
+
+    }
+
+    private Polyline getPolyLineFromRoute(DirectionsRoute route){
+        LineString lineString = LineString.fromPolyline(route.getGeometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
+        List<Position> coordinates = lineString.getCoordinates();
+        LatLng[] points = new LatLng[coordinates.size()];
+        for (int i = 0; i < coordinates.size(); i++) {
+            points[i] = new LatLng(
+                    coordinates.get(i).getLatitude(),
+                    coordinates.get(i).getLongitude());
+        }
+
+        // Draw Points on MapView
+        routeLine = new PolylineOptions()
+                .add(points)
+                .color(Color.RED)
+                .width(ROUTE_LINE_WIDTH);
+        return routeLine.getPolyline();
+    }
+
+
+    private void showDefaultLocation(){
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                new LatLng(DEFAULT_JERUSALEM_COORDINATE.getLatitude(),
+                        DEFAULT_JERUSALEM_COORDINATE.getLongitude()), 10));
+    }
+
+
+    private void toggleLanguage() {
+
+        SharedPreferences languagepref = getSharedPreferences(LANGUAGE,MODE_PRIVATE);
+        SharedPreferences.Editor editor = languagepref.edit();
+
+        String currLanguage = languagepref.getString(LANGUAGE_TO_LOAD,"");
+        String languageToLoad = currLanguage.equalsIgnoreCase(HEBREW)?ENGLISH:HEBREW;
+
+        editor.putString(LANGUAGE_TO_LOAD,languageToLoad );
+        editor.apply();
+
+    }
+
 
     private void initPopupWindow(Object object){
 
@@ -578,7 +785,7 @@ public class Home extends AppCompatActivity implements PermissionsListener {
                     }
 
                     ImageView img = (ImageView)customView.findViewById(R.id.img);
-                    img.setBackgroundResource(UserUpdate.whatIsTheLogoForType(u_update.get("type").toString()));
+                    img.setBackgroundResource((int) (long)UserUpdate.whatIsTheLogoForType(u_update.get("type").toString()));
                 }
             }
 
@@ -644,8 +851,6 @@ public class Home extends AppCompatActivity implements PermissionsListener {
 
 
     }
-
-
 
 
 
@@ -751,218 +956,6 @@ public class Home extends AppCompatActivity implements PermissionsListener {
         });
     }
 
-    private void showAllTracks() {
-        tracks.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Map<String, Object> tracksMap = (Map<String, Object>)dataSnapshot.getValue();
-                if(tracksMap == null) {
-                    loading_map_progress_bar.setVisibility(View.INVISIBLE);
-                    return;
-                }
-
-                /*Iterating all the coordinates in the list*/
-                for (Map.Entry<String, Object> entry : tracksMap.entrySet()) {
-                    /*For each coordinate in the database, we want to create a new marker
-                    * for it and to show the marker on the map*/
-                    Map<String, Object> track = ((Map<String, Object>) entry.getValue());
-
-                    String route_st = (String)track.get("route");
-                    DirectionsRoute route = retrieveRouteFromJson(route_st);
-                    drawRoute(route);
-                }
-                loading_map_progress_bar.setVisibility(View.INVISIBLE);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                loading_map_progress_bar.setVisibility(View.INVISIBLE);
-            }
-        });
-    }
-
-
-
-    public DirectionsRoute retrieveRouteFromJson(String route) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        DirectionsRoute obj = gson.fromJson(route, DirectionsRoute.class);
-        return obj;
-    }
-
-    private void showAllPointsOfInterest() {
-        /*Reading one time from the database, we get the points of interest map list*/
-        points_of_interest.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
-                if(pointsMap == null) {
-                    loading_map_progress_bar.setVisibility(View.INVISIBLE);
-                    return;
-                }
-                /*Iterating all the coordinates in the list*/
-                for (Map.Entry<String, Object> entry : pointsMap.entrySet())
-                {
-                    /*For each coordinate in the database, we want to create a new marker
-                    * for it and to show the marker on the map*/
-                    Map<String, Object> point = ((Map<String, Object>) entry.getValue());
-                    /*Now the object 'cor' holds a *map* for a specific coordinate*/
-                    String positionJSON = (String) point.get("position");
-                    Position position = retrievePositionFromJson(positionJSON);
-
-                    /*Creating the marker on the map*/
-                    LatLng latlng = new LatLng(
-                            position.getLongitude(),
-                            position.getLatitude());
-
-                    long logo = (long)point.get("logo");
-                    addMarkerForPointOfInterest(latlng, (String)point.get("title"), (String)point.get("snippet"), (int) logo);
-                }
-                loading_map_progress_bar.setVisibility(View.INVISIBLE);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                loading_map_progress_bar.setVisibility(View.INVISIBLE);
-            }
-
-        });
-    }
-
-    private void showAllUserUpdates() {
-        /*Reading one time from the database, we get the points of interest map list*/
-        user_updates.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
-                if(pointsMap == null) {
-                    loading_map_progress_bar.setVisibility(View.INVISIBLE);
-                    return;
-                }
-                /*Iterating all the coordinates in the list*/
-                for (Map.Entry<String, Object> entry : pointsMap.entrySet())
-                {
-                    /*For each coordinate in the database, we want to create a new marker
-                    * for it and to show the marker on the map*/
-                    Map<String, Object> point = ((Map<String, Object>) entry.getValue());
-                    /*Now the object 'cor' holds a *map* for a specific coordinate*/
-                    String positionJSON = (String) point.get("position");
-                    Position position = retrievePositionFromJson(positionJSON);
-
-                    /*Creating the marker on the map*/
-                    LatLng latlng = new LatLng(
-                            position.getLongitude(),
-                            position.getLatitude());
-
-                    long logo = (long)point.get("logo");
-                    addMarkerForUserUpdate(latlng, (String)point.get("title"), (String)point.get("snippet"), (int) logo);
-                }
-                loading_map_progress_bar.setVisibility(View.INVISIBLE);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                loading_map_progress_bar.setVisibility(View.INVISIBLE);
-            }
-
-        });
-    }
-
-    private void showAllCoordinates() {
-        /*Reading one time from the database, we get the coordinates map list*/
-        coordinates.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Map<String, Object> coordinatesMap = (Map<String, Object>)dataSnapshot.getValue();
-                if(coordinatesMap == null){
-                    return;
-                }
-
-                /*Iterating all the coordinates in the list*/
-                for (Map.Entry<String, Object> entry : coordinatesMap.entrySet())
-                {
-                    /*For each coordinate in the database, we want to create a new marker
-                    * for it and to show the marker on the map*/
-                    Map<String, Object> cor = ((Map<String, Object>) entry.getValue());
-                    /*Now the object 'cor' holds a *map* for a specific coordinate*/
-                    String positionJSON = (String) cor.get("position");
-                    Position position = retrievePositionFromJson(positionJSON);
-
-                    /*Creating the marker on the map*/
-                    LatLng latlng = new LatLng(
-                            position.getLongitude(),
-                            position.getLatitude());
-                    addMarkerForCoordinate(latlng, (String)cor.get("title"), (String)cor.get("snippet"));
-                }
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {}
-
-        });
-
-
-    }
-
-
-    private void drawRoute(DirectionsRoute route) {
-        // Convert LineString coordinates into LatLng[]
-        LineString lineString = LineString.fromPolyline(route.getGeometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
-        List<Position> coordinates = lineString.getCoordinates();
-        LatLng[] points = new LatLng[coordinates.size()];
-        for (int i = 0; i < coordinates.size(); i++) {
-            points[i] = new LatLng(
-                    coordinates.get(i).getLatitude(),
-                    coordinates.get(i).getLongitude());
-        }
-
-        // Draw Points on MapView
-        routeLine = new PolylineOptions()
-                .add(points)
-                .color(Color.RED)
-                .width(ROUTE_LINE_WIDTH);
-        map.addPolyline(routeLine);
-
-    }
-
-    private Polyline getPolyLineFromRoute(DirectionsRoute route){
-        LineString lineString = LineString.fromPolyline(route.getGeometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
-        List<Position> coordinates = lineString.getCoordinates();
-        LatLng[] points = new LatLng[coordinates.size()];
-        for (int i = 0; i < coordinates.size(); i++) {
-            points[i] = new LatLng(
-                    coordinates.get(i).getLatitude(),
-                    coordinates.get(i).getLongitude());
-        }
-
-        // Draw Points on MapView
-        routeLine = new PolylineOptions()
-                .add(points)
-                .color(Color.RED)
-                .width(ROUTE_LINE_WIDTH);
-        return routeLine.getPolyline();
-    }
-
-
-    /*Method get String that represents a Position Json object.
-    * Method retrieve the position object and returns it*/
-    public Position retrievePositionFromJson(String posJs) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        Position obj = gson.fromJson(posJs, Position.class);
-        return obj;
-    }
-
-    private void showDefaultLocation(){
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                new LatLng(DEFAULT_JERUSALEM_COORDINATE.getLatitude(),
-                        DEFAULT_JERUSALEM_COORDINATE.getLongitude()), 10));
-    }
 
     private class MyOnMapClickListener implements MapboxMap.OnMapClickListener{
         @Override
@@ -1021,14 +1014,45 @@ public class Home extends AppCompatActivity implements PermissionsListener {
         }
     }
 
-    private MarkerView addMarkerForCoordinate(LatLng point, String title, String snippet) {
-        MarkerViewOptions markerViewOptions = new MarkerViewOptions()
-                .position(point)
-                .title(title)
-                .snippet(snippet);
-        map.addMarker(markerViewOptions);
-        return markerViewOptions.getMarker();
+
+    /*Marker clicked listener. We can delete/edit a coordinate*/
+    private class MyOnMarkerClickListener implements MapboxMap.OnMarkerClickListener{
+        @Override
+        public boolean onMarkerClick(@NonNull final Marker marker) {
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(marker.getPosition().getLatitude(),
+                    marker.getPosition().getLongitude()), ZOOM_LEVEL_MARKER_CLICK));
+
+            final String key = getMarkerHashKey(marker);
+            points_of_interest.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
+                    Map<String, Object> point = ((Map<String, Object>)pointsMap.get(key));
+                    if(point != null) {
+                        String type = (String) point.get("type");
+                        if (!type.equals("תחנת רכבת")) {
+                            SHOW_DETAILS_POPUP = true;
+                            initPopupWindow(marker);
+
+                        }
+                    }
+                    else{
+                        SHOW_DETAILS_POPUP = true;
+                        initUpdateInfoWindow(marker);
+                    }
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+            return true;
+        }
     }
+
 
     private MarkerView addMarkerForPointOfInterest(LatLng point, String title, String snippet, int logo){
         MarkerViewOptions markerViewOptions = new MarkerViewOptions()
@@ -1036,6 +1060,8 @@ public class Home extends AppCompatActivity implements PermissionsListener {
                 .title(title)
                 .snippet(snippet);
         map.addMarker(markerViewOptions);
+
+
 
         if(logo != -1) {
             IconFactory iconFactory = IconFactory.getInstance(Home.this);
@@ -1074,47 +1100,6 @@ public class Home extends AppCompatActivity implements PermissionsListener {
     }
 
 
-
-    /*Marker clicked listener. We can delete/edit a coordinate*/
-    private class MyOnMarkerClickListener implements MapboxMap.OnMarkerClickListener{
-        @Override
-        public boolean onMarkerClick(@NonNull final Marker marker) {
-                map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(marker.getPosition().getLatitude(),
-                        marker.getPosition().getLongitude()), ZOOM_LEVEL_MARKER_CLICK));
-
-                final String key = getMarkerHashKey(marker);
-                points_of_interest.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
-                        Map<String, Object> point = ((Map<String, Object>)pointsMap.get(key));
-                        if(point != null) {
-                            String type = (String) point.get("type");
-                            if (!type.equals("תחנת רכבת")) {
-                                SHOW_DETAILS_POPUP = true;
-                                initPopupWindow(marker);
-
-                            }
-                        }
-                        else{
-                            SHOW_DETAILS_POPUP = true;
-                            initUpdateInfoWindow(marker);
-                        }
-
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
-                });
-
-            return true;
-        }
-    }
-
-
-
     private String getMarkerHashKey(final Marker marker) {
         double longitude = marker.getPosition().getLongitude();
         //double latitude = chosenCoordinateLatLng.getLatitude();
@@ -1151,6 +1136,44 @@ public class Home extends AppCompatActivity implements PermissionsListener {
         String json = gson.toJson(route, DirectionsRoute.class);
         return json;
     }
+
+    private String userUpdateHashFunction(double value, int id) {
+        //double latitude = chosenCoordinateLatLng.getLatitude();
+
+        int hash = ((int) (10000000*value))+id;
+        return "" + hash;
+    }
+
+    private LatLng retreiveLatLngFromJson(String stringExtra) {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.serializeSpecialFloatingPointValues();
+
+        Gson gson = gsonBuilder.create();
+        LatLng obj = gson.fromJson(stringExtra, LatLng.class);
+        return obj;
+    }
+
+
+    /*Method get String that represents a Position Json object.
+    * Method retrieve the position object and returns it*/
+    public Position retrievePositionFromJson(String posJs) {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.serializeSpecialFloatingPointValues();
+
+        Gson gson = gsonBuilder.create();
+        Position obj = gson.fromJson(posJs, Position.class);
+        return obj;
+    }
+
+    public DirectionsRoute retrieveRouteFromJson(String route) {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.serializeSpecialFloatingPointValues();
+
+        Gson gson = gsonBuilder.create();
+        DirectionsRoute obj = gson.fromJson(route, DirectionsRoute.class);
+        return obj;
+    }
+
 
 
     @Override
@@ -1256,7 +1279,7 @@ public class Home extends AppCompatActivity implements PermissionsListener {
 
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(
                         new LatLng(createdUpdateCoordinateLatLang.getLongitude(),
-                                createdUpdateCoordinateLatLang.getLatitude()), ZOOM_LEVEL_MARKER_CLICK));
+                                createdUpdateCoordinateLatLang.getLatitude()), ZOOM_LEVEL_CURRENT_LOCATION));
             }
 
             if (requestCode == 50 && resultCode == 53) {
@@ -1295,13 +1318,14 @@ public class Home extends AppCompatActivity implements PermissionsListener {
 
                 if(point == null){
                     Toast.makeText(Home.this, "point is null", Toast.LENGTH_SHORT).show();
+                    return;
                 }
 
-                long logo = (long)point.get("logo");
+                String type = point.get("type").toString();
                 if(mode == NEW_USER_UPDATE){
                     addMarkerForUserUpdate(createdCoordinate,
                             (String)point.get("title"), (String)point.get("snippet"),
-                            (int)logo);
+                            (int)(long) UserUpdate.whatIsTheLogoForType(type));
                 }
 
                 map.setInfoWindowAdapter(new MapboxMap.InfoWindowAdapter() {
@@ -1325,25 +1349,6 @@ public class Home extends AppCompatActivity implements PermissionsListener {
             }
         });
     }
-
-
-
-    private String userUpdateHashFunction(double value, int id) {
-        //double latitude = chosenCoordinateLatLng.getLatitude();
-
-        int hash = ((int) (10000000*value))+id;
-        return "" + hash;
-    }
-
-    private LatLng retreiveLatLngFromJson(String stringExtra) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        LatLng obj = gson.fromJson(stringExtra, LatLng.class);
-        return obj;
-    }
-
 
 
     @Override
@@ -1375,6 +1380,112 @@ public class Home extends AppCompatActivity implements PermissionsListener {
         super.onDestroy();
         mapView.onDestroy();
     }
+
+    protected void initCameraListener() {
+        map.addOnCameraIdleListener(clusterManagerPlugin);
+        try {
+            addItemsToClusterPlugin(R.raw.points);
+        } catch (JSONException exception) {
+            Toast.makeText(this, "Problem reading list of markers.", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void addItemsToClusterPlugin(int rawResourceFile) throws JSONException {
+        InputStream inputStream = getResources().openRawResource(rawResourceFile);
+        List<MyItem> items = new MyItemReader().read(inputStream);
+        clusterManagerPlugin.addItems(items);
+        clusterManagerPlugin.cluster();
+    }
+
+    /**
+     * Custom class for use by the marker cluster plugin
+     */
+    public static class MyItem implements ClusterItem {
+        private final LatLng position;
+        private String title;
+        private String snippet;
+
+        public MyItem(double lat, double lng) {
+            position = new LatLng(lat, lng);
+            title = null;
+            snippet = null;
+        }
+
+        public MyItem(double lat, double lng, String title, String snippet) {
+            position = new LatLng(lat, lng);
+            this.title = title;
+            this.snippet = snippet;
+        }
+
+        @Override
+        public LatLng getPosition() {
+            return position;
+        }
+
+        @Override
+        public String getTitle() {
+            return title;
+        }
+
+        @Override
+        public String getSnippet() {
+            return snippet;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        public void setSnippet(String snippet) {
+            this.snippet = snippet;
+        }
+    }
+
+    /**
+     * Custom class which reads JSON data and creates a list of MyItem objects
+     */
+    public static class MyItemReader {
+
+        private static final String REGEX_INPUT_BOUNDARY_BEGINNING = "\\A";
+
+        public List<MyItem> read(InputStream inputStream) throws JSONException {
+            List<MyItem> items = new ArrayList<MyItem>();
+            String json = new Scanner(inputStream).useDelimiter(REGEX_INPUT_BOUNDARY_BEGINNING).next();
+            JSONArray array = new JSONArray(json);
+            for (int i = 0; i < array.length(); i++) {
+                String title = null;
+                String snippet = null;
+                JSONObject object = array.getJSONObject(i);
+
+                 String pos = object.getString("position");
+                 Position position = retrievePositionFromJson(pos);
+
+                double lat = position.getLatitude();
+                double lng = position.getLongitude();
+                if (!object.isNull("title")) {
+                    title = object.getString("title");
+                }
+                if (!object.isNull("snippet")) {
+                    snippet = object.getString("snippet");
+                }
+                items.add(new MyItem(lat, lng, title, snippet));
+
+            }
+            return items;
+        }
+        public Position retrievePositionFromJson(String posJs) {
+            GsonBuilder gsonBuilder = new GsonBuilder();
+            gsonBuilder.serializeSpecialFloatingPointValues();
+
+            Gson gson = gsonBuilder.create();
+            Position obj = gson.fromJson(posJs, Position.class);
+            return obj;
+        }
+    }
+
+
+
+
 
 
 

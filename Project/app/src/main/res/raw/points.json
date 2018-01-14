@@ -1,0 +1,321 @@
+[
+{
+	 "logo" : 2130903043,
+	 "position" : "{\"altitude\":NaN,\"latitude\":35.182728307294155,\"longitude\":31.784488020159344}",
+	 "snippet" : "קווים 55, 52, 33, 74",
+	 "title" : "כפר שאול",
+	 "type" : "תחנת אוטובוס"
+  },
+ {
+	 "logo" : 2130903043,
+	 "position" : "{\"altitude\":NaN,\"latitude\":35.18338577237125,\"longitude\":31.77501447045303}",
+	 "snippet" : "קווים 33, 35, 21, 39",
+	 "title" : "יפה נוף",
+	 "type" : "תחנת אוטובוס"
+  },
+{
+	 "logo" : 2130903051,
+	 "position" : "{\"altitude\":NaN,\"latitude\":35.193948158543435,\"longitude\":31.786088489313997}",
+	 "snippet" : "",
+	 "title" : "גשר המיתרים ",
+	 "type" : "תחנת רכבת"
+  },
+ {
+	 "logo" : -1,
+	 "position" : "{\"altitude\":NaN,\"latitude\":35.196550754143004,\"longitude\":31.776388728410055}",
+	 "snippet" : "האונברסיטה הראשונה בירושלים",
+	 "title" : "אוניברסיטה העברית",
+	 "type" : "אחר"
+  },
+{
+	 "logo" : 2130903051,
+	 "position" : "{\"altitude\":NaN,\"latitude\":35.1997560304377,\"longitude\":31.787625316673896}",
+	 "snippet" : "",
+	 "title" : "הרצל",
+	 "type" : "תחנת רכבת"
+  },
+{
+	 "logo" : 2130903051,
+	 "position" : "{\"altitude\":NaN,\"latitude\":35.20317307562459,\"longitude\":31.788876342024125}",
+	 "snippet" : "",
+	 "title" : "מרכזית",
+	 "type" : "תחנת רכבת"
+  },
+{
+	 "logo" : -1,
+	 "position" : "{\"altitude\":NaN,\"latitude\":35.20846451428224,\"longitude\":31.76676701463829}",
+	 "snippet" : "",
+	 "title" : "עוד נקודה",
+	 "type" : "אחר"
+  },
+{
+	 "logo" : 2130903051,
+	 "position" : "{\"altitude\":NaN,\"latitude\":35.20988257454803,\"longitude\":31.786813043177816}",
+	 "snippet" : "",
+	 "title" : "הטורים",
+	 "type" : "תחנת רכבת"
+  },
+{
+	 "logo" : 2130903041,
+	 "position" : "{\"altitude\":NaN,\"latitude\":35.21004293381179,\"longitude\":31.77514989110564}",
+	 "snippet" : "כאן התגורר הרב שלמה זלמן אוירבאך זצ\"ל. הוא היה הרב של ירושלים הישנה.  ביתו נשאה לרשכב\"ג הרב אלישיב.  חבר ספרים רבים,  ועד היום פוסקים לפיו.",
+	 "title" : "בית רב שלמה זלמן אוירבאך",
+	 "type" : "אתר היסטורי"
+  },
+ {
+	 "logo" : 2130903047,
+	 "position" : "{\"altitude\":NaN,\"latitude\":35.21205082629467,\"longitude\":31.775992093788872}",
+	 "snippet" : "בית מאפה וקפה בסגנון אמריקאי",
+	 "title" : "גרינז",
+	 "type" : "בית קפה"
+  },
+{
+	 "logo" : 2130903051,
+	 "position" : "{\"altitude\":NaN,\"latitude\":35.213663898633285,\"longitude\":31.785491592208103}",
+	 "snippet" : "",
+	 "title" : "כיכר ספרא",
+	 "type" : "תחנת רכבת"
+  },
+{
+	 "logo" : 2130903051,
+	 "position" : "{\"altitude\":NaN,\"latitude\":35.21523092945449,\"longitude\":31.785333627047862}",
+	 "snippet" : "",
+	 "title" : "דאוידקא",
+	 "type" : "תחנת רכבת"
+  },
+{
+	 "logo" : 2130903051,
+	 "position" : "{\"altitude\":NaN,\"latitude\":35.2174585538545,\"longitude\":31.783419782344694}",
+	 "snippet" : "",
+	 "title" : "יפו מרכז",
+	 "type" : "תחנת רכבת"
+  },
+ {
+    "logo" : 2130837676,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.211499,\"longitude\":31.8018834}",
+    "snippet" : "",
+    "title" : "מזג אויר",
+    "type" : "מזג אויר",
+    "uid" : "mRLboPuwTCQQMzvjrEvYlDUx1G43",
+    "uname" : "Zehava Opalnet",
+    "update_time_space" : 900000,
+    "updated" : 1515536712
+  },
+{
+    "logo" : 2130837682,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.1754787,\"longitude\":31.7898696}",
+    "snippet" : "",
+    "title" : "מזג אויר",
+    "type" : "מזג אויר",
+    "update_time_space" : 900000,
+    "updated" : 1515397880
+  },
+ {
+    "logo" : 2130837725,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.1754787,\"longitude\":31.7898696}",
+    "snippet" : "",
+    "title" : "אין כניסה",
+    "type" : "אין כניסה",
+    "uid" : "zpATBrk4dTU9q3OJGRCJy58b2vA3",
+    "uname" : "יוסף פלדמן",
+    "update_time_space" : 300000,
+    "updated" : 1515398218
+  },
+ {
+    "logo" : 2130837834,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.210429999999995,\"longitude\":31.801995}",
+    "snippet" : "",
+    "title" : "אין תצפית",
+    "type" : "אין תצפית",
+    "uid" : "64xkNhmPOvXlmJaXeleTI5XT1zA2",
+    "update_time_space" : 7200000,
+    "updated" : 1514420535
+  },
+ {
+    "logo" : 2130837725,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.210429999999995,\"longitude\":31.801995}",
+    "snippet" : "",
+    "title" : "אין כניסה",
+    "type" : "אין כניסה",
+    "uid" : "64xkNhmPOvXlmJaXeleTI5XT1zA2",
+    "update_time_space" : 300000,
+    "updated" : 1514437614
+  },
+ {
+    "logo" : 2130837682,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.210429999999995,\"longitude\":31.801995}",
+    "snippet" : "",
+    "title" : "מזג אויר",
+    "type" : "מזג אויר",
+    "uid" : "64xkNhmPOvXlmJaXeleTI5XT1zA2",
+    "update_time_space" : 900000,
+    "updated" : 1514437774
+  },
+{
+    "logo" : 2130837725,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.210429999999995,\"longitude\":31.801995}",
+    "snippet" : "",
+    "title" : "אין כניסה",
+    "type" : "אין כניסה",
+    "uid" : "64xkNhmPOvXlmJaXeleTI5XT1zA2",
+    "update_time_space" : 300000,
+    "updated" : 1514421618
+  },
+{
+    "logo" : 2130837682,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.21139,\"longitude\":31.801801666666666}",
+    "snippet" : "מממממ",
+    "title" : "מזג אויר",
+    "type" : "מזג אויר",
+    "uid" : "64xkNhmPOvXlmJaXeleTI5XT1zA2",
+    "updated" : 1513113240
+  },
+ {
+    "logo" : 2130837725,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.2246739,\"longitude\":31.7270431}",
+    "snippet" : "",
+    "title" : "אין כניסה",
+    "type" : "אין כניסה",
+    "uid" : "64xkNhmPOvXlmJaXeleTI5XT1zA2",
+    "update_time_space" : 300000,
+    "updated" : 1514465931
+  },
+ {
+    "logo" : 2130837682,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.2246893,\"longitude\":31.7270501}",
+    "snippet" : "",
+    "title" : "מזג אויר",
+    "type" : "מזג אויר",
+    "uid" : "64xkNhmPOvXlmJaXeleTI5XT1zA2",
+    "update_time_space" : 900000,
+    "updated" : 1514465689
+  },
+ {
+    "logo" : 2130837682,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.1754787,\"longitude\":31.7898696}",
+    "snippet" : "",
+    "title" : "מזג אויר",
+    "type" : "מזג אויר",
+    "update_time_space" : 900000,
+    "updated" : 1515397537
+  },
+ {
+    "logo" : 2130903041,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.18568927398269,\"longitude\":31.777553963716315}",
+    "snippet" : "בית מנוחות צבאי בירושלים.  מקום בו מתאספים לכנסים למשל ביום ההצמאות",
+    "title" : "הר הרצל",
+    "type" : "אתר היסטורי"
+  },
+{
+    "logo" : 2130903051,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.2031882922596,\"longitude\":31.788578804524093}",
+    "snippet" : "",
+    "title" : "תחנה מרכזית",
+    "type" : "תחנת רכבת"
+  },
+ {
+    "logo" : 2130903051,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.20954787008725,\"longitude\":31.78682350985987}",
+    "snippet" : "",
+    "title" : "הטורים",
+    "type" : "תחנת רכבת"
+  },
+{
+    "logo" : 2130903051,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.211835535022146,\"longitude\":31.786023121683144}",
+    "snippet" : "",
+    "title" : "שוק מחנה יהודה",
+    "type" : "תחנת רכבת"
+  },
+ {
+    "logo" : 2130903051,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.21500519338031,\"longitude\":31.784650124873153}",
+    "snippet" : "",
+    "title" : "דוידקה",
+    "type" : "תחנת רכבת"
+  },
+ {
+    "logo" : 2130903051,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.21806906642564,\"longitude\":31.78298879897855}",
+    "snippet" : "",
+    "title" : "יפו מרכז",
+    "type" : "תחנת רכבת"
+  },
+ {
+    "logo" : 2130903051,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.222417180202456,\"longitude\":31.780295483356582}",
+    "snippet" : "",
+    "title" : "ממילא",
+    "type" : "תחנת רכבת"
+  },
+{
+    "logo" : 2130903051,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.22627927899828,\"longitude\":31.792498238724463}",
+    "snippet" : "",
+    "title" : "שמעון הצדיק",
+    "type" : "תחנת רכבת"
+  },
+ {
+    "logo" : 2130903051,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.22661202730012,\"longitude\":31.78862165589406}",
+    "snippet" : "",
+    "title" : "שבטי ישראל",
+    "type" : "תחנת רכבת"
+  },
+ {
+    "logo" : 2130903051,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.2275978308337,\"longitude\":31.78028162646764}",
+    "snippet" : "",
+    "title" : "שער שכם",
+    "type" : "תחנת רכבת"
+  },
+ {
+    "logo" : 2130903051,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.232248030150345,\"longitude\":31.79942257252533}",
+    "snippet" : "",
+    "title" : "גבעת המבתר",
+    "type" : "תחנת רכבת"
+  },
+{
+    "logo" : 2130903047,
+    "position" : "{\"altitude\":NaN,\"latitude\":35.23490243133597,\"longitude\":31.830311089039057}",
+    "snippet" : "בית קפה טורקי ",
+    "title" : "בית קפה",
+    "type" : "בית קפה"
+  },
+ {
+    "position" : "{\"altitude\":NaN,\"latitude\":35.204871725954945,\"longitude\":31.783661793168818}",
+    "snippet" : "",
+    "title" : ""
+  },
+ {
+    "position" : "{\"altitude\":NaN,\"latitude\":35.20745151770586,\"longitude\":31.780541637280194}",
+    "snippet" : "",
+    "title" : ""
+  },
+{
+    "position" : "{\"altitude\":NaN,\"latitude\":35.212611101207585,\"longitude\":31.780151609833723}",
+    "snippet" : "",
+    "title" : ""
+  },
+ {
+    "position" : "{\"altitude\":NaN,\"latitude\":35.21686550687025,\"longitude\":31.778796432973465}",
+    "snippet" : "",
+    "title" : ""
+  },
+ {
+    "position" : "{\"altitude\":NaN,\"latitude\":35.21869160118706,\"longitude\":31.778642922999424}",
+    "snippet" : "",
+    "title" : ""
+  },
+ {
+    "position" : "{\"altitude\":NaN,\"latitude\":35.219783618231986,\"longitude\":31.777051917640833}",
+    "snippet" : "",
+    "title" : ""
+  },
+{
+    "position" : "{\"altitude\":NaN,\"latitude\":35.22034124773154,\"longitude\":31.77873908385584}",
+    "snippet" : "",
+    "title" : ""
+  }
+]

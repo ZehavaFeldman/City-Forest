@@ -3,6 +3,9 @@ package com.zehava.cityforest.Models;
 import com.zehava.cityforest.Models.Coordinate;
 import com.zehava.cityforest.R;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,8 +13,8 @@ import java.util.Map;
 
 public class PointOfInterest extends Coordinate {
 
-    private String type;
-    private long logo;
+    protected String type;
+    protected long logo;
 
     public PointOfInterest(){
 
@@ -68,6 +71,15 @@ public class PointOfInterest extends Coordinate {
         else if(type.equals("בית קפה")){
             logo = R.mipmap.ic_local_cafe_black_24dp;
         }
+        else if(type.equals("מזג אויר")){
+            logo =  R.drawable.ic_cloud_1;
+        }
+        else if(type.equals("אין כניסה")){
+            logo =  R.drawable.ic_key;
+        }
+        else if(type.equals("אין תצפית")){
+            logo =  R.drawable.ic_no_vision;
+        }
         else logo = -1;
     }
 
@@ -84,8 +96,20 @@ public class PointOfInterest extends Coordinate {
         else if(type.equals("בית קפה")){
             return (long)R.mipmap.ic_local_cafe_black_24dp;
         }
+        else if(type.equals("מזג אויר")){
+            return (long) R.drawable.ic_cloud_1;
+        }
+        else if(type.equals("אין כניסה")){
+            return  (long)R.drawable.ic_key;
+        }
+        else if(type.equals("אין תצפית")){
+            return (long)R.drawable.ic_no_vision;
+        }
         else return (long) -1;
     }
 
 
 }
+
+
+
