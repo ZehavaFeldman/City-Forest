@@ -388,11 +388,32 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
             showDefaultLocation();
         }
         else {
-            String current_user_uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            if(FirebaseAuth.getInstance().getCurrentUser()!=null){
+                String current_user_uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-            if (current_user_uid.equals(getResources().getString(R.string.permitted_editor))) {
-                Intent i = new Intent(Home.this, EditorHomeActivity.class);
-                startActivity(i);
+                if (current_user_uid.equals(getResources().getString(R.string.permitted_editor))) {
+                    Intent i = new Intent(Home.this, EditorHomeActivity.class);
+                    startActivity(i);
+                }
+                else{
+                    new AlertDialog.Builder(this)
+                            .setTitle(R.string.dialog_exit_app_title)
+                            .setMessage(R.string.dialog_exit_app_body)
+                            .setPositiveButton(R.string.dialog_yes, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                           /*Exits the application*/
+                                    Intent intent = new Intent(Intent.ACTION_MAIN);
+                                    intent.addCategory(Intent.CATEGORY_HOME);
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    startActivity(intent);
+
+                                }
+                            })
+                            .setNegativeButton(R.string.dialog_cancel, null)
+                            .show();git sta
+                }
             } else {
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.dialog_exit_app_title)
@@ -441,7 +462,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
 
             clusterManagerPlugin = new ClusterManagerPlugin<>(Home.this, map);
 
-            initCameraListener();
+//            initCameraListener();
 
             myService.startCounter();
         }
@@ -1381,14 +1402,14 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
         mapView.onDestroy();
     }
 
-    protected void initCameraListener() {
-        map.addOnCameraIdleListener(clusterManagerPlugin);
-        try {
-            addItemsToClusterPlugin(R.raw.points);
-        } catch (JSONException exception) {
-            Toast.makeText(this, "Problem reading list of markers.", Toast.LENGTH_LONG).show();
-        }
-    }
+//    protected void initCameraListener() {
+//        map.addOnCameraIdleListener(clusterManagerPlugin);
+//        try {
+//            addItemsToClusterPlugin(R.raw.points);
+//        } catch (JSONException exception) {
+//            Toast.makeText(this, "Problem reading list of markers.", Toast.LENGTH_LONG).show();
+//        }
+//    }
 
     private void addItemsToClusterPlugin(int rawResourceFile) throws JSONException {
         InputStream inputStream = getResources().openRawResource(rawResourceFile);
