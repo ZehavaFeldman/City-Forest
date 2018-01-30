@@ -14,7 +14,7 @@
     <item
         android:title="@string/menu_adv_search"
         android:id="@+id/searchTracksActivity"
-        android:icon="@drawable/places_ic_search"
+        android:icon="@drawable/ic_search"
         app:showAsAction="always"
         />
 
