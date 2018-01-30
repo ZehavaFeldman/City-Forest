@@ -114,6 +114,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Locale;
@@ -158,8 +159,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
     private DatabaseReference tracks;
     private DatabaseReference points_of_interest;
     private DatabaseReference user_updates;
-    private ImageButton delete_coordinate_button;
-    private ImageButton edit_coordinate_button;
+
     private TextView likes_count;
 
     private FloatingActionButton createUserUpdate;
@@ -251,9 +251,6 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
         loading_map_progress_bar.setVisibility(View.VISIBLE);
 
         serviceIntent = new Intent(Home.this, UpdatesManagerService.class);
-
-        startService(serviceIntent); //Starting the service
-        bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE); //Binding to the service!
 
     }
 
@@ -400,6 +397,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
                 signIn();
                 return true;
             case R.id.languageActivity:
+
                 toggleLanguage();
                 return true;
 
@@ -475,9 +473,37 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
     }
 
     @Override
-    public void onUserUpdateNotify(USER_UPDATES_CLASS userUpdatesClass, int id) {
-        //Toast.makeText(this , "id: "+id, Toast.LENGTH_SHORT).show();
-       // Log.d("testingggg","testing");
+    public void onUserUpdateNotify(USER_UPDATES_CLASS userUpdatesClass, ArrayList<Marker> updateMarkers) {
+
+        if(userUpdatesClass == USER_UPDATES_CLASS.UPDATE_CREATED) {
+            for (Marker marker: updateMarkers) {
+
+                MarkerViewOptions markerViewOptions = new MarkerViewOptions()
+                        .position(marker.getPosition())
+                        .title(marker.getTitle())
+                        .snippet(marker.getSnippet());
+                map.addMarker(markerViewOptions);
+
+                markerViewOptions.getMarker().setIcon(marker.getIcon());
+
+            }
+        }
+        else if(userUpdatesClass == USER_UPDATES_CLASS.UPDATE_REMOVED){
+
+            Iterator<Marker> allMarkersIterator = map.getMarkers().iterator();
+
+            while(allMarkersIterator.hasNext()) {
+                Marker markerItemAll = allMarkersIterator.next();
+
+                for (Marker markerItemRemove : updateMarkers) {
+                    if (markerItemAll.toString().equals(markerItemRemove.toString())) {
+                        allMarkersIterator.remove();
+                        map.removeMarker(markerItemAll);
+                    }
+                }
+            }
+
+        }
     }
 
 
@@ -492,15 +518,17 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
             map.setOnMarkerClickListener(new MyOnMarkerClickListener());
             map.setStyleUrl(Style.OUTDOORS);
             showDefaultLocation();
-            showAllUserUpdates();
+
             showAllPointsOfInterest();
             showAllTracks();
+
+            startService(serviceIntent); //Starting the service
+            bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE); //Binding to the service!
 //
 //            clusterManagerPlugin = new ClusterManagerPlugin<>(Home.this, map);
 //
 //            initCameraListener();
 
-//            myService.startCounter();
         }
     }
 
@@ -593,46 +621,6 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
         });
     }
 
-    private void showAllUserUpdates() {
-        /*Reading one time from the database, we get the points of interest map list*/
-        user_updates.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
-                if(pointsMap == null) {
-                    loading_map_progress_bar.setVisibility(View.INVISIBLE);
-                    return;
-                }
-                /*Iterating all the coordinates in the list*/
-                for (Map.Entry<String, Object> entry : pointsMap.entrySet())
-                {
-                    /*For each coordinate in the database, we want to create a new marker
-                    * for it and to show the marker on the map*/
-                    Map<String, Object> point = ((Map<String, Object>) entry.getValue());
-                    /*Now the object 'cor' holds a *map* for a specific coordinate*/
-                    String positionJSON = (String) point.get("position");
-                    Position position = retrievePositionFromJson(positionJSON);
-
-                    /*Creating the marker on the map*/
-                    LatLng latlng = new LatLng(
-                            position.getLongitude(),
-                            position.getLatitude());
-
-                    String type = point.get("type").toString();
-                    addMarkerForUserUpdate(latlng, (String)point.get("title"), (String)point.get("snippet"), (int)(long)UserUpdate.whatIsTheLogoForType(type));
-                }
-                loading_map_progress_bar.setVisibility(View.INVISIBLE);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                loading_map_progress_bar.setVisibility(View.INVISIBLE);
-            }
-
-        });
-    }
-
-
 
     private void drawRoute(DirectionsRoute route) {
         // Convert LineString coordinates into LatLng[]
@@ -689,6 +677,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
 
     private void restartActivity() {
         Intent intent = getIntent();
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
         finish();
         startActivity(intent);
     }
@@ -697,7 +686,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
     private void initPopupWindow(Object object){
 
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-        View customView = inflater.inflate(R.layout.coordinate_details_popup, null);
+        View customView = inflater.inflate(R.layout.coordinate_details_popup_view, null);
 
         mPopupWindow = new PopupWindow(
                 customView,
@@ -708,10 +697,6 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
             mPopupWindow.setElevation(5.0f);
         }
 
-        delete_coordinate_button = (ImageButton)customView.findViewById(R.id.deleteCoordinateButt);
-        edit_coordinate_button = (ImageButton)customView.findViewById(R.id.editCoordinateButt);
-
-        Log.d("class", "--"+object.getClass());
         if(object.getClass().equals(MarkerView.class))
             initMarkerPopup((Marker) object, customView);
         else if(object.getClass().equals(HashMap.class))
@@ -744,10 +729,6 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
                 startActivity(intent);
             }
         });
-
-
-        delete_coordinate_button.setVisibility(View.GONE);
-        edit_coordinate_button.setVisibility(View.GONE);
 
         RatingBar ratingBar = (RatingBar)customView.findViewById(R.id.ratingBar);
         ratingBar.setVisibility(View.VISIBLE);
@@ -798,9 +779,6 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
         });
 
 
-        delete_coordinate_button.setVisibility(View.GONE);
-        edit_coordinate_button.setVisibility(View.GONE);
-
     }
 
 
@@ -833,16 +811,18 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
                 Map<String,Object> u_update = (Map<String,Object>)updates.get(key);
                 if(u_update!=null){
                     Log.d("key foud","");
-                    String created;
+                    String created, owner;
                     Date time;
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yy | HH:mm");
 
                     TextView update_created = (TextView)customView.findViewById(R.id.created);
+                    TextView update_owner= (TextView)customView.findViewById(R.id.owner);
                     if(u_update.get("uname")!=null && u_update.get("updated")!=null) {
-                        created = getResources().getString(R.string.created_by) + ": " + u_update.get("uname").toString();
+                        owner = getResources().getString(R.string.created_by) + ": " + u_update.get("uname").toString();
                         time = new Date(((Number) u_update.get("updated")).longValue()*1000);
-                        created = created + " " + getResources().getString(R.string.at)+": "+dateFormat.format(time);
+                        created =  getResources().getString(R.string.at)+": "+dateFormat.format(time);
                         update_created.setText(created);
+                        update_owner.setText(owner);
                     }
 
                     ImageView img = (ImageView)customView.findViewById(R.id.img);
@@ -1124,31 +1104,10 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
     }
 
 
-    private MarkerView addMarkerForUserUpdate(LatLng point, String title, String snippet, int logo){
-        MarkerViewOptions markerViewOptions = new MarkerViewOptions()
-                .position(point)
-                .title(title)
-                .snippet(snippet);
-        map.addMarker(markerViewOptions);
-
-        if(logo != -1) {
-            IconFactory iconFactory = IconFactory.getInstance(Home.this);
-            Icon icon = iconFactory.fromResource(logo);
-            markerViewOptions.getMarker().setIcon(icon);
-            MarkerView m = markerViewOptions.getMarker();
-            return m;
-        }
-        else {
-            MarkerView m = markerViewOptions.getMarker();
-            return m;
-        }
-    }
-
     private int type(Icon icon){
         for(int i=0;i<10;i++) {
             IconFactory iconFactory = IconFactory.getInstance(Home.this);
             Icon icon1 = iconFactory.fromResource(UserUpdate.whatIsTheLogoForId(1));
-            Log.d("icon1 2nd ", icon+" "+icon1);
             if(icon==icon1)
                 return i;
         }
@@ -1199,15 +1158,6 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
 
         int hash = ((int) (10000000*value))+id;
         return "" + hash;
-    }
-
-    private LatLng retreiveLatLngFromJson(String stringExtra) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        LatLng obj = gson.fromJson(stringExtra, LatLng.class);
-        return obj;
     }
 
 
@@ -1388,21 +1338,6 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
             }
 
 
-            if(requestCode == NEW_USER_UPDATE && resultCode == USER_UPDATE_CREATED){
-                LatLng createdUpdateCoordinateLatLang = retreiveLatLngFromJson(data.getStringExtra(CREATED_UPDATE_FOR_ZOOM));
-                String key = userUpdateHashFunction(createdUpdateCoordinateLatLang.getLatitude(),data.getIntExtra("id",0));
-                updateScreenUserUpdatesValue(key, createdUpdateCoordinateLatLang, NEW_USER_UPDATE);
-
-                map.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                        new LatLng(createdUpdateCoordinateLatLang.getLongitude(),
-                                createdUpdateCoordinateLatLang.getLatitude()), ZOOM_LEVEL_CURRENT_LOCATION));
-            }
-
-
-
-
-
-
         } catch (Exception ex) {
             Toast.makeText(Home.this, ex.toString(),
                     Toast.LENGTH_SHORT).show();
@@ -1412,51 +1347,6 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
 
     }
 
-
-
-    private void updateScreenUserUpdatesValue(final String key, final LatLng createdCoordinate, final int mode) {
-        user_updates.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
-                if(pointsMap == null)
-                    return;
-
-                Map<String, Object> point = ((Map<String, Object>)pointsMap.get(key));
-
-                if(point == null){
-                    Toast.makeText(Home.this, "point is null", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                String type = point.get("type").toString();
-                if(mode == NEW_USER_UPDATE){
-                    addMarkerForUserUpdate(createdCoordinate,
-                            (String)point.get("title"), (String)point.get("snippet"),
-                            (int)(long) UserUpdate.whatIsTheLogoForType(type));
-                }
-
-                map.setInfoWindowAdapter(new MapboxMap.InfoWindowAdapter() {
-                    @Nullable
-                    @Override
-                    public View getInfoWindow(@NonNull Marker marker) {
-
-                        LayoutInflater inflater = (LayoutInflater)   getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                        View view = inflater.inflate(R.layout.user_update_infowindow, null);
-
-                        return view;
-                    }
-                });
-
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
 
     /*In order to be able to sign out from the logged in account, I have to
         * check who is the logged in user.*/
@@ -1502,9 +1392,9 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
     protected void onDestroy() {
         super.onDestroy();
         mapView.onDestroy();
-
+//
         stopService(serviceIntent); //Starting the service
-        myService.stopCounter();
+//        myService.stopCounter();
 
     }
 
