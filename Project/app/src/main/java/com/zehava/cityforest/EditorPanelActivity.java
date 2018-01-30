@@ -345,7 +345,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     }
 
     @Override
-    public void onUserUpdateNotify(USER_UPDATES_CLASS userUpdatesClass, int id) {
+    public void onUserUpdateNotify(USER_UPDATES_CLASS userUpdatesClass, ArrayList<Marker> markers) {
 
     }
 
@@ -1086,7 +1086,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         Position tempP = Position.fromCoordinates(temp.getPosition().getLongitude(), temp.getPosition().getLatitude());
         Position newP = Position.fromCoordinates(marker.getPosition().getLongitude(), marker.getPosition().getLatitude());
         for(int i=0; i<track_positions.size();i++){
-            if(track_positions.get(i)==tempP)
+            if(track_positions.get(i).toString().equals(tempP.toString()))
                 track_positions.set(i,newP);
 
         }

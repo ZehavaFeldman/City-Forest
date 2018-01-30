@@ -58,6 +58,7 @@ import android.widget.Toast;
 
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -179,7 +180,7 @@ public class MoveablePointActivity extends AppCompatActivity implements Permissi
     }
 
     @Override
-    public void onUserUpdateNotify(USER_UPDATES_CLASS userUpdatesClass, int id) {
+    public void onUserUpdateNotify(USER_UPDATES_CLASS userUpdatesClass, ArrayList<Marker> id) {
 
     }
 
