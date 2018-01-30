@@ -147,7 +147,7 @@ public class TracksActivity extends AppCompatActivity {
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
-                        Intent i = new Intent(TracksActivity.this, SignInActivity.class);
+                        Intent i = new Intent(TracksActivity.this, Home.class);
                         startActivity(i);
                     }});
     }

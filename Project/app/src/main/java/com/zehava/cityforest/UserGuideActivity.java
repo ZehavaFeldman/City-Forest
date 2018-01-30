@@ -96,7 +96,7 @@ public class UserGuideActivity extends AppCompatActivity {
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
-                        Intent i = new Intent(UserGuideActivity.this, SignInActivity.class);
+                        Intent i = new Intent(UserGuideActivity.this, Home.class);
                         startActivity(i);
                     }});
     }

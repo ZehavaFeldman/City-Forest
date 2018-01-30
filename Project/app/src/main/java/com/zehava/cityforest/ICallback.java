@@ -1,5 +1,10 @@
 package com.zehava.cityforest;
 
+import com.mapbox.mapboxsdk.annotations.Marker;
+import com.mapbox.mapboxsdk.annotations.MarkerViewOptions;
+
+import java.util.ArrayList;
+
 /**
  * Created by avigail on 05/12/17.
  */
@@ -15,5 +20,5 @@ public interface ICallback {
     }
     void onDraggableNotify(DRAGGABLE_CALSS draggableIcall);
 
-    void onUserUpdateNotify(USER_UPDATES_CLASS userUpdatesClass, int id);
+    void onUserUpdateNotify(USER_UPDATES_CLASS userUpdatesClass, ArrayList<Marker> markers);
 }

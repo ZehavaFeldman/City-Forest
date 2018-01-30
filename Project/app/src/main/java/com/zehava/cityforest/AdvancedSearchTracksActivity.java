@@ -101,10 +101,10 @@ public class AdvancedSearchTracksActivity extends AppCompatActivity {
         spinner.setAdapter(adapter);
     }
 
-    private class ClickListener implements View.OnClickListener{
+    private class ClickListener implements View.OnClickListener {
         @Override
         public void onClick(View v) {
-            if(v.getId() == search_button.getId()){
+            if (v.getId() == search_button.getId()) {
 
                 /*Currently, we know that firebase database is able to do filters about only
                 * one parameter of track, that's why we will not have the ability right now to filter
@@ -115,12 +115,12 @@ public class AdvancedSearchTracksActivity extends AppCompatActivity {
 
                 Intent i = new Intent(AdvancedSearchTracksActivity.this, SearchTracksResultsActivity.class);
 
-                if(! starting_point.getSelectedItem().toString().equals(getResources().getString(R.string.choose_a_station)))
+                if (!starting_point.getSelectedItem().toString().equals(getResources().getString(R.string.choose_a_station)))
                     i.putExtra(Q_STARTING_POINT, starting_point.getSelectedItem().toString());
-                if(! ending_point.getSelectedItem().toString().equals(getResources().getString(R.string.choose_a_station)))
+                if (!ending_point.getSelectedItem().toString().equals(getResources().getString(R.string.choose_a_station)))
                     i.putExtra(Q_ENDING_POINT, ending_point.getSelectedItem().toString());
 
-                if(! track_level.getSelectedItem().toString().equals(getResources().getString(R.string.choose_a_level)))
+                if (!track_level.getSelectedItem().toString().equals(getResources().getString(R.string.choose_a_level)))
                     i.putExtra(Q_LEVEL, track_level.getSelectedItem().toString());
 
                 i.putExtra(Q_SEASON, season.getSelectedItem().toString());
@@ -135,25 +135,6 @@ public class AdvancedSearchTracksActivity extends AppCompatActivity {
             }
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -195,24 +176,11 @@ public class AdvancedSearchTracksActivity extends AppCompatActivity {
                 startActivity(i);
                 return true;
 
-            case R.id.signOut:
-                signOut();
-                return true;
 
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    /*Method signs out user's google account*/
-    private void signOut() {
-        FirebaseAuth.getInstance().signOut();
-        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
-                new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(Status status) {
-                        Intent i = new Intent(AdvancedSearchTracksActivity.this, SignInActivity.class);
-                        startActivity(i);
-                    }});
-    }
+
 }

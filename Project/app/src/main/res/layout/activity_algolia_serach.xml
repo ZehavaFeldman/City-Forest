@@ -16,58 +16,83 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="30dp"
         android:layout_marginBottom="15dp"
-        android:gravity="center">
+        android:layout_marginEnd="5dp"
+        android:layout_marginStart="5dp"
+        android:gravity="center"
+        android:layout_marginRight="5dp"
+        android:layout_marginLeft="5dp">
         <ImageView
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:src="@drawable/water"
-            android:layout_marginStart="15dp"
-            android:layout_marginEnd="15dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
             android:id="@+id/water"/>
         <ImageView
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:src="@drawable/bicycle"
-            android:layout_marginStart="15dp"
-            android:layout_marginEnd="15dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
             android:id="@+id/bicycle"/>
+        <!--<ImageView-->
+            <!--android:layout_width="56dp"-->
+            <!--android:layout_height="56dp"-->
+            <!--android:layout_marginStart="15dp"-->
+            <!--android:layout_marginEnd="15dp"-->
+            <!--android:src="@drawable/smoking"-->
+            <!--android:id="@+id/smoking"/>-->
         <ImageView
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:layout_marginStart="15dp"
-            android:layout_marginEnd="15dp"
-            android:src="@drawable/smoking"
-            android:id="@+id/smoking"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="15dp"
-        android:layout_marginBottom="30dp"
-        android:gravity="center">
-        <ImageView
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:layout_marginStart="15dp"
-            android:layout_marginEnd="15dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
             android:src="@drawable/cutlery"
             android:id="@+id/cutlery"/>
         <ImageView
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:src="@drawable/history"
-            android:layout_marginStart="15dp"
-            android:layout_marginEnd="15dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
             android:id="@+id/history"/>
         <ImageView
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:layout_marginStart="15dp"
-            android:layout_marginEnd="15dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
             android:src="@drawable/walking_the_dog"
             android:id="@+id/dog"/>
     </LinearLayout>
+
+    <!--<LinearLayout-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_marginTop="15dp"-->
+        <!--android:layout_marginBottom="30dp"-->
+        <!--android:gravity="center">-->
+        <!--<ImageView-->
+            <!--android:layout_width="56dp"-->
+            <!--android:layout_height="56dp"-->
+            <!--android:layout_marginStart="15dp"-->
+            <!--android:layout_marginEnd="15dp"-->
+            <!--android:src="@drawable/cutlery"-->
+            <!--android:id="@+id/cutlery"/>-->
+        <!--<ImageView-->
+            <!--android:layout_width="56dp"-->
+            <!--android:layout_height="56dp"-->
+            <!--android:src="@drawable/history"-->
+            <!--android:layout_marginStart="15dp"-->
+            <!--android:layout_marginEnd="15dp"-->
+            <!--android:id="@+id/history"/>-->
+        <!--<ImageView-->
+            <!--android:layout_width="56dp"-->
+            <!--android:layout_height="56dp"-->
+            <!--android:layout_marginStart="15dp"-->
+            <!--android:layout_marginEnd="15dp"-->
+            <!--android:src="@drawable/walking_the_dog"-->
+            <!--android:id="@+id/dog"/>-->
+    <!--</LinearLayout>-->
 
     <ListView
         android:id="@+id/listview_movies"

@@ -683,7 +683,7 @@ public class MakeOwnTrackActivity extends AppCompatActivity implements Permissio
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
-                        Intent i = new Intent(MakeOwnTrackActivity.this, SignInActivity.class);
+                        Intent i = new Intent(MakeOwnTrackActivity.this, Home.class);
                         startActivity(i);
                     }});
     }

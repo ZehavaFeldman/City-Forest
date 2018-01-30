@@ -114,7 +114,7 @@ public class AboutUsActivity extends AppCompatActivity {
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
-                        Intent i = new Intent(AboutUsActivity.this, SignInActivity.class);
+                        Intent i = new Intent(AboutUsActivity.this, Home.class);
                         startActivity(i);
                     }});
     }

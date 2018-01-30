@@ -24,7 +24,8 @@
             android:text="@string/not_here_butt"
             android:id="@+id/img"
 
-            />
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="10dp" />
 
         <TextView
             android:layout_width="match_parent"
@@ -51,6 +52,19 @@
             android:layout_centerHorizontal="true"
             android:layout_below="@+id/update_main_content"
             tools:ignore="HardcodedText"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingEnd="10dp"
+            android:paddingStart="10dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:textSize="20sp"
+            android:id="@+id/owner"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/update_minor_content"
+            tools:ignore="HardcodedText"/>
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -61,7 +75,7 @@
             android:textSize="20sp"
             android:id="@+id/created"
             android:layout_centerHorizontal="true"
-            android:layout_below="@+id/update_minor_content"
+            android:layout_below="@+id/owner"
             tools:ignore="HardcodedText"/>
 
 
@@ -73,7 +87,10 @@
             android:layout_alignParentEnd="true"
             android:text="@string/not_here_butt"
             android:id="@+id/not_here"
-            android:background="@color/colorPrimaryDark"/>
+            android:background="@color/colorPrimaryDark"
+            android:layout_marginRight="10dp"
+            android:layout_alignParentRight="true"
+            style="?android:attr/borderlessButtonStyle"/>
 
 
 
@@ -86,9 +103,8 @@
             android:id="@+id/like_wrp"
             android:gravity="center"
             android:layout_below="@+id/created"
-
             android:layout_alignParentStart="true"
-            >
+            android:layout_alignParentLeft="true">
 
 
             <ImageView
@@ -107,7 +123,7 @@
                 android:layout_gravity="end|center"
                 android:layout_marginStart="10dp"
                 android:id="@+id/update_like_count"
-                />
+                android:layout_marginLeft="10dp" />
         </LinearLayout>
 
     </RelativeLayout>

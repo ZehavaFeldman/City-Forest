@@ -99,11 +99,6 @@
         <!-- android:label="רשימת מסלולים" -->
 
         <activity
-            android:name=".SignInActivity"
-            android:screenOrientation="portrait">
-
-        </activity>
-        <activity
             android:name=".EditorHomeActivity"
             android:screenOrientation="portrait" />
         <activity

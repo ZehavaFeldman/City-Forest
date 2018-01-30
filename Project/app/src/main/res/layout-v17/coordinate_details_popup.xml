@@ -48,7 +48,8 @@
             android:layout_alignParentEnd="true"
             android:text="@string/read_more_butt"
             android:id="@+id/read_more"
-            android:background="@color/colorPrimaryDark"/>
+            android:background="@color/colorPrimaryDark"
+            style="?android:attr/borderlessButtonStyle"/>
         <RatingBar
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

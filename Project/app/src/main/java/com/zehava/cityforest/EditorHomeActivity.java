@@ -126,7 +126,7 @@ public class EditorHomeActivity extends AppCompatActivity {
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
-                        Intent i = new Intent(EditorHomeActivity.this, SignInActivity.class);
+                        Intent i = new Intent(EditorHomeActivity.this, Home.class);
                         startActivity(i);
                     }});
     }

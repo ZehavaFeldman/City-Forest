@@ -99,14 +99,14 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
         query.setHitsPerPage(HITS_PER_PAGE);
 
         dogFilter = (ImageView)findViewById(R.id.dog);
-        smockFilter = (ImageView)findViewById(R.id.smoking);
+       // smockFilter = (ImageView)findViewById(R.id.smoking);
         cutloryFilter = (ImageView)findViewById(R.id.cutlery);
         bikeFilter = (ImageView)findViewById(R.id.bicycle);
         waterFilter = (ImageView)findViewById(R.id.water);
         historyFilter = (ImageView)findViewById(R.id.history);
 
         dogFilter.setOnClickListener(this);
-        smockFilter.setOnClickListener(this);
+       // smockFilter.setOnClickListener(this);
         cutloryFilter.setOnClickListener(this);
         bikeFilter.setOnClickListener(this);
         waterFilter.setOnClickListener(this);
@@ -261,28 +261,6 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
         });
     }
 
-    private void queryPoints(String type){
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
-
-        com.google.firebase.database.Query query = reference.child("points_of_interest").orderByChild("type").equalTo(type);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    // dataSnapshot is the "point_of_interest" node with all children with type 'type'
-                    for (DataSnapshot pointsOfInterest : dataSnapshot.getChildren()) {
-                        // do something with the individual "points_of_interest"
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
-
 
 
     // Data sources
@@ -332,9 +310,9 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
             case R.id.dog:
                 queryTracks("suitable_for_dogs");
                 break;
-            case R.id.smoking:
-                queryTracks("suitable_for_families");
-                break;
+//            case R.id.smoking:
+//                queryTracks("suitable_for_families");
+//                break;
             case R.id.water:
                 queryTracks("has_water");
                 break;
