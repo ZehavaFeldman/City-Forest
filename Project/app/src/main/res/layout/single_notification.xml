@@ -37,7 +37,9 @@
         android:gravity="center_horizontal"
         android:paddingBottom="20dp"
         android:paddingEnd="26dp"
-        android:paddingStart="28dp">
+        android:paddingStart="28dp"
+        android:paddingRight="26dp"
+        android:paddingLeft="28dp">
 
         <LinearLayout
             android:layout_width="match_parent"

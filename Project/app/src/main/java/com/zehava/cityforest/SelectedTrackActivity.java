@@ -25,8 +25,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.mapbox.mapboxsdk.Mapbox;
-
+//import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.MapboxAccountManager;
 import com.mapbox.mapboxsdk.annotations.Icon;
 import com.mapbox.mapboxsdk.annotations.IconFactory;
 import com.mapbox.mapboxsdk.annotations.MarkerView;
@@ -57,10 +57,8 @@ import static com.zehava.cityforest.Constants.ZOOM_LEVEL_CURRENT_LOCATION;
 import static com.zehava.cityforest.Constants.ZOOM_LEVEL_LOCATION;
 import static com.mapbox.services.android.telemetry.location.AndroidLocationEngine.getLocationEngine;
 
-public class SelectedTrackActivity extends AppCompatActivity implements PermissionsListener {
+public class SelectedTrackActivity extends AppCompatActivity {
 
-    private MapView mapView;
-    private MapboxMap map;
     private FirebaseDatabase database;
     private DatabaseReference tracks;
     private DatabaseReference points_of_interest;
@@ -89,20 +87,21 @@ public class SelectedTrackActivity extends AppCompatActivity implements Permissi
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Mapbox.getInstance(this, getString(R.string.access_token));
+//        Mapbox.getInstance(this, getString(R.string.access_token));
+//
+//        MapboxAccountManager.start(this, getString(R.string.access_token));
         setContentView(R.layout.activity_selected_track);
 
         // Get the location engine object for later use.
-        locationEngine = getLocationEngine(this);
-        locationEngine.activate();
-
-        mapView = (MapView) findViewById(R.id.mapview);
-        mapView.onCreate(savedInstanceState);
-        mapView.getMapAsync(new myOnMapReadyCallback());
-
-        database = FirebaseDatabase.getInstance();
-        tracks = database.getReference("tracks");
-        points_of_interest = database.getReference("points_of_interest");
+//        locationEngine = getLocationEngine(this);
+//        locationEngine.activate();
+//
+//        mapView = (MapView) findViewById(R.id.mapview);
+//        mapView.onCreate(savedInstanceState);
+//        mapView.getMapAsync(new myOnMapReadyCallback());
+//
+//        database = FirebaseDatabase.getInstance();
+//        tracks = database.getReference("tracks");
 
         Intent i = getIntent();
         track_db_key = i.getStringExtra(SELECTED_TRACK);
@@ -129,27 +128,34 @@ public class SelectedTrackActivity extends AppCompatActivity implements Permissi
 
         initiateScreenValues();
 
-        floatingActionButton = (FloatingActionButton) findViewById(R.id.location_toggle_fab);
-        floatingActionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (map != null) {
-                    toggleGps(!map.isMyLocationEnabled());
-                }
-            }
-        });
+//        floatingActionButton = (FloatingActionButton) findViewById(R.id.location_toggle_fab);
+//        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                if (map != null) {
+//                    toggleGps(!map.isMyLocationEnabled());
+//                }
+//            }
+//        });
     }
 
 
     private void initiateScreenValues() {
+
+
+
+       FirebaseDatabase database = FirebaseDatabase.getInstance();
+//        DatabaseReference tracks = "https://fir-cityforest.firebaseio.com/tracks";
+        DatabaseReference tracks = database.getReference("tracks");
+
         tracks.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Map<String, Object> tracksMap = (Map<String, Object>) dataSnapshot.getValue();
                 Map<String, Object> track = (Map<String, Object>) tracksMap.get(track_db_key);
 
-                DirectionsRoute route = retrieveRouteFromJson((String) track.get("route"));
-                drawRoute(route);
+//                DirectionsRoute route = retrieveRouteFromJson((String) track.get("route"));
+//                drawRoute(route);
 
                 track_name_field.setText((String) track.get("track_name"));
                 starting_point_field.setText((String) track.get("starting_point"));
@@ -165,12 +171,12 @@ public class SelectedTrackActivity extends AppCompatActivity implements Permissi
                 suitable_for_dogs_checkbox.setChecked((boolean) track.get("suitable_for_dogs"));
                 is_romantic_checkbox.setChecked((boolean) track.get("is_romantic"));
 
-                LatLngBounds latLngBounds = new LatLngBounds.Builder()
-                        .include(retrieveLatLngFromJson((String)track.get("starting_point_json_latlng")))
-                        .include(retrieveLatLngFromJson((String)track.get("ending_point_json_latlng")))
-                        .build();
-
-                map.animateCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds, 200), 100);
+//                LatLngBounds latLngBounds = new LatLngBounds.Builder()
+//                        .include(retrieveLatLngFromJson((String)track.get("starting_point_json_latlng")))
+//                        .include(retrieveLatLngFromJson((String)track.get("ending_point_json_latlng")))
+//                        .build();
+//
+//                map.animateCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds, 200), 100);
             }
 
             @Override
@@ -180,246 +186,246 @@ public class SelectedTrackActivity extends AppCompatActivity implements Permissi
         });
     }
 
-    private void drawRoute(DirectionsRoute route) {
-        // Convert LineString coordinates into LatLng[]
-        LineString lineString = LineString.fromPolyline(route.getGeometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
-        List<Position> coordinates = lineString.getCoordinates();
-        LatLng[] points = new LatLng[coordinates.size()];
-        for (int i = 0; i < coordinates.size(); i++) {
-            points[i] = new LatLng(
-                    coordinates.get(i).getLatitude(),
-                    coordinates.get(i).getLongitude());
-        }
+//    private void drawRoute(DirectionsRoute route) {
+//        // Convert LineString coordinates into LatLng[]
+//        LineString lineString = LineString.fromPolyline(route.getGeometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
+//        List<Position> coordinates = lineString.getCoordinates();
+//        LatLng[] points = new LatLng[coordinates.size()];
+//        for (int i = 0; i < coordinates.size(); i++) {
+//            points[i] = new LatLng(
+//                    coordinates.get(i).getLatitude(),
+//                    coordinates.get(i).getLongitude());
+//        }
+//
+//        // Draw Points on MapView
+//        PolylineOptions routeLine = new PolylineOptions()
+//                .add(points)
+//                .color(Color.RED)
+//                .width(ROUTE_LINE_WIDTH);
+//        if (map == null)
+//            Toast.makeText(this, "Could not draw the route on the map", Toast.LENGTH_LONG).show();
+//        else
+//            map.addPolyline(routeLine);
+//    }
+//
+//    public DirectionsRoute retrieveRouteFromJson(String route) {
+//        GsonBuilder gsonBuilder = new GsonBuilder();
+//        gsonBuilder.serializeSpecialFloatingPointValues();
+//
+//        Gson gson = gsonBuilder.create();
+//        DirectionsRoute obj = gson.fromJson(route, DirectionsRoute.class);
+//        return obj;
+//    }
 
-        // Draw Points on MapView
-        PolylineOptions routeLine = new PolylineOptions()
-                .add(points)
-                .color(Color.RED)
-                .width(ROUTE_LINE_WIDTH);
-        if (map == null)
-            Toast.makeText(this, "Could not draw the route on the map", Toast.LENGTH_LONG).show();
-        else
-            map.addPolyline(routeLine);
-    }
-
-    public DirectionsRoute retrieveRouteFromJson(String route) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        DirectionsRoute obj = gson.fromJson(route, DirectionsRoute.class);
-        return obj;
-    }
-
-    private class myOnMapReadyCallback implements OnMapReadyCallback {
-        @Override
-        public void onMapReady(MapboxMap mapboxMap) {
-            map = mapboxMap;
-            map.setStyleUrl(Style.OUTDOORS);
-            showDefaultLocation();
-            showAllPointsOfInterest();
-        }
-    }
+//    private class myOnMapReadyCallback implements OnMapReadyCallback {
+//        @Override
+//        public void onMapReady(MapboxMap mapboxMap) {
+//            map = mapboxMap;
+//            map.setStyleUrl(Style.OUTDOORS);
+//            showDefaultLocation();
+//            showAllPointsOfInterest();
+//        }
+//    }
 
 
-    private void showDefaultLocation() {
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                new LatLng(DEFAULT_JERUSALEM_COORDINATE.getLatitude(),
-                        DEFAULT_JERUSALEM_COORDINATE.getLongitude()), 10));
-    }
+//    private void showDefaultLocation() {
+//        map.animateCamera(CameraUpdateFactory.newLatLngZoom(
+//                new LatLng(DEFAULT_JERUSALEM_COORDINATE.getLatitude(),
+//                        DEFAULT_JERUSALEM_COORDINATE.getLongitude()), 10));
+//    }
 
-    private void showAllPointsOfInterest() {
-        /*Reading one time from the database, we get the points of interest map list*/
-        points_of_interest.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
-                if(pointsMap == null)
-                    return;
-                /*Iterating all the coordinates in the list*/
-                for (Map.Entry<String, Object> entry : pointsMap.entrySet())
-                {
-                    /*For each coordinate in the database, we want to create a new marker
-                    * for it and to show the marker on the map*/
-                    Map<String, Object> point = ((Map<String, Object>) entry.getValue());
-                    /*Now the object 'cor' holds a *map* for a specific coordinate*/
-                    String positionJSON = (String) point.get("position");
-                    Position position = retrievePositionFromJson(positionJSON);
+//    private void showAllPointsOfInterest() {
+//        /*Reading one time from the database, we get the points of interest map list*/
+//        points_of_interest.addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
+//                if(pointsMap == null)
+//                    return;
+//                /*Iterating all the coordinates in the list*/
+//                for (Map.Entry<String, Object> entry : pointsMap.entrySet())
+//                {
+//                    /*For each coordinate in the database, we want to create a new marker
+//                    * for it and to show the marker on the map*/
+//                    Map<String, Object> point = ((Map<String, Object>) entry.getValue());
+//                    /*Now the object 'cor' holds a *map* for a specific coordinate*/
+//                    String positionJSON = (String) point.get("position");
+//                    Position position = retrievePositionFromJson(positionJSON);
+//
+//                    /*Creating the marker on the map*/
+//                    LatLng latlng = new LatLng(
+//                            position.getLongitude(),
+//                            position.getLatitude());
+//
+//                    long logo = (long)point.get("logo");
+//                    addMarkerForPointOfInterest(latlng, (String)point.get("title"), (String)point.get("snippet"), (int) logo);
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {}
+//
+//        });
+//    }
 
-                    /*Creating the marker on the map*/
-                    LatLng latlng = new LatLng(
-                            position.getLongitude(),
-                            position.getLatitude());
-
-                    long logo = (long)point.get("logo");
-                    addMarkerForPointOfInterest(latlng, (String)point.get("title"), (String)point.get("snippet"), (int) logo);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {}
-
-        });
-    }
-
-    private MarkerView addMarkerForPointOfInterest(LatLng point, String title, String snippet, int logo){
-        MarkerViewOptions markerViewOptions = new MarkerViewOptions()
-                .position(point)
-                .title(title)
-                .snippet(snippet);
-        map.addMarker(markerViewOptions);
-
-        if(logo != -1) {
-            IconFactory iconFactory = IconFactory.getInstance(SelectedTrackActivity.this);
-            Icon icon = iconFactory.fromResource(logo);
-            markerViewOptions.getMarker().setIcon(icon);
-        }
-        return markerViewOptions.getMarker();
-    }
+//    private MarkerView addMarkerForPointOfInterest(LatLng point, String title, String snippet, int logo){
+//        MarkerViewOptions markerViewOptions = new MarkerViewOptions()
+//                .position(point)
+//                .title(title)
+//                .snippet(snippet);
+//        map.addMarker(markerViewOptions);
+//
+//        if(logo != -1) {
+//            IconFactory iconFactory = IconFactory.getInstance(SelectedTrackActivity.this);
+//            Icon icon = iconFactory.fromResource(logo);
+//            markerViewOptions.getMarker().setIcon(icon);
+//        }
+//        return markerViewOptions.getMarker();
+//    }
 
     /*Method get String that represents a Position Json object.
     * Method retrieve the position object and returns it*/
-    public Position retrievePositionFromJson(String posJs) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        Position obj = gson.fromJson(posJs, Position.class);
-        return obj;
-    }
-
-    public LatLng retrieveLatLngFromJson(String posJs) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        LatLng obj = gson.fromJson(posJs, LatLng.class);
-        return obj;
-    }
-
-
-    private void toggleGps(boolean enableGps) {
-        if (enableGps) {
-            // Check if user has granted location permission
-            permissionsManager = new PermissionsManager(this);
-            if (!PermissionsManager.areLocationPermissionsGranted(this)) {
-                permissionsManager.requestLocationPermissions(this);
-            } else {
-                enableLocation(true);
-            }
-        } else {
-            enableLocation(false);
-            showDefaultLocation();
-        }
-    }
-
-    private void enableLocation(boolean enabled) {
-        if (enabled) {
-            // If we have the last location of the user, we can move the camera to that position.
-            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
-            }
-            Location lastLocation = locationEngine.getLastLocation();
-            if (lastLocation != null) {
-                map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLocation), ZOOM_LEVEL_LOCATION));
-            }
-
-            locationEngineListener = new LocationEngineListener() {
-                @Override
-                public void onConnected() {
-                    // No action needed here.
-                }
-
-                @Override
-                public void onLocationChanged(Location location) {
-                    if (location != null) {
-                        // Move the map camera to where the user location is and then remove the
-                        // listener so the camera isn't constantly updating when the user location
-                        // changes. When the user disables and then enables the location again, this
-                        // listener is registered again and will adjust the camera once again.
-                        map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location), ZOOM_LEVEL_LOCATION));
-                        locationEngine.removeLocationEngineListener(this);
-                    }
-                }
-            };
-            locationEngine.addLocationEngineListener(locationEngineListener);
-            floatingActionButton.setImageResource(R.drawable.ic_location_disabled_24dp);
-        } else {
-            floatingActionButton.setImageResource(R.drawable.ic_my_location_24dp);
-        }
-        // Enable or disable the location layer on the map
-        map.setMyLocationEnabled(enabled);
-    }
-
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        permissionsManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-    @Override
-    public void onExplanationNeeded(List<String> permissionsToExplain) {
-        Toast.makeText(this, "This app needs location permissions in order to show its functionality.",
-                Toast.LENGTH_LONG).show();
-    }
-
-    @Override
-    public void onPermissionResult(boolean granted) {
-        if (granted) {
-            enableLocation(true);
-        } else {
-            Toast.makeText(this, "You didn't grant location permissions.",
-                    Toast.LENGTH_LONG).show();
-            finish();
-        }
-    }
-
-
-
-
-
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        mapView.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        mapView.onPause();
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        mapView.onSaveInstanceState(outState);
-    }
-
-    @Override
-    public void onLowMemory() {
-        super.onLowMemory();
-        mapView.onLowMemory();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mapView.onDestroy();
-        // Ensure no memory leak occurs if we register the location listener but the call hasn't
-        // been made yet.
-        if (locationEngineListener != null) {
-            locationEngine.removeLocationEngineListener(locationEngineListener);
-        }
-    }
+//    public Position retrievePositionFromJson(String posJs) {
+//        GsonBuilder gsonBuilder = new GsonBuilder();
+//        gsonBuilder.serializeSpecialFloatingPointValues();
+//
+//        Gson gson = gsonBuilder.create();
+//        Position obj = gson.fromJson(posJs, Position.class);
+//        return obj;
+//    }
+//
+//    public LatLng retrieveLatLngFromJson(String posJs) {
+//        GsonBuilder gsonBuilder = new GsonBuilder();
+//        gsonBuilder.serializeSpecialFloatingPointValues();
+//
+//        Gson gson = gsonBuilder.create();
+//        LatLng obj = gson.fromJson(posJs, LatLng.class);
+//        return obj;
+//    }
+//
+//
+//    private void toggleGps(boolean enableGps) {
+//        if (enableGps) {
+//            // Check if user has granted location permission
+//            permissionsManager = new PermissionsManager(this);
+//            if (!PermissionsManager.areLocationPermissionsGranted(this)) {
+//                permissionsManager.requestLocationPermissions(this);
+//            } else {
+//                enableLocation(true);
+//            }
+//        } else {
+//            enableLocation(false);
+//            showDefaultLocation();
+//        }
+//    }
+//
+//    private void enableLocation(boolean enabled) {
+//        if (enabled) {
+//            // If we have the last location of the user, we can move the camera to that position.
+//            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//                // TODO: Consider calling
+//                //    ActivityCompat#requestPermissions
+//                // here to request the missing permissions, and then overriding
+//                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+//                //                                          int[] grantResults)
+//                // to handle the case where the user grants the permission. See the documentation
+//                // for ActivityCompat#requestPermissions for more details.
+//                return;
+//            }
+//            Location lastLocation = locationEngine.getLastLocation();
+//            if (lastLocation != null) {
+//                map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLocation), ZOOM_LEVEL_LOCATION));
+//            }
+//
+//            locationEngineListener = new LocationEngineListener() {
+//                @Override
+//                public void onConnected() {
+//                    // No action needed here.
+//                }
+//
+//                @Override
+//                public void onLocationChanged(Location location) {
+//                    if (location != null) {
+//                        // Move the map camera to where the user location is and then remove the
+//                        // listener so the camera isn't constantly updating when the user location
+//                        // changes. When the user disables and then enables the location again, this
+//                        // listener is registered again and will adjust the camera once again.
+//                        map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location), ZOOM_LEVEL_LOCATION));
+//                        locationEngine.removeLocationEngineListener(this);
+//                    }
+//                }
+//            };
+//            locationEngine.addLocationEngineListener(locationEngineListener);
+//            floatingActionButton.setImageResource(R.drawable.ic_location_disabled_24dp);
+//        } else {
+//            floatingActionButton.setImageResource(R.drawable.ic_my_location_24dp);
+//        }
+//        // Enable or disable the location layer on the map
+//        map.setMyLocationEnabled(enabled);
+//    }
+//
+//
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+//        permissionsManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//    }
+//
+//    @Override
+//    public void onExplanationNeeded(List<String> permissionsToExplain) {
+//        Toast.makeText(this, "This app needs location permissions in order to show its functionality.",
+//                Toast.LENGTH_LONG).show();
+//    }
+//
+//    @Override
+//    public void onPermissionResult(boolean granted) {
+//        if (granted) {
+//            enableLocation(true);
+//        } else {
+//            Toast.makeText(this, "You didn't grant location permissions.",
+//                    Toast.LENGTH_LONG).show();
+//            finish();
+//        }
+//    }
+//
+//
+//
+//
+//
+//
+//    @Override
+//    public void onResume() {
+//        super.onResume();
+//        mapView.onResume();
+//    }
+//
+//    @Override
+//    public void onPause() {
+//        super.onPause();
+//        mapView.onPause();
+//    }
+//
+//    @Override
+//    public void onSaveInstanceState(Bundle outState) {
+//        super.onSaveInstanceState(outState);
+//        mapView.onSaveInstanceState(outState);
+//    }
+//
+//    @Override
+//    public void onLowMemory() {
+//        super.onLowMemory();
+//        mapView.onLowMemory();
+//    }
+//
+//    @Override
+//    protected void onDestroy() {
+//        super.onDestroy();
+//        mapView.onDestroy();
+//        // Ensure no memory leak occurs if we register the location listener but the call hasn't
+//        // been made yet.
+//        if (locationEngineListener != null) {
+//            locationEngine.removeLocationEngineListener(locationEngineListener);
+//        }
+//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

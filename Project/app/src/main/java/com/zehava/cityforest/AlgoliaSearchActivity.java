@@ -12,6 +12,8 @@ import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
@@ -51,6 +53,7 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
     private int lastRequestedPage;
     private int lastDisplayedPage;
     private boolean endReached;
+    private String filter =null;
 
     // UI:
     private SearchView searchView;
@@ -73,6 +76,11 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+
         setContentView(R.layout.activity_algolia_serach);
 
         // Bind UI components.
@@ -128,6 +136,48 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
     private void search() {
         final int currentSearchSeqNo = ++lastSearchedSeqNo;
         query.setQuery(searchView.getQuery().toString());
+        query.setFilters(null);
+        lastRequestedPage = 0;
+        lastDisplayedPage = -1;
+        endReached = false;
+        index.searchAsync(query, new CompletionHandler() {
+            @Override
+            public void requestCompleted(JSONObject content, AlgoliaException error) {
+                if (content != null && error == null) {
+                    // NOTE: Check that the received results are newer that the last displayed results.
+                    //
+                    // Rationale: Although TCP imposes a server to send responses in the same order as
+                    // requests, nothing prevents the system from opening multiple connections to the
+                    // same server, nor the Algolia client to transparently switch to another server
+                    // between two requests. Therefore the order of responses is not guaranteed.
+                    if (currentSearchSeqNo <= lastDisplayedSeqNo) {
+                        return;
+                    }
+
+                    List<HighlightedResult<PointOfInterest>> results = resultsParser.parseResults(content);
+                    if (results.isEmpty()) {
+                        endReached = true;
+                    } else {
+                        moviesListAdapter.clear();
+                        moviesListAdapter.addAll(results);
+                        moviesListAdapter.notifyDataSetChanged();
+                        lastDisplayedSeqNo = currentSearchSeqNo;
+                        lastDisplayedPage = 0;
+                    }
+
+                    // Scroll the list back to the top.
+                    moviesListView.smoothScrollToPosition(0);
+                }
+            }
+        });
+    }
+
+
+
+    private void filter() {
+        final int currentSearchSeqNo = ++lastSearchedSeqNo;
+        query.setFilters(filter);
+        query.setQuery(null);
         lastRequestedPage = 0;
         lastDisplayedPage = -1;
         endReached = false;
@@ -289,13 +339,15 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
                 queryTracks("has_water");
                 break;
             case R.id.cutlery:
-                queryPoints("בית קפה");
+                filter="type:\"בית קפה\"";
+                filter();
                 break;
             case R.id.bicycle:
                 queryTracks("suitable_for_bikes");
                 break;
             case R.id.history:
-                queryPoints("אתר היסטורי");
+                filter="type:\"אתר היסטורי\"";
+                filter();
                 break;
         }
     }

@@ -12,11 +12,20 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 
 import com.google.android.gms.maps.LocationSource;
-import com.mapbox.mapboxsdk.Mapbox;
+//import com.mapbox.mapboxsdk.Mapbox;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.mapbox.mapboxsdk.MapboxAccountManager;
 import com.mapbox.mapboxsdk.annotations.Icon;
 import com.mapbox.mapboxsdk.annotations.IconFactory;
 import com.mapbox.mapboxsdk.annotations.Marker;
+import com.mapbox.mapboxsdk.annotations.MarkerView;
 import com.mapbox.mapboxsdk.annotations.MarkerViewOptions;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.constants.Style;
@@ -24,12 +33,14 @@ import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
+import com.mapbox.mapboxsdk.maps.Projection;
 import com.mapbox.services.android.telemetry.location.LocationEngine;
 import com.mapbox.services.android.telemetry.location.LocationEngineListener;
 import com.mapbox.services.android.telemetry.permissions.PermissionsListener;
 import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
 import com.mapbox.services.commons.ServicesException;
 import com.mapbox.services.commons.models.Position;
+import com.mapbox.services.directions.v5.models.DirectionsRoute;
 import com.mapbox.services.geocoding.v5.GeocodingCriteria;
 import com.mapbox.services.geocoding.v5.MapboxGeocoding;
 import com.mapbox.services.geocoding.v5.models.CarmenFeature;
@@ -46,6 +57,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import java.util.List;
+import java.util.Map;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -70,12 +82,17 @@ public class MoveablePointActivity extends AppCompatActivity implements Permissi
     private FloatingActionButton floatingActionButton;
     private Marker droppedMarker;
     private DragAndDrop hoveringMarker;
+    private Projection projection;
+    private FirebaseDatabase database;
+    private DatabaseReference points_of_interest;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Mapbox.getInstance(this, getString(R.string.access_token));
+        MapboxAccountManager.start(this, getString(R.string.access_token));
+//        Mapbox.getInstance(this, getString(R.string.access_token));
         setContentView(R.layout.moveable_point_activity);
 
         floatingActionButton = (FloatingActionButton) findViewById(R.id.location_toggle_fab);
@@ -90,8 +107,8 @@ public class MoveablePointActivity extends AppCompatActivity implements Permissi
 
 
 
-
-
+        database = FirebaseDatabase.getInstance();
+        points_of_interest = database.getReference("points_of_interest");
         // Get the location engine object for later use.
         locationEngine = getLocationEngine(this);
         locationEngine.activate();
@@ -100,16 +117,6 @@ public class MoveablePointActivity extends AppCompatActivity implements Permissi
         mapView = (MapView) findViewById(R.id.mapview);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(new myOnMapReadyCallback());
-        //mapView.setClickable(false);
-
-
-//        mapView.setOnTouchListener(new View.OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View v, MotionEvent event) {
-//
-//                return true;
-//            }
-//        });
 
 
         hoveringMarker = new DragAndDrop(this,this);
@@ -144,6 +151,9 @@ public class MoveablePointActivity extends AppCompatActivity implements Permissi
                 // Placing the marker on the mapboxMap as soon as possible causes the illusion
                 // that the hovering marker and dropped marker are the same.
                 droppedMarker = mapboxMap.addMarker(new MarkerViewOptions().position(latLng));
+                IconFactory iconFactory = IconFactory.getInstance(MoveablePointActivity.this);
+                Icon icon = iconFactory.fromResource(R.drawable.blue_marker);
+                droppedMarker.setIcon(icon);
 
                 // Finally we get the geocoding information
                 reverseGeocode(latLng);
@@ -153,9 +163,13 @@ public class MoveablePointActivity extends AppCompatActivity implements Permissi
         if(draggableIcall == DRAGGABLE_CALSS.VIEW_TOUCHED){
             if (mapboxMap != null && droppedMarker!=null) {
 
-                mapboxMap.removeMarker(droppedMarker);
+
 
                 // Lastly, set the hovering marker back to visible.
+                PointF point = mapboxMap.getProjection().toScreenLocation(droppedMarker.getPosition());
+                mapboxMap.removeMarker(droppedMarker);
+                hoveringMarker.setX(point.x-(hoveringMarker.getWidth()/2));
+                hoveringMarker.setY(point.y-hoveringMarker.getHeight());
                 hoveringMarker.setVisibility(View.VISIBLE);
                 droppedMarker = null;
             }
@@ -178,13 +192,85 @@ public class MoveablePointActivity extends AppCompatActivity implements Permissi
             mapboxMap.setOnMarkerClickListener(new MapboxMap.OnMarkerClickListener() {
                 @Override
                 public boolean onMarkerClick(@NonNull Marker marker) {
+                    PointF point = mapboxMap.getProjection().toScreenLocation(marker.getPosition());
+
+                    hoveringMarker.setX(point.x-(hoveringMarker.getWidth()/2));
+                    hoveringMarker.setY(point.y-hoveringMarker.getHeight());
+
                     hoveringMarker.setVisibility(View.VISIBLE);
+                    droppedMarker = marker;
                     return true;
                 }
             });
 
+            showAllPointsOfInterest();
+
             showDefaultLocation();
         }
+    }
+
+
+    private MarkerView addMarkerForPointOfInterest(LatLng point, String title, String snippet){
+        MarkerViewOptions markerViewOptions = new MarkerViewOptions()
+                .position(point)
+                .title(title)
+                .snippet(snippet);
+        mapboxMap.addMarker(markerViewOptions);
+
+        IconFactory iconFactory = IconFactory.getInstance(MoveablePointActivity.this);
+        Icon icon = iconFactory.fromResource(R.drawable.blue_marker);
+        markerViewOptions.getMarker().setIcon(icon);
+        return markerViewOptions.getMarker();
+    }
+
+
+    public Position retrievePositionFromJson(String posJs) {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.serializeSpecialFloatingPointValues();
+
+        Gson gson = gsonBuilder.create();
+        Position obj = gson.fromJson(posJs, Position.class);
+        return obj;
+    }
+
+
+    private void showAllPointsOfInterest() {
+        /*Reading one time from the database, we get the points of interest map list*/
+
+        points_of_interest.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
+                if(pointsMap == null) {
+
+                    return;
+                }
+                /*Iterating all the coordinates in the list*/
+                for (Map.Entry<String, Object> entry : pointsMap.entrySet())
+                {
+                    /*For each coordinate in the database, we want to create a new marker
+                    * for it and to show the marker on the map*/
+                    Map<String, Object> point = ((Map<String, Object>) entry.getValue());
+                    /*Now the object 'cor' holds a *map* for a specific coordinate*/
+                    String positionJSON = (String) point.get("position");
+                    Position position = retrievePositionFromJson(positionJSON);
+
+                    /*Creating the marker on the map*/
+                    LatLng latlng = new LatLng(
+                            position.getLongitude(),
+                            position.getLatitude());
+
+                    addMarkerForPointOfInterest(latlng, (String)point.get("title"), (String)point.get("snippet"));
+                }
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+
+        });
     }
 
 

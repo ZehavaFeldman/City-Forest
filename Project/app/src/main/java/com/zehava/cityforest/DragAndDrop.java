@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.mapbox.mapboxsdk.annotations.Marker;
+import com.mapbox.mapboxsdk.maps.Projection;
 import com.mapbox.services.commons.models.Position;
 
 /**
@@ -21,6 +22,7 @@ public class DragAndDrop extends ImageView implements View.OnTouchListener {
     float dY;
     private ICallback iCallback;
 
+
     public DragAndDrop(Context context)
     {
         super(context);
@@ -31,6 +33,7 @@ public class DragAndDrop extends ImageView implements View.OnTouchListener {
     {
         super(context);
         iCallback = callback;
+
         setOnTouchListener(this);
 
     }

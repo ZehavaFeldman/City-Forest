@@ -12,6 +12,9 @@
     <string name="dialog_exit_app_title">יציאה מעיר יער</string>
     <string name="dialog_exit_app_body">האם הנך בטוח אתה רוצה לעזוב את האפליקציה</string>
     <string name="dialog_yes">כן</string>
+    <string name="dialog_change_point">מה ברצונך לעשות עם נקודה זו</string>
+    <string name="dialog_remove_point">למחוק</string>
+    <string name="dialog_move_point">להזיז</string>
     <!--End of dialogs -->
 
 
@@ -62,6 +65,11 @@
     <string name="ending_point_txt_heb">סיום -</string>
     <string name="no_track_name">-ללא שם-</string>
     <string name="update_button">עדכן</string>
+
+    <string-array name="spinner_list_item_array">
+        <item>התנתק</item>
+        <item>פורצי דרכים</item>
+    </string-array>
 
     <string-array name="train_stations">
         <item>בחר תחנה</item>
@@ -144,6 +152,7 @@
     <string name="tracks_menu">רשימת מסלולים</string>
     <string name="edit_tracks_button">עריכת מסלולים</string>
     <string name="sign_out_action">התנתק</string>
+    <string name="sign_in_action">התחבר</string>
     <string name="language">שפה</string>
 
     <string name="home_button">בית</string>

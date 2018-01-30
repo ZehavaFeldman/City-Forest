@@ -6,8 +6,8 @@
 
 
     <item
-        android:id="@+id/signOut"
-        android:title="@string/sign_out_action"
+        android:id="@+id/signIn"
+        android:title="@string/sign_in_action"
         android:visible="true"
         app:showAsAction="ifRoom" />
 

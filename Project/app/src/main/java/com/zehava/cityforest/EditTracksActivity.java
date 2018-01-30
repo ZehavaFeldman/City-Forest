@@ -10,7 +10,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import com.mapbox.mapboxsdk.Mapbox;
+//import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.MapboxAccountManager;
 import com.zehava.cityforest.Models.Track;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -47,7 +48,8 @@ public class EditTracksActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Mapbox.getInstance(this, getString(R.string.access_token));
+//        Mapbox.getInstance(this, getString(R.string.access_token));
+        MapboxAccountManager.start(this,getString(R.string.access_token));
         setContentView(R.layout.activity_edit_tracks);
 
         mapView = (MapView) findViewById(R.id.mapview);

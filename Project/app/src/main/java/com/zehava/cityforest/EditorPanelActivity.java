@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.graphics.PointF;
 import android.location.Location;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -23,7 +24,10 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -34,7 +38,12 @@ import android.widget.RatingBar;
 import android.widget.LinearLayout;
 import android.widget.ImageView;
 
-import com.mapbox.mapboxsdk.Mapbox;
+//import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.MapboxAccountManager;
+import com.mapbox.services.geocoding.v5.GeocodingCriteria;
+import com.mapbox.services.geocoding.v5.MapboxGeocoding;
+import com.mapbox.services.geocoding.v5.models.CarmenFeature;
+import com.mapbox.services.geocoding.v5.models.GeocodingResponse;
 import com.zehava.cityforest.Models.Coordinate;
 import com.zehava.cityforest.Models.Track;
 import com.google.android.gms.auth.api.Auth;
@@ -120,7 +129,7 @@ import static com.zehava.cityforest.Constants.ZOOM_LEVEL_CURRENT_LOCATION;
 import static com.zehava.cityforest.Constants.ZOOM_LEVEL_MARKER_CLICK;
 import static com.mapbox.services.android.telemetry.location.AndroidLocationEngine.getLocationEngine;
 
-public class EditorPanelActivity extends AppCompatActivity implements PermissionsListener {
+public class EditorPanelActivity extends AppCompatActivity implements PermissionsListener , ICallback {
 
     private MapView mapView;
     private MapboxMap map;
@@ -144,6 +153,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
     /*Count how many coordinates selected for creating a track (max of 25 coordinates)*/
     private int count_coordinates_selected = 0;
+    private int markerIndex;
     private ArrayList<Double> track_coordinates = new ArrayList<>();
     private ArrayList<Marker> track_markers = new ArrayList<>();
     private ArrayList<Position> track_positions = new ArrayList<>();
@@ -160,6 +170,9 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     private PopupWindow mPopupWindow;
     private RelativeLayout mRelativeLayout;
 
+    private Marker droppedMarker;
+    private DragAndDrop hoveringMarker;
+
     String uid;
 
 
@@ -167,16 +180,14 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-//        String languageToLoad  = "he"; // your language
-//        Locale locale = new Locale(languageToLoad);
-//        Locale.setDefault(locale);
-//        Configuration config = new Configuration();
-//        config.locale = locale;
-//        getBaseContext().getResources().updateConfiguration(config,
-//                getBaseContext().getResources().getDisplayMetrics());
-
         /*Mapbox and firebase initializations*/
-        Mapbox.getInstance(this, getString(R.string.access_token));
+//        Mapbox.getInstance(this, getString(R.string.access_token));
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+
+
+        MapboxAccountManager.start(this,getString(R.string.access_token));
         setContentView(R.layout.activity_editor_panel);
 
         // Get the location engine object for later use.
@@ -186,6 +197,15 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         mapView = (MapView) findViewById(R.id.mapview);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(new myOnMapReadyCallback());
+
+        hoveringMarker = new DragAndDrop(this,this);
+        hoveringMarker.setImageResource(R.drawable.blue_marker);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER);
+        hoveringMarker.setLayoutParams(params);
+        hoveringMarker.setVisibility(View.INVISIBLE);
+        mapView.addView(hoveringMarker);
 
         database = FirebaseDatabase.getInstance();
         coordinates = database.getReference("coordinates");
@@ -276,6 +296,57 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         mGoogleApiClient.connect();
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         super.onStart();
+    }
+
+    @Override
+    public void onDraggableNotify(DRAGGABLE_CALSS draggableIcall) {
+        if(draggableIcall == DRAGGABLE_CALSS.VIEW_MOVED){
+            if (map != null) {
+
+                float coordinateX = hoveringMarker.getX() + (hoveringMarker.getWidth() / 2);
+                float coordinateY = hoveringMarker.getY()+(hoveringMarker.getHeight());
+                float[] coords = new float[]{coordinateX, coordinateY};
+                final LatLng latLng = map.getProjection().fromScreenLocation(new PointF(coords[0], coords[1]));
+                hoveringMarker.setVisibility(View.INVISIBLE);
+
+
+                // Create the marker icon the dropped marker will be using.
+                //  Icon icon = IconFactory.getInstance(MoveablePointActivity.this).fromResource(R.drawable.blue_marker);
+
+                // Placing the marker on the mapboxMap as soon as possible causes the illusion
+                // that the hovering marker and dropped marker are the same.
+                droppedMarker = map.addMarker(new MarkerViewOptions().position(latLng));
+                IconFactory iconFactory = IconFactory.getInstance(EditorPanelActivity.this);
+                Icon icon = iconFactory.fromResource(R.drawable.blue_marker);
+                droppedMarker.setIcon(icon);
+//                addTrackPoint(latLng, droppedMarker);
+                updateTrackPoint(markerIndex,droppedMarker);
+
+
+                // Finally we get the geocoding information
+                //reverseGeocode(latLng);
+            }
+
+        }
+        if(draggableIcall == DRAGGABLE_CALSS.VIEW_TOUCHED){
+            if (map != null && droppedMarker!=null) {
+
+
+                // Lastly, set the hovering marker back to visible.
+                PointF point = map.getProjection().toScreenLocation(droppedMarker.getPosition());
+                map.removeMarker(droppedMarker);
+                hoveringMarker.setX(point.x-(hoveringMarker.getWidth()/2));
+                hoveringMarker.setY(point.y-hoveringMarker.getHeight());
+                hoveringMarker.setVisibility(View.VISIBLE);
+                droppedMarker = null;
+            }
+
+        }
+    }
+
+    @Override
+    public void onUserUpdateNotify(USER_UPDATES_CLASS userUpdatesClass, int id) {
+
     }
 
 
@@ -441,10 +512,10 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     private void initPopupWindow(Object object){
 
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-        View customView = inflater.inflate(R.layout.coordinate_details_popup, null);
+       // View customView = inflater.inflate(R.layout.coordinate_details_popup, null);
 
         mPopupWindow = new PopupWindow(
-                customView,
+                inflater.inflate(R.layout.coordinate_details_popup, null),
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
@@ -452,28 +523,36 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             mPopupWindow.setElevation(5.0f);
         }
 
-        delete_coordinate_button = (ImageButton)customView.findViewById(R.id.deleteCoordinateButt);
-        edit_coordinate_button = (ImageButton)customView.findViewById(R.id.editCoordinateButt);
+        delete_coordinate_button = (ImageButton)mPopupWindow.getContentView().findViewById(R.id.deleteCoordinateButt);
+        edit_coordinate_button = (ImageButton)mPopupWindow.getContentView().findViewById(R.id.editCoordinateButt);
 
         Log.d("class", "--"+object.getClass());
         if(object.getClass().equals(MarkerView.class))
-            initMarkerPopup((Marker) object, customView);
+            initMarkerPopup((Marker) object, mPopupWindow.getContentView());
         else if(object.getClass().equals(HashMap.class))
-            initTrackPopup((Map<String, Object>)object, customView);
+            initTrackPopup((Map<String, Object>)object, mPopupWindow.getContentView());
 
-         mPopupWindow.setOutsideTouchable(true);
-         mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+        mPopupWindow.setOutsideTouchable(true);
+        mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+
+        mPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                SHOW_DETAILS_POPUP=false;
+                mPopupWindow=null;
+            }
+        });
 
     }
 
     private void initTrackPopup(final  Map<String, Object> track, View customView){
-        TextView title = (TextView)customView.findViewById(R.id.main_content);
+        TextView title = (TextView)mPopupWindow.getContentView().findViewById(R.id.main_content);
         title.setText(track.get("track_name").toString());
 
-        TextView discreption = (TextView)customView.findViewById(R.id.minor_content);
+        TextView discreption = (TextView)mPopupWindow.getContentView().findViewById(R.id.minor_content);
         discreption.setText(track.get("additional_info").toString());
 
-        Button read_more = (Button) customView.findViewById(R.id.read_more);
+        Button read_more = (Button) mPopupWindow.getContentView().findViewById(R.id.read_more);
         read_more.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -495,20 +574,20 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             }
         });
 
-        RatingBar ratingBar = (RatingBar)customView.findViewById(R.id.ratingBar);
+        RatingBar ratingBar = (RatingBar)mPopupWindow.getContentView().findViewById(R.id.ratingBar);
         ratingBar.setVisibility(View.VISIBLE);
-        ratingBar.setRating((long) track.get("star_count"));
-        if(uid == null)
-            ratingBar.setIsIndicator(true);
+//        ratingBar.setRating((long) track.get("star_count"));
 
-        ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
-            @Override
-            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-                onStarClicked(track, rating);
-            }
-        });
+        ratingBar.setIsIndicator(true);
 
-        LinearLayout likesWrp = (LinearLayout) customView.findViewById(R.id.like_wrp);
+//        ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+//            @Override
+//            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
+//                onStarClicked(track, rating);
+//            }
+//        });
+
+        LinearLayout likesWrp = (LinearLayout) mPopupWindow.getContentView().findViewById(R.id.like_wrp);
         likesWrp.setVisibility(View.VISIBLE);
 
         likes_count = (TextView) mPopupWindow.getContentView().findViewById(R.id.like_count);
@@ -577,9 +656,9 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            textview.setText(String.valueOf(t.getLike_count()));
+                            textview.setText(String.valueOf((int)t.getLike_count()));
 
-                            popupWindow.dismiss();
+                         //   popupWindow.dismiss();
                         }
                     });
 
@@ -593,8 +672,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            textview.setText(String.valueOf(t.getLike_count()));
-                            popupWindow.dismiss();
+                            textview.setText(String.valueOf((int)t.getLike_count()));
+                          //  popupWindow.dismiss();
                         }
                     });
 
@@ -620,48 +699,48 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     }
 
 
-    private void onStarClicked(final Map<String,Object> track, final Float stars) {
-        String key= (String) track.get("db_key");
-        DatabaseReference trackRef = tracks.child(key);
-
-        trackRef.runTransaction(new Transaction.Handler() {
-            @Override
-            public Transaction.Result doTransaction(MutableData mutableData) {
-
-                Track t = mutableData.getValue(Track.class);
-
-                if(t == null) {
-                    return Transaction.success(mutableData);
-                }
-
-                if (t.getStars().containsKey(uid)) {
-
-                    Map<String, Float> temp = t.getStars();
-                    temp.remove(uid);
-                    temp.put(uid,stars);
-                    t.setStars(temp);
-                } else {
-
-                    Map<String, Float> temp = t.getStars();
-                    temp.put(uid,stars);
-                    t.setStars(temp);
-
-                }
-                t.setStar_count(stars);
-
-                // Set value and report transaction success
-                mutableData.setValue(t);
-                return Transaction.success(mutableData);
-            }
-
-            @Override
-            public void onComplete(DatabaseError databaseError, boolean b,
-                                   DataSnapshot dataSnapshot) {
-                // Transaction completed
-                Log.d(EditorPanelActivity.class.getSimpleName(), "postTransaction:onComplete:" + databaseError);
-            }
-        });
-    }
+//    private void onStarClicked(final Map<String,Object> track, final Float stars) {
+//        String key= (String) track.get("db_key");
+//        DatabaseReference trackRef = tracks.child(key);
+//
+//        trackRef.runTransaction(new Transaction.Handler() {
+//            @Override
+//            public Transaction.Result doTransaction(MutableData mutableData) {
+//
+//                Track t = mutableData.getValue(Track.class);
+//
+//                if(t == null) {
+//                    return Transaction.success(mutableData);
+//                }
+//
+//                if (t.getStars().containsKey(uid)) {
+//
+//                    Map<String, Float> temp = t.getStars();
+//                    temp.remove(uid);
+//                    temp.put(uid,stars);
+//                    t.setStars(temp);
+//                } else {
+//
+//                    Map<String, Float> temp = t.getStars();
+//                    temp.put(uid,stars);
+//                    t.setStars(temp);
+//
+//                }
+//                t.setStar_count(stars);
+//
+//                // Set value and report transaction success
+//                mutableData.setValue(t);
+//                return Transaction.success(mutableData);
+//            }
+//
+//            @Override
+//            public void onComplete(DatabaseError databaseError, boolean b,
+//                                   DataSnapshot dataSnapshot) {
+//                // Transaction completed
+//                Log.d(EditorPanelActivity.class.getSimpleName(), "postTransaction:onComplete:" + databaseError);
+//            }
+//        });
+//    }
 
     private void showAllTracks() {
         tracks.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -823,7 +902,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         MapboxDirections client = new MapboxDirections.Builder()
                 .setCoordinates(track_positions)
                 .setProfile(DirectionsCriteria.PROFILE_WALKING)
-                .setAccessToken(Mapbox.getInstance(this, getString(R.string.access_token)).getAccessToken())
+//                .setAccessToken(Mapbox.getInstance(this, getString(R.string.access_token)).getAccessToken())
+                .setAccessToken(MapboxAccountManager.getInstance().getAccessToken())
                 .build();
 
         client.enqueueCall(new Callback<DirectionsResponse>() {
@@ -895,17 +975,6 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     }
 
 
-    /*Method get String that represents a Position Json object.
-    * Method retrieve the position object and returns it*/
-    public Position retrievePositionFromJson(String posJs) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        Position obj = gson.fromJson(posJs, Position.class);
-        return obj;
-    }
-
     private void showDefaultLocation(){
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(
                 new LatLng(DEFAULT_JERUSALEM_COORDINATE.getLatitude(),
@@ -917,6 +986,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         public void onMapClick(@NonNull final LatLng point) {
             if(SHOW_DETAILS_POPUP){
                 mPopupWindow.dismiss();
+
+                //return;
             }
 
             if(ADD_COORDINATE_MODE)
@@ -938,12 +1009,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     Icon icon = iconFactory.fromResource(R.drawable.blue_marker);
                     marker.setIcon(icon);
 
+                    addTrackPoint(point, marker);
 
-                    track_coordinates.add(point.getLongitude());
-                    track_coordinates.add(point.getLatitude());
-                    track_markers.add(marker);
-                    Position temp = Position.fromCoordinates(point.getLongitude(), point.getLatitude());
-                    track_positions.add(temp);
                     count_coordinates_selected++;
                     updateScreenCounter();
                 }
@@ -975,7 +1042,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                                 Location.distanceBetween(point.getLatitude(), point.getLongitude(),
                                         polyCoords.getLatitude(), polyCoords.getLongitude(), results);
 
-                                if (results[0] < 100) {
+                                if (results[0] < 100 && !SHOW_DETAILS_POPUP) {
                                     // If distance is less than 100 meters, this is your polyline
 //                                    Log.e(TAG, "Found @ "+clickCoords.latitude+" "+clickCoords.longitude);
                                     SHOW_DETAILS_POPUP = true;
@@ -986,8 +1053,6 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                         }
                     }
 
-
-
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
 
@@ -997,6 +1062,44 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             }
 
         }
+    }
+
+    private void removeTrackPoint(Marker marker){
+        track_coordinates.remove(marker.getPosition().getLongitude());
+        track_coordinates.remove(marker.getPosition().getLatitude());
+        track_markers.remove(marker);
+        Position temp = Position.fromCoordinates(marker.getPosition().getLongitude(), marker.getPosition().getLatitude());
+        track_positions.remove(temp);
+
+
+    }
+
+    private void updateTrackPoint(int index, Marker marker){
+        Marker temp = track_markers.get(index);
+        track_markers.set(index,marker);
+        for(int i=0; i<track_coordinates.size();i++){
+            if(track_coordinates.get(i)==temp.getPosition().getLatitude())
+                track_coordinates.set(i,marker.getPosition().getLatitude());
+            else if(track_coordinates.get(i)==temp.getPosition().getLongitude())
+                track_coordinates.set(i,marker.getPosition().getLongitude());
+        }
+        Position tempP = Position.fromCoordinates(temp.getPosition().getLongitude(), temp.getPosition().getLatitude());
+        Position newP = Position.fromCoordinates(marker.getPosition().getLongitude(), marker.getPosition().getLatitude());
+        for(int i=0; i<track_positions.size();i++){
+            if(track_positions.get(i)==tempP)
+                track_positions.set(i,newP);
+
+        }
+
+
+    }
+
+    private void addTrackPoint(LatLng point, Marker marker){
+        track_coordinates.add(point.getLongitude());
+        track_coordinates.add(point.getLatitude());
+        track_markers.add(marker);
+        Position temp = Position.fromCoordinates(point.getLongitude(), point.getLatitude());
+        track_positions.add(temp);
     }
 
     private MarkerView addMarkerForCoordinate(LatLng point, String title, String snippet) {
@@ -1063,6 +1166,11 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     private class MyOnMarkerClickListener implements MapboxMap.OnMarkerClickListener{
         @Override
         public boolean onMarkerClick(@NonNull final Marker marker) {
+//            if(SHOW_DETAILS_POPUP) {
+//                mPopupWindow.dismiss();
+//
+//                return true;
+//            }
             if(!ADD_TRACK_MODE) {
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(marker.getPosition().getLatitude(),
                         marker.getPosition().getLongitude()), ZOOM_LEVEL_MARKER_CLICK));
@@ -1092,19 +1200,12 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
             if(ADD_TRACK_MODE) {
                 for(int i=0; i<track_markers.size(); i++) {
-                            /*If the editor clicked a marker that is already part of the track
-                            * we want to remove it from the track coordinates array*/
+                    /*If the editor clicked a marker that is already part of the track
+                    * we want to remove it from the track coordinates array*/
                     if(track_markers.get(i).toString().equals(marker.toString())){
-                        track_coordinates.remove(marker.getPosition().getLongitude());
-                        track_coordinates.remove(marker.getPosition().getLatitude());
-                        track_markers.remove(marker);
-                        Position temp = Position.fromCoordinates(marker.getPosition().getLongitude(), marker.getPosition().getLatitude());
-                        track_positions.remove(temp);
-                        count_coordinates_selected--;
-                        updateScreenCounter();
-                        addMarkerForCoordinate(marker.getPosition(), marker.getTitle(), marker.getSnippet());
+                        dialogEditMarker(marker);
+                        markerIndex=i;
 
-                        map.removeMarker(marker);
                         return true;
                     }
                 }
@@ -1144,14 +1245,9 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                             IconFactory iconFactory = IconFactory.getInstance(EditorPanelActivity.this);
                             Icon icon = iconFactory.fromResource(R.drawable.blue_marker);
 
-                            track_coordinates.add(marker.getPosition().getLongitude());
-                            track_coordinates.add(marker.getPosition().getLatitude());
-                            track_markers.add(marker);
-                            Position temp = Position.fromCoordinates(marker.getPosition().getLongitude(), marker.getPosition().getLatitude());
-                            track_positions.add(temp);
+                            addTrackPoint(marker.getPosition(), marker);
                             count_coordinates_selected++;
                             updateScreenCounter();
-
 
                             marker.setIcon(icon);
 
@@ -1168,11 +1264,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     IconFactory iconFactory = IconFactory.getInstance(EditorPanelActivity.this);
                     Icon icon = iconFactory.fromResource(R.drawable.blue_marker);
 
-                    track_coordinates.add(marker.getPosition().getLongitude());
-                    track_coordinates.add(marker.getPosition().getLatitude());
-                    track_markers.add(marker);
-                    Position temp = Position.fromCoordinates(marker.getPosition().getLongitude(), marker.getPosition().getLatitude());
-                    track_positions.add(temp);
+                    addTrackPoint(marker.getPosition(),marker);
                     count_coordinates_selected++;
                     updateScreenCounter();
 
@@ -1194,9 +1286,38 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     }
 
 
+    private void dialogEditMarker(final Marker marker){
+        AlertDialog.Builder builder = new AlertDialog.Builder(EditorPanelActivity.this);
+        builder.setMessage(getResources().getString(R.string.dialog_change_point));
+
+        builder.setPositiveButton(R.string.dialog_remove_point, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                removePointFromTrack(marker);
+            }
+        });
+        builder.setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+            return;
+            }
+        });
+
+        builder.setNeutralButton(R.string.dialog_move_point, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                movePointOnMap(marker);
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+
+
+
     private void dialogEditTrack(final Map<String,Object> track){
         AlertDialog.Builder builder = new AlertDialog.Builder(EditorPanelActivity.this);
-        builder.setMessage(getResources().getString(R.string.dialog_delete_track));
+        builder.setMessage(getResources().getString(R.string.dialog_edit_coordinate));
 
         builder.setPositiveButton(R.string.dialog_ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
@@ -1229,8 +1350,15 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 String key = (String) track.get("db_key");
                 String route_st = (String)track.get("route");
                 DirectionsRoute route = retrieveRouteFromJson(route_st);
-                map.removePolyline(getPolyLineFromRoute(route));
-                tracks.child(key).removeValue();
+                for(Polyline polyline: map.getPolylines()){
+                    if (polyline.getPoints().toString().equals(getPolyLineFromRoute(route).getPoints().toString()))
+                    {
+                        map.removePolyline(polyline);
+                        tracks.child(key).removeValue();
+                        return;
+                    }
+                }
+                mPopupWindow.dismiss();
             }
         });
         builder.setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
@@ -1356,6 +1484,28 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         return json;
     }
 
+    private LatLng retreiveLatLngFromJson(String stringExtra) {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.serializeSpecialFloatingPointValues();
+
+        Gson gson = gsonBuilder.create();
+        LatLng obj = gson.fromJson(stringExtra, LatLng.class);
+        return obj;
+    }
+
+
+
+    /*Method get String that represents a Position Json object.
+    * Method retrieve the position object and returns it*/
+    public Position retrievePositionFromJson(String posJs) {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.serializeSpecialFloatingPointValues();
+
+        Gson gson = gsonBuilder.create();
+        Position obj = gson.fromJson(posJs, Position.class);
+        return obj;
+    }
+
 
     @Override
     public void onExplanationNeeded(List<String> permissionsToExplain) {
@@ -1458,7 +1608,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
-                        Intent i = new Intent(EditorPanelActivity.this, SignInActivity.class);
+                        Intent i = new Intent(EditorPanelActivity.this, Home.class);
                         startActivity(i);
                     }});
     }
@@ -1663,6 +1813,70 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         });
     }
 
+    private void reverseGeocode(final LatLng point) {
+        // This method is used to reverse geocode where the user has dropped the marker.
+        try {
+            MapboxGeocoding client = new MapboxGeocoding.Builder()
+                    .setAccessToken(getString(R.string.access_token))
+                    .setCoordinates(Position.fromCoordinates(point.getLongitude(), point.getLatitude()))
+                    .setGeocodingType(GeocodingCriteria.TYPE_ADDRESS)
+                    .build();
+
+            client.enqueueCall(new Callback<GeocodingResponse>() {
+                @Override
+                public void onResponse(Call<GeocodingResponse> call, Response<GeocodingResponse> response) {
+
+                    List<CarmenFeature> results = response.body().getFeatures();
+                    if (results.size() > 0) {
+                        CarmenFeature feature = results.get(0);
+                        // If the geocoder returns a result, we take the first in the list and update
+                        // the dropped marker snippet with the information. Lastly we open the info
+                        // window.
+                        if (droppedMarker != null) {
+                            droppedMarker.setSnippet(feature.getPlaceName());
+                            //   mapboxMap.selectMarker(droppedMarker);
+                        }
+
+                    } else {
+                        if (droppedMarker != null) {
+                            droppedMarker.setSnippet("");
+
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<GeocodingResponse> call, Throwable throwable) {
+                    Log.e("Moveable", "Geocoding Failure: " + throwable.getMessage());
+                }
+            });
+        } catch (ServicesException servicesException) {
+            Log.e("Moveable", "Error geocoding: " + servicesException.toString());
+            servicesException.printStackTrace();
+        }
+    }
+
+
+    private void movePointOnMap(Marker marker){
+        PointF point = map.getProjection().toScreenLocation(marker.getPosition());
+
+        hoveringMarker.setX(point.x-(hoveringMarker.getWidth()/2));
+        hoveringMarker.setY(point.y-hoveringMarker.getHeight());
+
+        hoveringMarker.setVisibility(View.VISIBLE);
+        droppedMarker = marker;
+    }
+
+
+    private void removePointFromTrack(Marker marker){
+        removeTrackPoint(marker);
+        count_coordinates_selected--;
+        updateScreenCounter();
+        addMarkerForCoordinate(marker.getPosition(), marker.getTitle(), marker.getSnippet());
+
+        map.removeMarker(marker);
+    }
+
     private String hashFunction(double value) {
         //double latitude = chosenCoordinateLatLng.getLatitude();
 
@@ -1677,22 +1891,13 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         return "" + hash;
     }
 
-    private LatLng retreiveLatLngFromJson(String stringExtra) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        LatLng obj = gson.fromJson(stringExtra, LatLng.class);
-        return obj;
-    }
-
     @Override
     public void onBackPressed() {
         if(SHOW_DETAILS_POPUP)
         {
-            SHOW_DETAILS_POPUP = false;
+
             mPopupWindow.dismiss();
-            mPopupWindow = null;
+//            mPopupWindow = null;
             showDefaultLocation();
         }
         else {

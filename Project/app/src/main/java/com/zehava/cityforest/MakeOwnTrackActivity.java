@@ -32,8 +32,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.mapbox.mapboxsdk.Mapbox;
+//import com.mapbox.mapboxsdk.Mapbox;
 
+import com.mapbox.mapboxsdk.MapboxAccountManager;
 import com.mapbox.mapboxsdk.annotations.Icon;
 import com.mapbox.mapboxsdk.annotations.IconFactory;
 import com.mapbox.mapboxsdk.annotations.Marker;
@@ -111,7 +112,8 @@ public class MakeOwnTrackActivity extends AppCompatActivity implements Permissio
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         /*Mapbox and firebase initializations*/
-        Mapbox.getInstance(this, getString(R.string.access_token));
+//        Mapbox.getInstance(this, getString(R.string.access_token));
+        MapboxAccountManager.start(this,getString(R.string.access_token));
         setContentView(R.layout.activity_make_own_track);
 
         // Get the location engine object for later use.
@@ -331,8 +333,9 @@ public class MakeOwnTrackActivity extends AppCompatActivity implements Permissio
         MapboxDirections client = new MapboxDirections.Builder()
                 .setCoordinates(track_positions)
                 .setProfile(DirectionsCriteria.PROFILE_WALKING)
-                .setAccessToken(Mapbox.getInstance(this,getString(R.string.access_token)).getAccessToken())
+                .setAccessToken(MapboxAccountManager.getInstance().getAccessToken())
                 .build();
+        //                .setAccessToken(Mapbox.get(this,getString(R.string.access_token)).getAccessToken())
 
         client.enqueueCall(new Callback<DirectionsResponse>() {
             @Override

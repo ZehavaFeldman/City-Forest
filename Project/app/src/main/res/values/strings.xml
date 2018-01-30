@@ -13,6 +13,10 @@
     <string name="dialog_exit_app_title">Exit CityForest</string>
     <string name="dialog_exit_app_body">Are you sure you want to exit the app?</string>
     <string name="dialog_yes">Yes</string>
+    <string name="dialog_change_point">What would you like to do with this point?</string>
+    <string name="dialog_remove_point">Delete</string>
+    <string name="dialog_move_point">Move</string>
+
     <!--End of dialogs -->
 
 
@@ -95,8 +99,8 @@
     </string-array>
 
     <string-array name="spinner_list_item_array">
-        <item>התנתק</item>
-        <item>פרוצי דרכים</item>
+        <item>Sign Out</item>
+        <item>Editor</item>
     </string-array>
 
     <string-array name="track_level">
@@ -147,7 +151,7 @@
     <string name="suitable_for_bikes_heb">Suitable For Bikes</string>
     <string name="suitable_for_dogs_heb">Suitable for Dogs</string>
     <string name="suitable_for_families_heb">Suitable For Families</string>
-    <string name="has_water_heb">Track with Aater</string>
+    <string name="has_water_heb">Track with Water</string>
     <string name="starting_point_hebrew">Starting Point</string>
     <string name="ending_point_hebrew">Endind Point</string>
     <string name="is_romantic_heb">Romantic</string>
@@ -158,6 +162,7 @@
     <string name="tracks_menu">Tracks list</string>
     <string name="edit_tracks_button">Edit Tracks</string>
     <string name="sign_out_action">Log Out</string>
+    <string name="sign_in_action">Log In</string>
     <string name="language">language</string>
 
     <string name="permitted_editor" translatable="false">1UGTxtDh7UaO9WFi70CnG3njfE02</string>
@@ -168,7 +173,7 @@
     <string name="what_are_you_up_to_today_txt">What are you up to today?</string>
     <string name="point_of_interest_txt">Point Of Interest?</string>
 
-    <string name="ALGOLIA_APP_ID">23AHHRJOBU</string>
-    <string name="ALGOLIA_SEARCH_API_KEY">8fd54c914d7dd05b7a87265beb57cad4</string>
-    <string name="ALGOLIA_INDEX_NAME">tracks</string>
+    <string name="ALGOLIA_APP_ID" translatable="false">23AHHRJOBU</string>
+    <string name="ALGOLIA_SEARCH_API_KEY" translatable="false">8fd54c914d7dd05b7a87265beb57cad4</string>
+    <string name="ALGOLIA_INDEX_NAME" translatable="false">tracks</string>
 </resources>

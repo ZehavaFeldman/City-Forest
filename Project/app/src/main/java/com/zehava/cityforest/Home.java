@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Build;
@@ -28,6 +29,8 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -43,9 +46,17 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.AdapterView.OnItemSelectedListener;
 
-import com.mapbox.mapboxsdk.Mapbox;
-import com.mapbox.mapboxsdk.plugins.cluster.clustering.ClusterItem;
-import com.mapbox.mapboxsdk.plugins.cluster.clustering.ClusterManagerPlugin;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.GoogleAuthProvider;
+//import com.mapbox.mapboxsdk.Mapbox;
+//import com.mapbox.mapboxsdk.plugins.cluster.clustering.ClusterItem;
+//import com.mapbox.mapboxsdk.plugins.cluster.clustering.ClusterManagerPlugin;
+import com.mapbox.mapboxsdk.MapboxAccountManager;
 import com.zehava.cityforest.Models.Coordinate;
 import com.zehava.cityforest.Models.Track;
 import com.zehava.cityforest.Models.UserUpdate;
@@ -91,6 +102,7 @@ import com.mapbox.services.commons.models.Position;
 
 import com.mapbox.services.directions.v5.models.DirectionsRoute;
 
+import org.apache.commons.codec.language.bm.Lang;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -104,6 +116,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Locale;
 
 
 import static com.zehava.cityforest.Constants.CREATED_UPDATE_FOR_ZOOM;
@@ -116,7 +129,9 @@ import static com.zehava.cityforest.Constants.LANGUAGE;
 import static com.zehava.cityforest.Constants.LANGUAGE_TO_LOAD;
 import static com.zehava.cityforest.Constants.MOVE_MARKER;
 import static com.zehava.cityforest.Constants.NEW_USER_UPDATE;
+import static com.zehava.cityforest.Constants.RC_SIGN_IN;
 import static com.zehava.cityforest.Constants.ROUTE_LINE_WIDTH;
+import static com.zehava.cityforest.Constants.SELECTED_TRACK;
 import static com.zehava.cityforest.Constants.SHOW_DETAILS_POPUP;
 import static com.zehava.cityforest.Constants.UPDATE_POSITION;
 import static com.zehava.cityforest.Constants.USER_UPDATE_CREATED;
@@ -153,8 +168,9 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
     private RelativeLayout mRelativeLayout;
 
     String uid,uname;
+    private FirebaseAuth mAuth;
 
-    private ClusterManagerPlugin<MyItem> clusterManagerPlugin;
+//    private ClusterManagerPlugin<MyItem> clusterManagerPlugin;
 
     Intent serviceIntent;
     UpdatesManagerService myService;
@@ -164,16 +180,14 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-//        String languageToLoad  = "he"; // your language
-//        Locale locale = new Locale(languageToLoad);
-//        Locale.setDefault(locale);
-//        Configuration config = new Configuration();
-//        config.locale = locale;
-//        getBaseContext().getResources().updateConfiguration(config,
-//                getBaseContext().getResources().getDisplayMetrics());
+        LocaleManager.setLocale(this);
 
         /*Mapbox and firebase initializations*/
-        Mapbox.getInstance(this, getString(R.string.access_token));
+//        Mapbox.getInstance(this, getString(R.string.access_token));
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        MapboxAccountManager.start(this,getString(R.string.access_token));
         setContentView(R.layout.activity_home);
 
         // Get the location engine object for later use.
@@ -210,28 +224,30 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
         createUserUpdate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(Home.this, CreateUserUpdateActivity.class);
-                i.putExtra(CURRENT_USER_UID, uid);
-                i.putExtra(CURRENT_USER_NAME, uname);
-
-                if (ActivityCompat.checkSelfPermission(Home.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(Home.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-                    return;
+                if (map != null) {
+                    sendUpdate(!map.isMyLocationEnabled());
                 }
-
-                Location lastLocation = locationEngine.getLastLocation();
-
-                i.putExtra(UPDATE_POSITION, castLatLngToJson(new LatLng(lastLocation)));
-                startActivityForResult(i, NEW_USER_UPDATE);
 
             }
         });
+
+        // Configure sign-in to request the user's ID, email address, and basic
+        // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+
+        // Build a GoogleApiClient with access to the Google Sign-In API and the
+        // options specified by gso.
+
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .build();
+
+        mAuth = FirebaseAuth.getInstance();
+
         loading_map_progress_bar.setVisibility(View.VISIBLE);
 
         serviceIntent = new Intent(Home.this, UpdatesManagerService.class);
@@ -239,33 +255,51 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
         startService(serviceIntent); //Starting the service
         bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE); //Binding to the service!
 
-//        myService.startCounter();
-
     }
 
-    /*In order to be able to sign out from the logged in account, I have to
-    * check who is the logged in user.*/
-    @Override
-    protected void onStart() {
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build();
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
-        mGoogleApiClient.connect();
 
-
-
-        super.onStart();
+    private void signIn() {
+        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+        startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 
+
+    private void handleSignInResult(GoogleSignInResult result) {
+
+        if (result.isSuccess()) {
+            // Google Sign In was successful, authenticate with Firebase
+            GoogleSignInAccount account = result.getSignInAccount();
+            firebaseAuthWithGoogle(account);
+        } else {
+            Toast.makeText(Home.this, "Authentication failed",
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
+
+        AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            Toast.makeText(Home.this, "Signed in successfully",
+                                    Toast.LENGTH_SHORT).show();
+                            invalidateOptionsMenu();
+
+                        } else {
+                            Toast.makeText(Home.this, "Authentication failed",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         final MenuInflater inflater = getMenuInflater();
 
-        FirebaseAuth mAuth = FirebaseAuth.getInstance();
         final FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null)
             inflater.inflate(R.menu.not_signedin_menu, menu);
@@ -292,9 +326,9 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
 
 
             ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                    android.R.layout.simple_spinner_item, carArr);
+                    R.layout.propfile_spinner_item, carArr);
+            adapter.setDropDownViewResource(R.layout.propfile_spinner_item);
             spinner.setAdapter(adapter);
-            adapter.setDropDownViewResource(R.layout.spinner_item);
             spinner.setSelection(0, false);
 
             spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
@@ -362,9 +396,8 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
                 startActivity(i);
                 return true;
 
-            case R.id.signOut:
-                Intent intent = new Intent(Home.this, SignInActivity.class);
-                startActivityForResult(intent, 50);
+            case R.id.signIn:
+                signIn();
                 return true;
             case R.id.languageActivity:
                 toggleLanguage();
@@ -412,7 +445,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
                                 }
                             })
                             .setNegativeButton(R.string.dialog_cancel, null)
-                            .show();git sta
+                            .show();
                 }
             } else {
                 new AlertDialog.Builder(this)
@@ -452,6 +485,9 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
         @Override
         public void onMapReady(MapboxMap mapboxMap) {
             map = mapboxMap;
+
+
+
             map.setOnMapClickListener(new MyOnMapClickListener());
             map.setOnMarkerClickListener(new MyOnMarkerClickListener());
             map.setStyleUrl(Style.OUTDOORS);
@@ -459,12 +495,12 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
             showAllUserUpdates();
             showAllPointsOfInterest();
             showAllTracks();
-
-            clusterManagerPlugin = new ClusterManagerPlugin<>(Home.this, map);
-
+//
+//            clusterManagerPlugin = new ClusterManagerPlugin<>(Home.this, map);
+//
 //            initCameraListener();
 
-            myService.startCounter();
+//            myService.startCounter();
         }
     }
 
@@ -478,8 +514,6 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
             UpdatesManagerService.LocalBinder binder = (UpdatesManagerService.LocalBinder) service;
             myService = binder.getServiceInstance(); //Get instance of your service!
             myService.registerClient(Home.this); //Activity register in the service as client for callabcks!
-
-
 
         }
 
@@ -648,15 +682,15 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
 
     private void toggleLanguage() {
 
-        SharedPreferences languagepref = getSharedPreferences(LANGUAGE,MODE_PRIVATE);
-        SharedPreferences.Editor editor = languagepref.edit();
+        LocaleManager.toggaleLang(this);
+        restartActivity();
 
-        String currLanguage = languagepref.getString(LANGUAGE_TO_LOAD,"");
-        String languageToLoad = currLanguage.equalsIgnoreCase(HEBREW)?ENGLISH:HEBREW;
+    }
 
-        editor.putString(LANGUAGE_TO_LOAD,languageToLoad );
-        editor.apply();
-
+    private void restartActivity() {
+        Intent intent = getIntent();
+        finish();
+        startActivity(intent);
     }
 
 
@@ -705,7 +739,9 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
         read_more.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                Intent intent = new Intent(Home.this, SelectedTrackActivity.class);
+                intent.putExtra(SELECTED_TRACK, String.valueOf(track.get("db_key")));
+                startActivity(intent);
             }
         });
 
@@ -715,16 +751,20 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
 
         RatingBar ratingBar = (RatingBar)customView.findViewById(R.id.ratingBar);
         ratingBar.setVisibility(View.VISIBLE);
-        ratingBar.setRating((long) track.get("star_count"));
-        if(uid == null)
-            ratingBar.setIsIndicator(true);
 
-        ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
-            @Override
-            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-                onStarClicked(track, rating);
-            }
-        });
+//        Double d = Double.valueOf(track.get("star_count").toString());
+//        Object o = d;
+//
+//        ratingBar.setRating((long)o);
+//        if(uid == null)
+//            ratingBar.setIsIndicator(true);
+//
+//        ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+//            @Override
+//            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
+//                onStarClicked(track, rating);
+//            }
+//        });
 
         LinearLayout likesWrp = (LinearLayout) customView.findViewById(R.id.like_wrp);
         likesWrp.setVisibility(View.VISIBLE);
@@ -831,20 +871,6 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
             }
         });
 
-//
-//        RatingBar ratingBar = (RatingBar)customView.findViewById(R.id.ratingBar);
-//        ratingBar.setVisibility(View.VISIBLE);
-//        ratingBar.setRating((long) update.ge);
-//        if(uid == null)
-//            ratingBar.setIsIndicator(true);
-//
-//        ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
-//            @Override
-//            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-//                onStarClicked(update, rating);
-//            }
-//        });
-//
 //        LinearLayout likesWrp = (LinearLayout) customView.findViewById(R.id.like_wrp);
 //        likesWrp.setVisibility(View.VISIBLE);
 //
@@ -1036,7 +1062,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
     }
 
 
-    /*Marker clicked listener. We can delete/edit a coordinate*/
+    /*Marker clicked listener.*/
     private class MyOnMarkerClickListener implements MapboxMap.OnMarkerClickListener{
         @Override
         public boolean onMarkerClick(@NonNull final Marker marker) {
@@ -1088,8 +1114,13 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
             IconFactory iconFactory = IconFactory.getInstance(Home.this);
             Icon icon = iconFactory.fromResource(logo);
             markerViewOptions.getMarker().setIcon(icon);
+            MarkerView m = markerViewOptions.getMarker();
+            return m;
         }
-        return markerViewOptions.getMarker();
+        else {
+            MarkerView m = markerViewOptions.getMarker();
+            return m;
+        }
     }
 
 
@@ -1104,8 +1135,13 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
             IconFactory iconFactory = IconFactory.getInstance(Home.this);
             Icon icon = iconFactory.fromResource(logo);
             markerViewOptions.getMarker().setIcon(icon);
+            MarkerView m = markerViewOptions.getMarker();
+            return m;
         }
-        return markerViewOptions.getMarker();
+        else {
+            MarkerView m = markerViewOptions.getMarker();
+            return m;
+        }
     }
 
     private int type(Icon icon){
@@ -1259,9 +1295,11 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
                 }
             };
             locationEngine.addLocationEngineListener(locationEngineListener);
+
             floatingActionButton.setImageResource(R.drawable.ic_location_disabled_24dp);
         } else {
             floatingActionButton.setImageResource(R.drawable.ic_my_location_24dp);
+
         }
         // Enable or disable the location layer on the map
         map.setMyLocationEnabled(enabled);
@@ -1270,6 +1308,58 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         permissionsManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    private void sendUpdate(boolean enableGps){
+        if (enableGps) {
+            // Check if user has granted location permission
+            permissionsManager = new PermissionsManager(this);
+            if (!PermissionsManager.areLocationPermissionsGranted(this)) {
+                permissionsManager.requestLocationPermissions(this);
+            } else {
+                Location lastLocation = getLastLocation();
+                if(lastLocation!= null) {
+                    Intent i = new Intent(Home.this, CreateUserUpdateActivity.class);
+                    i.putExtra(CURRENT_USER_UID, uid);
+                    i.putExtra(CURRENT_USER_NAME, uname);
+                    i.putExtra(UPDATE_POSITION, castLatLngToJson(new LatLng(lastLocation)));
+                    startActivityForResult(i, NEW_USER_UPDATE);
+                }
+                else{
+                    Toast.makeText(this, "Location not found, cant send update.",
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+        } else {
+            Location lastLocation = getLastLocation();
+            if(lastLocation!= null) {
+                Intent i = new Intent(Home.this, CreateUserUpdateActivity.class);
+                i.putExtra(CURRENT_USER_UID, uid);
+                i.putExtra(CURRENT_USER_NAME, uname);
+                i.putExtra(UPDATE_POSITION, castLatLngToJson(new LatLng(lastLocation)));
+                startActivityForResult(i, NEW_USER_UPDATE);
+            }
+            else{
+                Toast.makeText(this, "Location not found, cant send update.",
+                        Toast.LENGTH_LONG).show();
+            }
+        }
+
+    }
+
+    private Location getLastLocation(){
+        if (ActivityCompat.checkSelfPermission(Home.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(Home.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return null;
+        }
+
+        return locationEngine.getLastLocation();
     }
 
 
@@ -1281,8 +1371,6 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
-//                        Intent i = new Intent(Home.this, SignInActivity.class);
-//                        startActivity(i);
                         invalidateOptionsMenu();
                     }});
     }
@@ -1291,6 +1379,13 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         try {
             super.onActivityResult(requestCode, resultCode, data);
+
+            // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
+            if (requestCode == RC_SIGN_IN) {
+            /*Getting the result and sending it to method handleSignInResult*/
+                GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+                handleSignInResult(result);
+            }
 
 
             if(requestCode == NEW_USER_UPDATE && resultCode == USER_UPDATE_CREATED){
@@ -1303,18 +1398,10 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
                                 createdUpdateCoordinateLatLang.getLatitude()), ZOOM_LEVEL_CURRENT_LOCATION));
             }
 
-            if (requestCode == 50 && resultCode == 53) {
 
-                Toast.makeText(Home.this, "SIGNED IN SUCCSFULLY",
-                        Toast.LENGTH_SHORT).show();
-                invalidateOptionsMenu();
-            }
 
-            if (requestCode == 51 && resultCode == 53) {
 
-                Intent intent = new Intent(Home.this, EditorPanelActivity.class);
-                startActivity(intent);
-            }
+
 
         } catch (Exception ex) {
             Toast.makeText(Home.this, ex.toString(),
@@ -1371,6 +1458,21 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
         });
     }
 
+    /*In order to be able to sign out from the logged in account, I have to
+        * check who is the logged in user.*/
+    @Override
+    protected void onStart() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .build();
+        mGoogleApiClient.connect();
+        super.onStart();
+    }
+
 
     @Override
     public void onResume() {
@@ -1400,6 +1502,10 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
     protected void onDestroy() {
         super.onDestroy();
         mapView.onDestroy();
+
+        stopService(serviceIntent); //Starting the service
+        myService.stopCounter();
+
     }
 
 //    protected void initCameraListener() {
@@ -1411,98 +1517,98 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
 //        }
 //    }
 
-    private void addItemsToClusterPlugin(int rawResourceFile) throws JSONException {
-        InputStream inputStream = getResources().openRawResource(rawResourceFile);
-        List<MyItem> items = new MyItemReader().read(inputStream);
-        clusterManagerPlugin.addItems(items);
-        clusterManagerPlugin.cluster();
-    }
+//    private void addItemsToClusterPlugin(int rawResourceFile) throws JSONException {
+//        InputStream inputStream = getResources().openRawResource(rawResourceFile);
+//        List<MyItem> items = new MyItemReader().read(inputStream);
+//        clusterManagerPlugin.addItems(items);
+//        clusterManagerPlugin.cluster();
+//    }
 
     /**
      * Custom class for use by the marker cluster plugin
      */
-    public static class MyItem implements ClusterItem {
-        private final LatLng position;
-        private String title;
-        private String snippet;
-
-        public MyItem(double lat, double lng) {
-            position = new LatLng(lat, lng);
-            title = null;
-            snippet = null;
-        }
-
-        public MyItem(double lat, double lng, String title, String snippet) {
-            position = new LatLng(lat, lng);
-            this.title = title;
-            this.snippet = snippet;
-        }
-
-        @Override
-        public LatLng getPosition() {
-            return position;
-        }
-
-        @Override
-        public String getTitle() {
-            return title;
-        }
-
-        @Override
-        public String getSnippet() {
-            return snippet;
-        }
-
-        public void setTitle(String title) {
-            this.title = title;
-        }
-
-        public void setSnippet(String snippet) {
-            this.snippet = snippet;
-        }
-    }
+//    public static class MyItem implements ClusterItem {
+//        private final LatLng position;
+//        private String title;
+//        private String snippet;
+//
+//        public MyItem(double lat, double lng) {
+//            position = new LatLng(lat, lng);
+//            title = null;
+//            snippet = null;
+//        }
+//
+//        public MyItem(double lat, double lng, String title, String snippet) {
+//            position = new LatLng(lat, lng);
+//            this.title = title;
+//            this.snippet = snippet;
+//        }
+//
+//        @Override
+//        public LatLng getPosition() {
+//            return position;
+//        }
+//
+//        @Override
+//        public String getTitle() {
+//            return title;
+//        }
+//
+//        @Override
+//        public String getSnippet() {
+//            return snippet;
+//        }
+//
+//        public void setTitle(String title) {
+//            this.title = title;
+//        }
+//
+//        public void setSnippet(String snippet) {
+//            this.snippet = snippet;
+//        }
+//    }
 
     /**
      * Custom class which reads JSON data and creates a list of MyItem objects
      */
-    public static class MyItemReader {
-
-        private static final String REGEX_INPUT_BOUNDARY_BEGINNING = "\\A";
-
-        public List<MyItem> read(InputStream inputStream) throws JSONException {
-            List<MyItem> items = new ArrayList<MyItem>();
-            String json = new Scanner(inputStream).useDelimiter(REGEX_INPUT_BOUNDARY_BEGINNING).next();
-            JSONArray array = new JSONArray(json);
-            for (int i = 0; i < array.length(); i++) {
-                String title = null;
-                String snippet = null;
-                JSONObject object = array.getJSONObject(i);
-
-                 String pos = object.getString("position");
-                 Position position = retrievePositionFromJson(pos);
-
-                double lat = position.getLatitude();
-                double lng = position.getLongitude();
-                if (!object.isNull("title")) {
-                    title = object.getString("title");
-                }
-                if (!object.isNull("snippet")) {
-                    snippet = object.getString("snippet");
-                }
-                items.add(new MyItem(lat, lng, title, snippet));
-
-            }
-            return items;
-        }
-        public Position retrievePositionFromJson(String posJs) {
-            GsonBuilder gsonBuilder = new GsonBuilder();
-            gsonBuilder.serializeSpecialFloatingPointValues();
-
-            Gson gson = gsonBuilder.create();
-            Position obj = gson.fromJson(posJs, Position.class);
-            return obj;
-        }
-    }
+//    public static class MyItemReader {
+//
+//        private static final String REGEX_INPUT_BOUNDARY_BEGINNING = "\\A";
+//
+//        public List<MyItem> read(InputStream inputStream) throws JSONException {
+//            List<MyItem> items = new ArrayList<MyItem>();
+//            String json = new Scanner(inputStream).useDelimiter(REGEX_INPUT_BOUNDARY_BEGINNING).next();
+//            JSONArray array = new JSONArray(json);
+//            for (int i = 0; i < array.length(); i++) {
+//                String title = null;
+//                String snippet = null;
+//                JSONObject object = array.getJSONObject(i);
+//
+//                 String pos = object.getString("position");
+//                 Position position = retrievePositionFromJson(pos);
+//
+//                double lat = position.getLatitude();
+//                double lng = position.getLongitude();
+//                if (!object.isNull("title")) {
+//                    title = object.getString("title");
+//                }
+//                if (!object.isNull("snippet")) {
+//                    snippet = object.getString("snippet");
+//                }
+//                items.add(new MyItem(lat, lng, title, snippet));
+//
+//            }
+//            return items;
+//        }
+//        public Position retrievePositionFromJson(String posJs) {
+//            GsonBuilder gsonBuilder = new GsonBuilder();
+//            gsonBuilder.serializeSpecialFloatingPointValues();
+//
+//            Gson gson = gsonBuilder.create();
+//            Position obj = gson.fromJson(posJs, Position.class);
+//            return obj;
+//        }
+//    }
 
 
 
