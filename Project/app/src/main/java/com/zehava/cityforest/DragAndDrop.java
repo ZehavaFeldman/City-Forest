@@ -17,9 +17,15 @@ import com.mapbox.services.commons.models.Position;
  * Created by avigail on 05/12/17.
  */
 
+/*calss that extends ImageView adding on dragging options
+we use this as a workaround for draging markers on map*/
 public class DragAndDrop extends ImageView implements View.OnTouchListener {
+
+
     float dX;
     float dY;
+
+    //comunicate with activity via callbacks
     private ICallback iCallback;
 
 
@@ -49,19 +55,15 @@ public class DragAndDrop extends ImageView implements View.OnTouchListener {
         super(context, attrs, defStyle);
     }
 
-    public void setPositionAtMarker(Marker marker){
-//        setY((float)marker.getPosition().getLongitude()-getHeight());
-//        setX((float)marker.getPosition().getLatitude()-getWidth() / 2);
-       Position coordinates =  Position.fromCoordinates(marker.getPosition().getLongitude(),marker.getPosition().getLatitude());
-    }
-
 
     public boolean onTouch(View view, MotionEvent event) {
 
         switch (event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
 
-                iCallback.onDraggableNotify(ICallback.DRAGGABLE_CALSS.VIEW_TOUCHED);
+                //notifay activity on draging start
+                if(iCallback != null)
+                    iCallback.onDraggableNotify(ICallback.DRAGGABLE_CALSS.VIEW_TOUCHED);
 
                 dX = view.getX() - event.getRawX();
                 dY = view.getY() - event.getRawY();
@@ -74,6 +76,7 @@ public class DragAndDrop extends ImageView implements View.OnTouchListener {
                 break;
 
             case MotionEvent.ACTION_UP:
+                //notifay activity on dragging stop
                 if(iCallback != null)
                     iCallback.onDraggableNotify(ICallback.DRAGGABLE_CALSS.VIEW_MOVED);
                 break;

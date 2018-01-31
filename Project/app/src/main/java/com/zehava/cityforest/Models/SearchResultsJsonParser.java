@@ -13,9 +13,13 @@ import java.util.ArrayList;
  * Created by avigail on 10/01/18.
  */
 
+/*parsing data recivd from algolia serach via PointOfInterestParser
+then send parsed result back to activity to show to user
+ */
+
 public class SearchResultsJsonParser
 {
-    private MovieJsonParser movieParser = new MovieJsonParser();
+    private PointOfInterestJsonParser pointOfInterestJsonParser = new PointOfInterestJsonParser();
     public List<HighlightedResult<PointOfInterest>> parseResults(JSONObject jsonObject)
     {
         if (jsonObject == null)
@@ -28,7 +32,7 @@ public class SearchResultsJsonParser
             JSONObject hit = hits.optJSONObject(i);
             if (hit == null)
                 continue;
-            PointOfInterest movie = movieParser.parse(hit);
+            PointOfInterest movie = pointOfInterestJsonParser.parse(hit);
             if (movie == null)
                 continue;
             JSONObject highlightResult = hit.optJSONObject("_highlightResult");

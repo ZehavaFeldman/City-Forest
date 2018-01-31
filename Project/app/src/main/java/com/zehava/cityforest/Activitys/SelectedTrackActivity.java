@@ -1,61 +1,30 @@
-package com.zehava.cityforest;
+package com.zehava.cityforest.Activitys;
 
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.Color;
-import android.location.Location;
-import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.CheckBox;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.gms.maps.LocationSource;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 //import com.mapbox.mapboxsdk.Mapbox;
-import com.mapbox.mapboxsdk.MapboxAccountManager;
-import com.mapbox.mapboxsdk.annotations.Icon;
-import com.mapbox.mapboxsdk.annotations.IconFactory;
-import com.mapbox.mapboxsdk.annotations.MarkerView;
-import com.mapbox.mapboxsdk.annotations.MarkerViewOptions;
-import com.mapbox.mapboxsdk.annotations.PolylineOptions;
-import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
-import com.mapbox.mapboxsdk.constants.Style;
-import com.mapbox.mapboxsdk.geometry.LatLng;
-import com.mapbox.mapboxsdk.geometry.LatLngBounds;
-import com.mapbox.mapboxsdk.maps.MapView;
-import com.mapbox.mapboxsdk.maps.MapboxMap;
-import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.services.android.telemetry.location.LocationEngine;
 import com.mapbox.services.android.telemetry.location.LocationEngineListener;
-import com.mapbox.services.android.telemetry.permissions.PermissionsListener;
 import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
-import com.mapbox.services.commons.geojson.LineString;
-import com.mapbox.services.commons.models.Position;
-import com.mapbox.services.directions.v5.models.DirectionsRoute;
+import com.zehava.cityforest.MakeOwnTrackActivity;
+import com.zehava.cityforest.R;
 
-import java.util.List;
 import java.util.Map;
 
-import static com.zehava.cityforest.Constants.DEFAULT_JERUSALEM_COORDINATE;
-import static com.zehava.cityforest.Constants.ROUTE_LINE_WIDTH;
 import static com.zehava.cityforest.Constants.SELECTED_TRACK;
-import static com.zehava.cityforest.Constants.ZOOM_LEVEL_CURRENT_LOCATION;
-import static com.zehava.cityforest.Constants.ZOOM_LEVEL_LOCATION;
-import static com.mapbox.services.android.telemetry.location.AndroidLocationEngine.getLocationEngine;
 
 public class SelectedTrackActivity extends AppCompatActivity {
 
@@ -88,8 +57,7 @@ public class SelectedTrackActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 //        Mapbox.getInstance(this, getString(R.string.access_token));
-//
-//        MapboxAccountManager.start(this, getString(R.string.access_token));
+
         setContentView(R.layout.activity_selected_track);
 
         // Get the location engine object for later use.

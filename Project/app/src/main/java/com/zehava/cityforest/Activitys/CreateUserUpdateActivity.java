@@ -1,4 +1,4 @@
-package com.zehava.cityforest;
+package com.zehava.cityforest.Activitys;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -19,12 +19,14 @@ import android.widget.Button;
 
 
 import com.google.firebase.database.DatabaseError;
+import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Models.UserUpdate;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.zehava.cityforest.R;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -94,23 +96,6 @@ public class CreateUserUpdateActivity extends AppCompatActivity {
 
     }
 
-    private LatLng retreiveLatLngFromJson(String stringExtra) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        LatLng obj = gson.fromJson(stringExtra, LatLng.class);
-        return obj;
-    }
-
-    private String castLatLngToJson(LatLng coordinate) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        String json = gson.toJson(coordinate, LatLng.class);
-        return json;
-    }
 
 
     private void writeNewUserUpdate() {
@@ -141,7 +126,7 @@ public class CreateUserUpdateActivity extends AppCompatActivity {
                 } else {
 
                     Intent intent = getIntent();
-                    intent.putExtra(CREATED_UPDATE_FOR_ZOOM, castLatLngToJson(chosenCoordinateLatLng));
+                    intent.putExtra(CREATED_UPDATE_FOR_ZOOM, JsonParserManager.getInstance().castLatLngToJson(chosenCoordinateLatLng));
                     intent.putExtra("id",i1);
                     setResult(USER_UPDATE_CREATED, intent);
                     finish();
@@ -180,7 +165,7 @@ public class CreateUserUpdateActivity extends AppCompatActivity {
                 type = ((TextView) v).getText().toString();
                 uid = i.getStringExtra(CURRENT_USER_UID);
                 uname= i.getStringExtra(CURRENT_USER_NAME);
-                chosenCoordinateLatLng = retreiveLatLngFromJson(i.getStringExtra(UPDATE_POSITION));
+                chosenCoordinateLatLng = JsonParserManager.getInstance().retreiveLatLngFromJson(i.getStringExtra(UPDATE_POSITION));
 
                 vf.setDisplayedChild(1);
             }

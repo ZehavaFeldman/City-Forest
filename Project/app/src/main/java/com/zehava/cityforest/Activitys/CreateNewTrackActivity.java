@@ -1,4 +1,4 @@
-package com.zehava.cityforest;
+package com.zehava.cityforest.Activitys;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Models.Track;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -18,6 +19,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mapbox.mapboxsdk.annotations.Polyline;
 import com.mapbox.services.directions.v5.models.DirectionsRoute;
+import com.zehava.cityforest.R;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,7 +66,7 @@ public class CreateNewTrackActivity extends AppCompatActivity {
         tracks = database.getReference("tracks");
 
         Intent i = getIntent();
-        current_route = retreiveRouteFromJson(i.getStringExtra(CHOSEN_TRACK));
+        current_route = JsonParserManager.getInstance().retreiveRouteFromJson(i.getStringExtra(CHOSEN_TRACK));
         starting_point_JsonLatLng = i.getStringExtra(TRACK_STARTING_POINT);
         ending_point_JsonLatLng = i.getStringExtra(TRACK_ENDING_POINT);
 //        polyline= i.getParcelableArrayListExtra(TRACK_POLY_LINE);
@@ -150,15 +152,6 @@ public class CreateNewTrackActivity extends AppCompatActivity {
         spinner.setAdapter(adapter);
     }
 
-    private DirectionsRoute retreiveRouteFromJson(String stringExtra) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        DirectionsRoute obj = gson.fromJson(stringExtra, DirectionsRoute.class);
-        return obj;
-    }
-
 
     private void writeNewTrack(){
 
@@ -168,7 +161,7 @@ public class CreateNewTrackActivity extends AppCompatActivity {
         double distance = Double.parseDouble(distance_field.getText().toString());
 
         Track track = new Track(
-                castRouteToJson(),
+                JsonParserManager.getInstance().castRouteToJson(this.current_route),
                 key,
                 track_name_field.getText().toString(),
                 starting_point.getSelectedItem().toString(),
@@ -195,12 +188,4 @@ public class CreateNewTrackActivity extends AppCompatActivity {
         tracks.updateChildren(childUpdates);
     }
 
-    public String castRouteToJson(){
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        String json = gson.toJson(this.current_route, DirectionsRoute.class);
-        return json;
-    }
 }

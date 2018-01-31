@@ -1,4 +1,4 @@
-package com.zehava.cityforest;
+package com.zehava.cityforest.Activitys;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -10,81 +10,81 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import com.zehava.cityforest.MakeOwnTrackActivity;
 import com.zehava.cityforest.Models.Track;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.zehava.cityforest.MyFirebaseListAdapter;
+import com.zehava.cityforest.R;
 
-import static com.zehava.cityforest.Constants.Q_ENDING_POINT;
-import static com.zehava.cityforest.Constants.Q_HAS_WATER;
-import static com.zehava.cityforest.Constants.Q_IS_ROMANTIC;
-import static com.zehava.cityforest.Constants.Q_LEVEL;
-import static com.zehava.cityforest.Constants.Q_SEASON;
-import static com.zehava.cityforest.Constants.Q_STARTING_POINT;
-import static com.zehava.cityforest.Constants.Q_SUITABLE_FOR_BIKES;
-import static com.zehava.cityforest.Constants.Q_SUITABLE_FOR_DOGS;
-import static com.zehava.cityforest.Constants.Q_SUITABLE_FOR_FAMILIES;
 import static com.zehava.cityforest.Constants.SELECTED_TRACK;
 
-public class SearchTracksResultsActivity extends AppCompatActivity {
+public class TracksActivity extends AppCompatActivity {
 
     private FirebaseDatabase database;
     private DatabaseReference tracks;
-    private ListView tracks_list;
-
-    private String q_starting_point;
-    private String q_ending_point;
-    private String q_track_level;
-    private String q_season;
-    private boolean q_has_water;
-    private boolean q_suitable_for_bikes;
-    private boolean q_suitable_for_dogs;
-    private boolean q_suitable_for_families;
-    private boolean q_is_romantic;
+    private ListView track_list;
+    private GoogleApiClient mGoogleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_search_tracks_results);
+        setContentView(R.layout.activity_tracks);
 
         database = FirebaseDatabase.getInstance();
         tracks = database.getReference("tracks");
 
-        tracks_list = (ListView)findViewById(R.id.tracks_list);
+        track_list = (ListView) findViewById(R.id.tracksList);
 
-        Intent i = getIntent();
-        q_starting_point = i.getStringExtra(Q_STARTING_POINT);
-        q_ending_point = i.getStringExtra(Q_ENDING_POINT);
-        q_track_level = i.getStringExtra(Q_LEVEL);
-        q_season = i.getStringExtra(Q_SEASON);
-        q_has_water = i.getBooleanExtra(Q_HAS_WATER, false);
-        q_suitable_for_bikes = i.getBooleanExtra(Q_SUITABLE_FOR_BIKES, false);
-        q_suitable_for_dogs = i.getBooleanExtra(Q_SUITABLE_FOR_DOGS, false);
-        q_suitable_for_families = i.getBooleanExtra(Q_SUITABLE_FOR_FAMILIES, false);
-        q_is_romantic = i.getBooleanExtra(Q_IS_ROMANTIC, false);
+        track_list.setOnItemClickListener(new ItemClickListener());
 
-        //Query query = tracks.orderByChild("starting_point").equalTo("הר הרצל");
-        //Query q2 = tracks.orderByChild("suitable_for_dogs").equalTo(true);
 
-        MyFirebaseListAdapter adapter = new MyFirebaseListAdapter(this,Track.class,
+        MyFirebaseListAdapter adapter = new MyFirebaseListAdapter(this,Track.class ,
                 R.layout.track_list_view, tracks);
-        tracks_list.setAdapter(adapter);
-
-        tracks_list.setOnItemClickListener(new ItemClickListener());
-
+        track_list.setAdapter(adapter);
     }
 
+    /*In order to be able to sign out from the logged in account, I have to
+        * check who is the logged in user.*/
+    @Override
+    protected void onStart() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build();
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
+                .build();
+        mGoogleApiClient.connect();
+        super.onStart();
+    }
 
     private class ItemClickListener implements android.widget.AdapterView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             Track track = (Track) parent.getItemAtPosition(position);
 
-            Intent i = new Intent(SearchTracksResultsActivity.this, SelectedTrackActivity.class);
+            Intent i = new Intent(TracksActivity.this, SelectedTrackActivity.class);
             i.putExtra(SELECTED_TRACK, track.getDb_key());
             startActivity(i);
         }
 
     }
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -114,11 +114,7 @@ public class SearchTracksResultsActivity extends AppCompatActivity {
                 i = new Intent(this, ContactUsActivity.class);
                 startActivity(i);
                 return true;
-//
-//            case R.id.homeActivity:
-//                i = new Intent(this, Home.class);
-//                startActivity(i);
-//                return true;
+
 
             case R.id.userGuideActivity:
                 i = new Intent(this, UserGuideActivity.class);
@@ -136,12 +132,26 @@ public class SearchTracksResultsActivity extends AppCompatActivity {
                 return true;
 
             case R.id.tracksActivity:
-                i = new Intent(this, TracksActivity.class);
-                startActivity(i);
+                return true;
+
+            case R.id.signOut:
+                signOut();
                 return true;
 
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    /*Method signs out user's google account*/
+    private void signOut() {
+        FirebaseAuth.getInstance().signOut();
+        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
+                new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(Status status) {
+                        Intent i = new Intent(TracksActivity.this, HomeActivity.class);
+                        startActivity(i);
+                    }});
     }
 }

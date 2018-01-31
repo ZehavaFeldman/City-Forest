@@ -1,4 +1,4 @@
-package com.zehava.cityforest;
+package com.zehava.cityforest.Activitys;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Models.PointOfInterest;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -20,6 +21,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.zehava.cityforest.R;
 
 import java.util.Map;
 
@@ -102,7 +104,7 @@ public class EditCoordinateActivity extends AppCompatActivity {
                     updateDatabaseForCoordinate();
 
                 Intent intent = getIntent();
-                intent.putExtra(EDITED_COORDINATE_FOR_ZOOM, castLatLngToJson(coordinateLatLng));
+                intent.putExtra(EDITED_COORDINATE_FOR_ZOOM, JsonParserManager.getInstance().castLatLngToJson(coordinateLatLng));
                 setResult(COORDINATE_EDITED, intent);
                 finish();
             }
@@ -113,14 +115,7 @@ public class EditCoordinateActivity extends AppCompatActivity {
         }
     }
 
-    private String castLatLngToJson(LatLng coordinate) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
 
-        Gson gson = gsonBuilder.create();
-        String json = gson.toJson(coordinate, LatLng.class);
-        return json;
-    }
 
     private void updateDatabaseForCoordinate() {
         /*If it wasn't a point of interest, we should just update the coordinate in db */
@@ -203,7 +198,7 @@ public class EditCoordinateActivity extends AppCompatActivity {
                     initiateSpinner(typeOfPoint, R.array.points_of_interest, null);
                     was_point_of_interest = false;
 
-                    coordinateLatLng = retreiveLatLngFromJson((String)cor.get("position"));
+                    coordinateLatLng = JsonParserManager.getInstance().retreiveLatLngFromJson((String)cor.get("position"));
                 }
                 /*If cor is null, we know for sure that it's a point of interest and we should
                 * check for it in the other set in database for points*/
@@ -234,7 +229,7 @@ public class EditCoordinateActivity extends AppCompatActivity {
                 Map<String, Object> point = ((Map<String, Object>)pointsMap.get(coordinateKey));
                 titleField.setText((String)point.get("title"));
                 snippetField.setText((String)point.get("snippet"));
-                coordinateLatLng = retreiveLatLngFromJson((String)point.get("position"));
+                coordinateLatLng = JsonParserManager.getInstance().retreiveLatLngFromJson((String)point.get("position"));
                 initiateSpinner(typeOfPoint, R.array.points_of_interest, (String)point.get("type"));
             }
 
@@ -257,12 +252,4 @@ public class EditCoordinateActivity extends AppCompatActivity {
         return true;
     }
 
-    private LatLng retreiveLatLngFromJson(String stringExtra) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        LatLng obj = gson.fromJson(stringExtra, LatLng.class);
-        return obj;
-    }
 }

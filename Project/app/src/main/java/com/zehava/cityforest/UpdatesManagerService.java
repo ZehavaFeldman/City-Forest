@@ -26,6 +26,7 @@ import com.mapbox.mapboxsdk.annotations.MarkerView;
 import com.mapbox.mapboxsdk.annotations.MarkerViewOptions;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.services.commons.models.Position;
+import com.zehava.cityforest.Managers.JsonParserManager;
 
 import java.sql.Date;
 import java.util.Map;
@@ -34,6 +35,12 @@ import java.util.ArrayList;
 /**
  * Created by avigail on 09/12/17.
  */
+
+
+/*adding and removing user_updates from database and map requires lots of call to database
+ we use a service binded to activity to do the work in the background,
+ avoiding the work from being done on the main thread of the activity
+ notifay activity when needed using callbacks*/
 
 public class UpdatesManagerService extends Service {
 
@@ -47,6 +54,7 @@ public class UpdatesManagerService extends Service {
     Handler handler = new Handler();
     private final IBinder mBinder = new LocalBinder();
 
+    //using a runnable to do needed work non stop
     Runnable serviceRunnable = new Runnable() {
         @Override
         public void run() {
@@ -61,12 +69,15 @@ public class UpdatesManagerService extends Service {
     public void onCreate() {
         super.onCreate();
 
+        //firebase refs
         database = FirebaseDatabase.getInstance();
         updates = database.getReference("user_updates");
 
+        //mrakers arrays to send to activity
         newmarkers=new ArrayList<>();
         oldmarkers=new ArrayList<>();
 
+        //when service started set lastupdated to 0 inorder to get all updates
         lastupdated=0;
 
     }
@@ -90,6 +101,7 @@ public class UpdatesManagerService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
+        //start doing work
         startCounter();
 
         return START_NOT_STICKY;
@@ -97,6 +109,7 @@ public class UpdatesManagerService extends Service {
 
     private void LoopThroughUpdates() {
 
+        /* using query to get only old updates from database*/
         long cutoff = (System.currentTimeMillis() - (1000 * 60 * 60*24)) / 1000;
         Query oldItems = updates.orderByChild("updated").endAt(cutoff);
         oldItems.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -106,8 +119,10 @@ public class UpdatesManagerService extends Service {
                     Map<String, Object> point = ((Map<String, Object>) itemSnapshot.getValue());
 
                     if (point != null) {
+
                         createAndAddMarker(point, true);
 
+                        //remove data from database
                         String key = itemSnapshot.getKey();
                         updates.child(key).removeValue();
 
@@ -115,6 +130,9 @@ public class UpdatesManagerService extends Service {
 
                 }
 
+                /*notifay activity on updates removed and then clear array
+                activity will remove marker from map
+                */
                 iCallback.onUserUpdateNotify(ICallback.USER_UPDATES_CLASS.UPDATE_REMOVED, oldmarkers);
                 oldmarkers.clear();
             }
@@ -139,6 +157,10 @@ public class UpdatesManagerService extends Service {
 
                 }
 
+                /*notifay activity on new updates and then clear array
+                and update lastupdates to insure that next time we will recive only updates we havent recived previsly
+                activity will remove marker from map
+                */
                 iCallback.onUserUpdateNotify(ICallback.USER_UPDATES_CLASS.UPDATE_CREATED, newmarkers);
                 newmarkers.clear();
 
@@ -174,10 +196,12 @@ public class UpdatesManagerService extends Service {
         handler.removeCallbacks(serviceRunnable);
     }
 
+
+    //creating a marker for user_updates and sending ready markers to activity
     private void createAndAddMarker(Map<String, Object> point, boolean old){
 
         String positionJSON = (String) point.get("position");
-        Position position = retrievePositionFromJson(positionJSON);
+        Position position = JsonParserManager.getInstance().retrievePositionFromJson(positionJSON);
 
         /*Creating the marker*/
         LatLng latlng = new LatLng(
@@ -202,14 +226,6 @@ public class UpdatesManagerService extends Service {
 
     }
 
-    public Position retrievePositionFromJson(String posJs) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        Position obj = gson.fromJson(posJs, Position.class);
-        return obj;
-    }
 
 
 }

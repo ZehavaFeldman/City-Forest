@@ -16,42 +16,42 @@
         <service android:name="com.mapbox.mapboxsdk.telemetry.TelemetryService" />
 
         <activity
-            android:name=".CreateNewCoordinateActivity"
+            android:name=".Activitys.CreateNewCoordinateActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="New Coordinate" -->
 
         <activity
-            android:name=".EditorPanelActivity"
+            android:name=".Activitys.EditorPanelActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="Editor Panel" -->
 
         <activity
-            android:name=".EditCoordinateActivity"
+            android:name=".Activitys.EditCoordinateActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="Edit Coordinate" -->
 
         <activity
-            android:name=".CreateNewTrackActivity"
+            android:name=".Activitys.CreateNewTrackActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="New Track" -->
 
         <activity
-            android:name=".EditTracksActivity"
+            android:name=".Activitys.EditTracksActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="Edit Tracks" -->
 
         <activity
-            android:name=".EditTrackActivity"
+            android:name=".Activitys.EditTrackActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="Edit Track" -->
 
         <activity
-            android:name=".Home"
+            android:name=".Activitys.HomeActivity"
             android:screenOrientation="portrait">
 
         </activity>
         <activity
-            android:name=".SplashActivity"
+            android:name=".Activitys.SplashActivity"
             android:screenOrientation="portrait"
             android:theme="@style/SplashTheme">
             <intent-filter>
@@ -61,17 +61,17 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".AdvancedSearchTracksActivity"
+            android:name=".Activitys.AdvancedSearchTracksActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="חיפוש מתקדם" -->
 
         <activity
-            android:name=".SearchTracksResultsActivity"
+            android:name=".Activitys.SearchTracksResultsActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="תוצאות חיפוש" -->
 
         <activity
-            android:name=".SelectedTrackActivity"
+            android:name=".Activitys.SelectedTrackActivity"
             android:screenOrientation="portrait" />
         <activity
             android:name=".MakeOwnTrackActivity"
@@ -79,30 +79,27 @@
         <!-- android:label="יצירת מסלול חדש" -->
 
         <activity
-            android:name=".AboutUsActivity"
+            android:name=".Activitys.AboutUsActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="אודות" -->
 
         <activity
-            android:name=".ContactUsActivity"
+            android:name=".Activitys.ContactUsActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="צור קשר" -->
 
         <activity
-            android:name=".UserGuideActivity"
+            android:name=".Activitys.UserGuideActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="מדריך למשתמש" -->
 
         <activity
-            android:name=".TracksActivity"
+            android:name=".Activitys.TracksActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="רשימת מסלולים" -->
 
         <activity
-            android:name=".EditorHomeActivity"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".CreateUserUpdateActivity"
+            android:name=".Activitys.CreateUserUpdateActivity"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Dialog" />
         <activity
@@ -121,7 +118,7 @@
             android:name=".UpdatesManagerService"
             android:exported="false" />
         <!-- android:label="" -->
-        <activity android:name=".AlgoliaSearchActivity"
+        <activity android:name=".Activitys.AlgoliaSearchActivity"
             android:screenOrientation="portrait">
 
              <!--<intent-filter>-->

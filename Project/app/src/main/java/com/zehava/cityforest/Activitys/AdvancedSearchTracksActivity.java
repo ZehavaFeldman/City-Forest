@@ -1,4 +1,4 @@
-package com.zehava.cityforest;
+package com.zehava.cityforest.Activitys;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -15,11 +15,10 @@ import android.widget.Spinner;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.zehava.cityforest.MakeOwnTrackActivity;
+import com.zehava.cityforest.R;
 
 import static com.zehava.cityforest.Constants.Q_ENDING_POINT;
 import static com.zehava.cityforest.Constants.Q_HAS_WATER;

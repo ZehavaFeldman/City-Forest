@@ -1,4 +1,4 @@
-package com.zehava.cityforest;
+package com.zehava.cityforest.Activitys;
 
 import android.app.AlertDialog;
 import android.content.ComponentName;
@@ -6,15 +6,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.MenuItemCompat;
@@ -33,7 +30,6 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
@@ -57,7 +53,10 @@ import com.google.firebase.auth.GoogleAuthProvider;
 //import com.mapbox.mapboxsdk.plugins.cluster.clustering.ClusterItem;
 //import com.mapbox.mapboxsdk.plugins.cluster.clustering.ClusterManagerPlugin;
 import com.mapbox.mapboxsdk.MapboxAccountManager;
-import com.zehava.cityforest.Models.Coordinate;
+import com.zehava.cityforest.ICallback;
+import com.zehava.cityforest.MakeOwnTrackActivity;
+import com.zehava.cityforest.Managers.JsonParserManager;
+import com.zehava.cityforest.Managers.LocaleManager;
 import com.zehava.cityforest.Models.Track;
 import com.zehava.cityforest.Models.UserUpdate;
 import com.google.android.gms.auth.api.Auth;
@@ -74,8 +73,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import com.mapbox.mapboxsdk.annotations.Icon;
 import com.mapbox.mapboxsdk.annotations.IconFactory;
@@ -84,11 +81,9 @@ import com.mapbox.mapboxsdk.annotations.MarkerView;
 import com.mapbox.mapboxsdk.annotations.MarkerViewOptions;
 import com.mapbox.mapboxsdk.annotations.Polyline;
 import com.mapbox.mapboxsdk.annotations.PolylineOptions;
-import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.constants.Style;
 import com.mapbox.mapboxsdk.geometry.LatLng;
-import com.mapbox.mapboxsdk.geometry.LatLngBounds;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
@@ -101,13 +96,10 @@ import com.mapbox.services.commons.geojson.LineString;
 import com.mapbox.services.commons.models.Position;
 
 import com.mapbox.services.directions.v5.models.DirectionsRoute;
+import com.zehava.cityforest.MoveablePointActivity;
+import com.zehava.cityforest.R;
+import com.zehava.cityforest.UpdatesManagerService;
 
-import org.apache.commons.codec.language.bm.Lang;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.InputStream;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -116,18 +108,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Scanner;
-import java.util.Locale;
 
 
-import static com.zehava.cityforest.Constants.CREATED_UPDATE_FOR_ZOOM;
 import static com.zehava.cityforest.Constants.CURRENT_USER_NAME;
 import static com.zehava.cityforest.Constants.CURRENT_USER_UID;
 import static com.zehava.cityforest.Constants.DEFAULT_JERUSALEM_COORDINATE;
-import static com.zehava.cityforest.Constants.ENGLISH;
-import static com.zehava.cityforest.Constants.HEBREW;
-import static com.zehava.cityforest.Constants.LANGUAGE;
-import static com.zehava.cityforest.Constants.LANGUAGE_TO_LOAD;
 import static com.zehava.cityforest.Constants.MOVE_MARKER;
 import static com.zehava.cityforest.Constants.NEW_USER_UPDATE;
 import static com.zehava.cityforest.Constants.RC_SIGN_IN;
@@ -135,12 +120,11 @@ import static com.zehava.cityforest.Constants.ROUTE_LINE_WIDTH;
 import static com.zehava.cityforest.Constants.SELECTED_TRACK;
 import static com.zehava.cityforest.Constants.SHOW_DETAILS_POPUP;
 import static com.zehava.cityforest.Constants.UPDATE_POSITION;
-import static com.zehava.cityforest.Constants.USER_UPDATE_CREATED;
 import static com.zehava.cityforest.Constants.ZOOM_LEVEL_CURRENT_LOCATION;
 import static com.zehava.cityforest.Constants.ZOOM_LEVEL_MARKER_CLICK;
 import static com.mapbox.services.android.telemetry.location.AndroidLocationEngine.getLocationEngine;
 
-public class Home extends AppCompatActivity implements PermissionsListener, ICallback {
+public class HomeActivity extends AppCompatActivity implements PermissionsListener, ICallback {
 
     private FloatingActionButton floatingActionButton;
     private LocationEngine locationEngine;
@@ -250,7 +234,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
 
         loading_map_progress_bar.setVisibility(View.VISIBLE);
 
-        serviceIntent = new Intent(Home.this, UpdatesManagerService.class);
+        serviceIntent = new Intent(HomeActivity.this, UpdatesManagerService.class);
 
     }
 
@@ -268,7 +252,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
             GoogleSignInAccount account = result.getSignInAccount();
             firebaseAuthWithGoogle(account);
         } else {
-            Toast.makeText(Home.this, "Authentication failed",
+            Toast.makeText(HomeActivity.this, "Authentication failed",
                     Toast.LENGTH_SHORT).show();
         }
     }
@@ -281,12 +265,12 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            Toast.makeText(Home.this, "Signed in successfully",
+                            Toast.makeText(HomeActivity.this, "Signed in successfully",
                                     Toast.LENGTH_SHORT).show();
                             invalidateOptionsMenu();
 
                         } else {
-                            Toast.makeText(Home.this, "Authentication failed",
+                            Toast.makeText(HomeActivity.this, "Authentication failed",
                                     Toast.LENGTH_SHORT).show();
                         }
                     }
@@ -297,6 +281,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
     public boolean onCreateOptionsMenu(Menu menu) {
         final MenuInflater inflater = getMenuInflater();
 
+        //user not loged in show login button
         final FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null)
             inflater.inflate(R.menu.not_signedin_menu, menu);
@@ -309,6 +294,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
 
             ArrayList<String> temp = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.spinner_list_item_array)));
 
+            //check if user has editor permissions, if not remove editor option
             String userUid = currentUser.getUid();
             if(!userUid.equals(getResources().getString(R.string.permitted_editor)) &&
                     !userUid.equals(getResources().getString(R.string.permitted_editor2))&&!(userUid.equals("TNHu1lOD4vfz9SY8EEf4bsiQQuG2"))) {
@@ -332,6 +318,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
                 public void onItemSelected(
                         AdapterView<?> parent, View view, int position, long id) {
 
+                    //user name  nothing to do on click
                     if (position == 0) {
 
                     }
@@ -340,8 +327,9 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
                         signOut();
                     }
 
+                    //switch to editor mode
                     if (position == 2) {
-                        Intent intent = new Intent(Home.this, EditorPanelActivity.class);
+                        Intent intent = new Intent(HomeActivity.this, EditorPanelActivity.class);
                         startActivity(intent);
 
                     }
@@ -419,33 +407,6 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
             showDefaultLocation();
         }
         else {
-            if(FirebaseAuth.getInstance().getCurrentUser()!=null){
-                String current_user_uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-
-                if (current_user_uid.equals(getResources().getString(R.string.permitted_editor))) {
-                    Intent i = new Intent(Home.this, EditorHomeActivity.class);
-                    startActivity(i);
-                }
-                else{
-                    new AlertDialog.Builder(this)
-                            .setTitle(R.string.dialog_exit_app_title)
-                            .setMessage(R.string.dialog_exit_app_body)
-                            .setPositiveButton(R.string.dialog_yes, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-
-                           /*Exits the application*/
-                                    Intent intent = new Intent(Intent.ACTION_MAIN);
-                                    intent.addCategory(Intent.CATEGORY_HOME);
-                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    startActivity(intent);
-
-                                }
-                            })
-                            .setNegativeButton(R.string.dialog_cancel, null)
-                            .show();
-                }
-            } else {
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.dialog_exit_app_title)
                         .setMessage(R.string.dialog_exit_app_body)
@@ -463,10 +424,13 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
                         })
                         .setNegativeButton(R.string.dialog_cancel, null)
                         .show();
-            }
         }
     }
 
+    /*override Icallbacks methods
+    here ue use icallback to detect user_updates updates
+    add and remove update marker from map accurdingly
+    */
     @Override
     public void onDraggableNotify(DRAGGABLE_CALSS draggableIcall) {
 
@@ -506,7 +470,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
         }
     }
 
-
+    //when map ready call function to add tracks and point of interest to map
     private class myOnMapReadyCallback implements OnMapReadyCallback {
         @Override
         public void onMapReady(MapboxMap mapboxMap) {
@@ -525,29 +489,30 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
             startService(serviceIntent); //Starting the service
             bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE); //Binding to the service!
 //
-//            clusterManagerPlugin = new ClusterManagerPlugin<>(Home.this, map);
+//            clusterManagerPlugin = new ClusterManagerPlugin<>(HomeActivity.this, map);
 //
 //            initCameraListener();
 
         }
     }
 
+    //detect when UserManagerService is connected and bind activity to service
     private ServiceConnection mConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName className,
                                        IBinder service) {
-            //Toast.makeText(Home.this, "onServiceConnected called", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(HomeActivity.this, "onServiceConnected called", Toast.LENGTH_SHORT).show();
             // We've binded to LocalService, cast the IBinder and get LocalService instance
             UpdatesManagerService.LocalBinder binder = (UpdatesManagerService.LocalBinder) service;
             myService = binder.getServiceInstance(); //Get instance of your service!
-            myService.registerClient(Home.this); //Activity register in the service as client for callabcks!
+            myService.registerClient(HomeActivity.this); //Activity register in the service as client for callabcks!
 
         }
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
-           // Toast.makeText(Home.this, "onServiceDisconnected called", Toast.LENGTH_SHORT).show();
+           // Toast.makeText(HomeActivity.this, "onServiceDisconnected called", Toast.LENGTH_SHORT).show();
         }
     };
 
@@ -569,7 +534,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
                     Map<String, Object> track = ((Map<String, Object>) entry.getValue());
 
                     String route_st = (String)track.get("route");
-                    DirectionsRoute route = retrieveRouteFromJson(route_st);
+                    DirectionsRoute route = JsonParserManager.getInstance().retrieveRouteFromJson(route_st);
                     drawRoute(route);
                 }
                 loading_map_progress_bar.setVisibility(View.INVISIBLE);
@@ -600,7 +565,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
                     Map<String, Object> point = ((Map<String, Object>) entry.getValue());
                     /*Now the object 'cor' holds a *map* for a specific coordinate*/
                     String positionJSON = (String) point.get("position");
-                    Position position = retrievePositionFromJson(positionJSON);
+                    Position position = JsonParserManager.getInstance().retrievePositionFromJson(positionJSON);
 
                     /*Creating the marker on the map*/
                     LatLng latlng = new LatLng(
@@ -661,26 +626,6 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
     }
 
 
-    private void showDefaultLocation(){
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                new LatLng(DEFAULT_JERUSALEM_COORDINATE.getLatitude(),
-                        DEFAULT_JERUSALEM_COORDINATE.getLongitude()), 10));
-    }
-
-
-    private void toggleLanguage() {
-
-        LocaleManager.toggaleLang(this);
-        restartActivity();
-
-    }
-
-    private void restartActivity() {
-        Intent intent = getIntent();
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        finish();
-        startActivity(intent);
-    }
 
 
     private void initPopupWindow(Object object){
@@ -724,7 +669,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
         read_more.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Home.this, SelectedTrackActivity.class);
+                Intent intent = new Intent(HomeActivity.this, SelectedTrackDetailsActivity.class);
                 intent.putExtra(SELECTED_TRACK, String.valueOf(track.get("db_key")));
                 startActivity(intent);
             }
@@ -806,11 +751,10 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Map<String, Object> updates = (Map<String, Object>)dataSnapshot.getValue();
-                Log.d("key",key);
+
 
                 Map<String,Object> u_update = (Map<String,Object>)updates.get(key);
                 if(u_update!=null){
-                    Log.d("key foud","");
                     String created, owner;
                     Date time;
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yy | HH:mm");
@@ -983,15 +927,17 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
         });
     }
 
-
+    /* mp click listener- when click detected check if user touced a route*/
     private class MyOnMapClickListener implements MapboxMap.OnMapClickListener{
         @Override
         public void onMapClick(@NonNull final LatLng point) {
+
+            //if popup open user touched map to dissmis
             if(SHOW_DETAILS_POPUP){
                 mPopupWindow.dismiss();
             }
 
-
+            //loop through tacks and check if touch point is in route points
             else{
                 tracks.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -1006,7 +952,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
                             Map<String, Object> track = ((Map<String, Object>) entry.getValue());
 
                             String route_st = (String)track.get("route");
-                            DirectionsRoute route = retrieveRouteFromJson(route_st);
+                            DirectionsRoute route = JsonParserManager.getInstance().retrieveRouteFromJson(route_st);
                             Polyline polyline = getPolyLineFromRoute(route);
 
 
@@ -1091,7 +1037,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
 
 
         if(logo != -1) {
-            IconFactory iconFactory = IconFactory.getInstance(Home.this);
+            IconFactory iconFactory = IconFactory.getInstance(HomeActivity.this);
             Icon icon = iconFactory.fromResource(logo);
             markerViewOptions.getMarker().setIcon(icon);
             MarkerView m = markerViewOptions.getMarker();
@@ -1106,7 +1052,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
 
     private int type(Icon icon){
         for(int i=0;i<10;i++) {
-            IconFactory iconFactory = IconFactory.getInstance(Home.this);
+            IconFactory iconFactory = IconFactory.getInstance(HomeActivity.this);
             Icon icon1 = iconFactory.fromResource(UserUpdate.whatIsTheLogoForId(1));
             if(icon==icon1)
                 return i;
@@ -1133,53 +1079,6 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
     }
 
 
-    /*Method casts LatLng object to Json, to be able to send it via intent*/
-    public String castLatLngToJson(LatLng point){
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        String json = gson.toJson(point, LatLng.class);
-        return json;
-    }
-
-    /*Method casts LatLng object to Json, to be able to send it via intent*/
-    public String castRouteToJson(DirectionsRoute route){
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        String json = gson.toJson(route, DirectionsRoute.class);
-        return json;
-    }
-
-    private String userUpdateHashFunction(double value, int id) {
-        //double latitude = chosenCoordinateLatLng.getLatitude();
-
-        int hash = ((int) (10000000*value))+id;
-        return "" + hash;
-    }
-
-
-    /*Method get String that represents a Position Json object.
-    * Method retrieve the position object and returns it*/
-    public Position retrievePositionFromJson(String posJs) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        Position obj = gson.fromJson(posJs, Position.class);
-        return obj;
-    }
-
-    public DirectionsRoute retrieveRouteFromJson(String route) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        DirectionsRoute obj = gson.fromJson(route, DirectionsRoute.class);
-        return obj;
-    }
 
 
 
@@ -1199,6 +1098,28 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
             finish();
         }
     }
+
+
+    // toggle language via locale manager and restart activty to update UI on language changed
+    private void toggleLanguage() {
+
+        LocaleManager.toggaleLang(this);
+
+
+        Intent intent = getIntent();
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        finish();
+        startActivity(intent);
+
+    }
+
+
+    private void showDefaultLocation(){
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                new LatLng(DEFAULT_JERUSALEM_COORDINATE.getLatitude(),
+                        DEFAULT_JERUSALEM_COORDINATE.getLongitude()), 10));
+    }
+
 
     private void toggleGps(boolean enableGps) {
         if (enableGps) {
@@ -1260,6 +1181,8 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
         permissionsManager.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
+    //retrive usr location to set his update at that point
+    // user can only send an update at his current location- if not found update will not be sent
     private void sendUpdate(boolean enableGps){
         if (enableGps) {
             // Check if user has granted location permission
@@ -1269,10 +1192,10 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
             } else {
                 Location lastLocation = getLastLocation();
                 if(lastLocation!= null) {
-                    Intent i = new Intent(Home.this, CreateUserUpdateActivity.class);
+                    Intent i = new Intent(HomeActivity.this, CreateUserUpdateActivity.class);
                     i.putExtra(CURRENT_USER_UID, uid);
                     i.putExtra(CURRENT_USER_NAME, uname);
-                    i.putExtra(UPDATE_POSITION, castLatLngToJson(new LatLng(lastLocation)));
+                    i.putExtra(UPDATE_POSITION, JsonParserManager.getInstance().castLatLngToJson(new LatLng(lastLocation)));
                     startActivityForResult(i, NEW_USER_UPDATE);
                 }
                 else{
@@ -1283,10 +1206,10 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
         } else {
             Location lastLocation = getLastLocation();
             if(lastLocation!= null) {
-                Intent i = new Intent(Home.this, CreateUserUpdateActivity.class);
+                Intent i = new Intent(HomeActivity.this, CreateUserUpdateActivity.class);
                 i.putExtra(CURRENT_USER_UID, uid);
                 i.putExtra(CURRENT_USER_NAME, uname);
-                i.putExtra(UPDATE_POSITION, castLatLngToJson(new LatLng(lastLocation)));
+                i.putExtra(UPDATE_POSITION, JsonParserManager.getInstance().castLatLngToJson(new LatLng(lastLocation)));
                 startActivityForResult(i, NEW_USER_UPDATE);
             }
             else{
@@ -1298,7 +1221,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
     }
 
     private Location getLastLocation(){
-        if (ActivityCompat.checkSelfPermission(Home.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(Home.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(HomeActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(HomeActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -1339,7 +1262,7 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
 
 
         } catch (Exception ex) {
-            Toast.makeText(Home.this, ex.toString(),
+            Toast.makeText(HomeActivity.this, ex.toString(),
                     Toast.LENGTH_SHORT).show();
         }
 
@@ -1392,8 +1315,9 @@ public class Home extends AppCompatActivity implements PermissionsListener, ICal
     protected void onDestroy() {
         super.onDestroy();
         mapView.onDestroy();
-//
-        stopService(serviceIntent); //Starting the service
+
+        //Stoping the service on activity desotry
+        stopService(serviceIntent);
 //        myService.stopCounter();
 
     }

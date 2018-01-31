@@ -1,4 +1,4 @@
-package com.zehava.cityforest;
+package com.zehava.cityforest.Activitys;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -13,15 +13,17 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.firebase.auth.FirebaseAuth;
+import com.zehava.cityforest.MakeOwnTrackActivity;
+import com.zehava.cityforest.R;
 
-public class UserGuideActivity extends AppCompatActivity {
+public class AboutUsActivity extends AppCompatActivity {
 
     private GoogleApiClient mGoogleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_user_guide);
+        setContentView(R.layout.activity_about_us);
     }
 
     /*In order to be able to sign out from the logged in account, I have to
@@ -39,6 +41,24 @@ public class UserGuideActivity extends AppCompatActivity {
     }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -51,8 +71,6 @@ public class UserGuideActivity extends AppCompatActivity {
         Intent i;
         switch(item.getItemId()){
             case R.id.aboutActivity:
-                i = new Intent(this, AboutUsActivity.class);
-                startActivity(i);
                 return true;
 
             case R.id.contactUsActivity:
@@ -63,6 +81,8 @@ public class UserGuideActivity extends AppCompatActivity {
 
 
             case R.id.userGuideActivity:
+                i = new Intent(this, UserGuideActivity.class);
+                startActivity(i);
                 return true;
 
             case R.id.searchTracksActivity:
@@ -96,7 +116,7 @@ public class UserGuideActivity extends AppCompatActivity {
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
-                        Intent i = new Intent(UserGuideActivity.this, Home.class);
+                        Intent i = new Intent(AboutUsActivity.this, HomeActivity.class);
                         startActivity(i);
                     }});
     }

@@ -1,4 +1,4 @@
-package com.zehava.cityforest;
+package com.zehava.cityforest.Activitys;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -21,7 +21,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -36,7 +35,6 @@ import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.RatingBar;
 import android.widget.LinearLayout;
-import android.widget.ImageView;
 
 //import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.MapboxAccountManager;
@@ -44,8 +42,10 @@ import com.mapbox.services.geocoding.v5.GeocodingCriteria;
 import com.mapbox.services.geocoding.v5.MapboxGeocoding;
 import com.mapbox.services.geocoding.v5.models.CarmenFeature;
 import com.mapbox.services.geocoding.v5.models.GeocodingResponse;
+import com.zehava.cityforest.DragAndDrop;
+import com.zehava.cityforest.ICallback;
+import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Models.Coordinate;
-import com.zehava.cityforest.Models.Track;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -56,11 +56,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.MutableData;
-import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import com.mapbox.mapboxsdk.annotations.Icon;
 import com.mapbox.mapboxsdk.annotations.IconFactory;
@@ -87,6 +83,7 @@ import com.mapbox.services.directions.v5.DirectionsCriteria;
 import com.mapbox.services.directions.v5.MapboxDirections;
 import com.mapbox.services.directions.v5.models.DirectionsResponse;
 import com.mapbox.services.directions.v5.models.DirectionsRoute;
+import com.zehava.cityforest.R;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -170,6 +167,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     private PopupWindow mPopupWindow;
     private RelativeLayout mRelativeLayout;
 
+    /*marker and imageview nedded for fragging points on map*/
     private Marker droppedMarker;
     private DragAndDrop hoveringMarker;
 
@@ -180,13 +178,12 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        /*Mapbox and firebase initializations*/
-//        Mapbox.getInstance(this, getString(R.string.access_token));
+        /*hide status bar and app label in action bar*/
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-
+        /*Mapbox initializations*/
         MapboxAccountManager.start(this,getString(R.string.access_token));
         setContentView(R.layout.activity_editor_panel);
 
@@ -198,6 +195,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(new myOnMapReadyCallback());
 
+        /*initalizing draggable marker and adding to map*/
         hoveringMarker = new DragAndDrop(this,this);
         hoveringMarker.setImageResource(R.drawable.blue_marker);
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
@@ -207,6 +205,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         hoveringMarker.setVisibility(View.INVISIBLE);
         mapView.addView(hoveringMarker);
 
+        /*firebase initialization*/
         database = FirebaseDatabase.getInstance();
         coordinates = database.getReference("coordinates");
         points_of_interest = database.getReference("points_of_interest");
@@ -274,7 +273,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
                 Location lastLocation = locationEngine.getLastLocation();
 
-                i.putExtra(UPDATE_POSITION, castLatLngToJson(new LatLng(lastLocation)));
+                i.putExtra(UPDATE_POSITION, JsonParserManager.getInstance().castLatLngToJson(new LatLng(lastLocation)));
                 startActivityForResult(i, NEW_USER_UPDATE);
 
             }
@@ -298,8 +297,12 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         super.onStart();
     }
 
+    /* owveriding ICallback methods-
+    we use icallback for detecting dragable states and user update*/
+
     @Override
     public void onDraggableNotify(DRAGGABLE_CALSS draggableIcall) {
+        //user stoped draging, time to update marker position
         if(draggableIcall == DRAGGABLE_CALSS.VIEW_MOVED){
             if (map != null) {
 
@@ -328,6 +331,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             }
 
         }
+        //user started draging, time to remve marker and set imageview to new position
         if(draggableIcall == DRAGGABLE_CALSS.VIEW_TOUCHED){
             if (map != null && droppedMarker!=null) {
 
@@ -346,7 +350,9 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
     @Override
     public void onUserUpdateNotify(USER_UPDATES_CLASS userUpdatesClass, ArrayList<Marker> markers) {
+        //new user updates added to database, add markers to map
 
+        //remove old updates from map
     }
 
 
@@ -485,9 +491,9 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             }
             if(v.getId() == save_track.getId()){
                 Intent i = new Intent(EditorPanelActivity.this, CreateNewTrackActivity.class);
-                i.putExtra(CHOSEN_TRACK, castRouteToJson(currentRoute));
-                i.putExtra(TRACK_STARTING_POINT, castLatLngToJson(track_markers.get(0).getPosition()));
-                i.putExtra(TRACK_ENDING_POINT, castLatLngToJson(track_markers.get(track_markers.size()-1).getPosition()));
+                i.putExtra(CHOSEN_TRACK, JsonParserManager.getInstance().castRouteToJson(currentRoute));
+                i.putExtra(TRACK_STARTING_POINT, JsonParserManager.getInstance().castLatLngToJson(track_markers.get(0).getPosition()));
+                i.putExtra(TRACK_ENDING_POINT, JsonParserManager.getInstance().castLatLngToJson(track_markers.get(track_markers.size()-1).getPosition()));
                 startActivityForResult(i, NEW_TRACK);
             }
 
@@ -509,10 +515,10 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         }
     }
 
+    // details window shown to user when clicked on marker or route
     private void initPopupWindow(Object object){
 
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-       // View customView = inflater.inflate(R.layout.coordinate_details_popup, null);
 
         mPopupWindow = new PopupWindow(
                 inflater.inflate(R.layout.coordinate_details_popup, null),
@@ -526,11 +532,11 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         delete_coordinate_button = (ImageButton)mPopupWindow.getContentView().findViewById(R.id.deleteCoordinateButt);
         edit_coordinate_button = (ImageButton)mPopupWindow.getContentView().findViewById(R.id.editCoordinateButt);
 
-        Log.d("class", "--"+object.getClass());
+
         if(object.getClass().equals(MarkerView.class))
-            initMarkerPopup((Marker) object, mPopupWindow.getContentView());
+            initMarkerPopup((Marker) object);
         else if(object.getClass().equals(HashMap.class))
-            initTrackPopup((Map<String, Object>)object, mPopupWindow.getContentView());
+            initTrackPopup((Map<String, Object>)object);
 
         mPopupWindow.setOutsideTouchable(true);
         mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
@@ -545,7 +551,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
     }
 
-    private void initTrackPopup(final  Map<String, Object> track, View customView){
+    //track popup
+    private void initTrackPopup(final  Map<String, Object> track){
         TextView title = (TextView)mPopupWindow.getContentView().findViewById(R.id.main_content);
         title.setText(track.get("track_name").toString());
 
@@ -560,7 +567,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             }
         });
 
-
+        //add click listeners for editing and removing track
         delete_coordinate_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -576,16 +583,10 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
         RatingBar ratingBar = (RatingBar)mPopupWindow.getContentView().findViewById(R.id.ratingBar);
         ratingBar.setVisibility(View.VISIBLE);
-//        ratingBar.setRating((long) track.get("star_count"));
 
+        //editor can only view current rating
         ratingBar.setIsIndicator(true);
 
-//        ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
-//            @Override
-//            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-//                onStarClicked(track, rating);
-//            }
-//        });
 
         LinearLayout likesWrp = (LinearLayout) mPopupWindow.getContentView().findViewById(R.id.like_wrp);
         likesWrp.setVisibility(View.VISIBLE);
@@ -593,25 +594,26 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         likes_count = (TextView) mPopupWindow.getContentView().findViewById(R.id.like_count);
         likes_count.setText(String.valueOf( track.get("like_count")));
 
-        ImageView likeImg = (ImageView) mPopupWindow.getContentView().findViewById(R.id.likes);
-        likeImg.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                onLikeClicked(track,likes_count, mPopupWindow);
-                return true;
-
-            }
-        });
+//        ImageView likeImg = (ImageView) mPopupWindow.getContentView().findViewById(R.id.likes);
+//        likeImg.setOnTouchListener(new View.OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View v, MotionEvent event) {
+//                onLikeClicked(track,likes_count);
+//                return true;
+//
+//            }
+//        });
     }
 
-    private void initMarkerPopup(final Marker marker, View customView){
-        TextView title = (TextView)customView.findViewById(R.id.main_content);
+    //point of interest popup
+    private void initMarkerPopup(final Marker marker){
+        TextView title = (TextView)mPopupWindow.getContentView().findViewById(R.id.main_content);
         title.setText(marker.getTitle());
 
-        TextView discreption = (TextView)customView.findViewById(R.id.minor_content);
+        TextView discreption = (TextView)mPopupWindow.getContentView().findViewById(R.id.minor_content);
         discreption.setText(marker.getSnippet());
 
-        Button read_more = (Button) customView.findViewById(R.id.read_more);
+        Button read_more = (Button) mPopupWindow.getContentView().findViewById(R.id.read_more);
         read_more.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -619,7 +621,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             }
         });
 
-
+        //add click listeners for editing and removing point of intereset
         delete_coordinate_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -634,69 +636,72 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         });
 
     }
+/* adding likes and staing track using Transaction to insure users vote will be saved in database.
+* this is needed since many users can be voting at once and writing to database might be rejected*/
 
+//    private void onLikeClicked(final Map<String,Object> track, final TextView textview) {
+//        String key= (String) track.get("db_key");
+//        DatabaseReference trackRef = tracks.child(key);
+//
+//        trackRef.runTransaction(new Transaction.Handler() {
+//            @Override
+//            public Transaction.Result doTransaction(MutableData mutableData) {
+//
+//                final Track t = mutableData.getValue(Track.class);
+//
+//                if(t == null) {
+//                    return Transaction.success(mutableData);
+//                }
 
-    private void onLikeClicked(final Map<String,Object> track, final TextView textview, final PopupWindow popupWindow) {
-        String key= (String) track.get("db_key");
-        DatabaseReference trackRef = tracks.child(key);
-
-        trackRef.runTransaction(new Transaction.Handler() {
-            @Override
-            public Transaction.Result doTransaction(MutableData mutableData) {
-
-                final Track t = mutableData.getValue(Track.class);
-
-                if(t == null) {
-                    return Transaction.success(mutableData);
-                }
-
-                if (t.getLikes().containsKey(uid)) {
-                    // Unstar the track and remove self from stars
-                    t.setLike_count(t.getLike_count() - 1);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            textview.setText(String.valueOf((int)t.getLike_count()));
-
-                         //   popupWindow.dismiss();
-                        }
-                    });
-
-
-                    Map<String, Boolean> temp = t.getLikes();
-                    temp.remove(uid);
-                    t.setLikes(temp);
-                } else {
-                    // Star the track and add self to stars
-                    t.setLike_count(t.getLike_count() + 1);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            textview.setText(String.valueOf((int)t.getLike_count()));
-                          //  popupWindow.dismiss();
-                        }
-                    });
-
-                    Map<String, Boolean> temp = t.getLikes();
-                    temp.put(uid,true);
-                    t.setLikes(temp);
-
-                }
-
-                // Set value and report transaction success
-                mutableData.setValue(t);
-
-                return Transaction.success(mutableData);
-            }
-
-            @Override
-            public void onComplete(DatabaseError databaseError, boolean b,
-                                   DataSnapshot dataSnapshot) {
-                // Transaction completed
-                Log.d(EditorPanelActivity.class.getSimpleName(), "postTransaction:onComplete:" + databaseError);
-            }
-        });
-    }
+                    /* when user clicked on like check if his uid is in tacks likes array-
+                    if found decrese likes count and remove him from array, user is deleting his vote. otherwise increse like count
+                     */
+//
+//                if (t.getLikes().containsKey(uid)) {
+//                    // Unstar the track and remove self from stars
+//                    t.setLike_count(t.getLike_count() - 1);
+//                    runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            textview.setText(String.valueOf((int)t.getLike_count()));
+//                        }
+//                    });
+//
+//
+//                    Map<String, Boolean> temp = t.getLikes();
+//                    temp.remove(uid);
+//                    t.setLikes(temp);
+//                } else {
+//                    // Star the track and add self to stars
+//                    t.setLike_count(t.getLike_count() + 1);
+//                    runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            textview.setText(String.valueOf((int)t.getLike_count()));
+//
+//                        }
+//                    });
+//
+//                    Map<String, Boolean> temp = t.getLikes();
+//                    temp.put(uid,true);
+//                    t.setLikes(temp);
+//
+//                }
+//
+//                // Set value and report transaction success
+//                mutableData.setValue(t);
+//
+//                return Transaction.success(mutableData);
+//            }
+//
+//            @Override
+//            public void onComplete(DatabaseError databaseError, boolean b,
+//                                   DataSnapshot dataSnapshot) {
+//                // Transaction completed
+//                Log.d(EditorPanelActivity.class.getSimpleName(), "postTransaction:onComplete:" + databaseError);
+//            }
+//        });
+//    }
 
 
 //    private void onStarClicked(final Map<String,Object> track, final Float stars) {
@@ -713,6 +718,9 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 //                    return Transaction.success(mutableData);
 //                }
 //
+                     /* when user clicked on rating bar if his uid is in tacks stars array-
+                    if found update his rating , other wise add him to array- update star count
+                     */
 //                if (t.getStars().containsKey(uid)) {
 //
 //                    Map<String, Float> temp = t.getStars();
@@ -759,7 +767,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     Map<String, Object> track = ((Map<String, Object>) entry.getValue());
 
                     String route_st = (String)track.get("route");
-                    DirectionsRoute route = retrieveRouteFromJson(route_st);
+                    DirectionsRoute route = JsonParserManager.getInstance().retrieveRouteFromJson(route_st);
                     drawRoute(route);
                 }
                 loading_map_progress_bar.setVisibility(View.INVISIBLE);
@@ -774,14 +782,6 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
 
 
-    public DirectionsRoute retrieveRouteFromJson(String route) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        DirectionsRoute obj = gson.fromJson(route, DirectionsRoute.class);
-        return obj;
-    }
 
     private void showAllPointsOfInterest() {
         /*Reading one time from the database, we get the points of interest map list*/
@@ -801,7 +801,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     Map<String, Object> point = ((Map<String, Object>) entry.getValue());
                     /*Now the object 'cor' holds a *map* for a specific coordinate*/
                     String positionJSON = (String) point.get("position");
-                    Position position = retrievePositionFromJson(positionJSON);
+                    Position position = JsonParserManager.getInstance().retrievePositionFromJson(positionJSON);
 
                     /*Creating the marker on the map*/
                     LatLng latlng = new LatLng(
@@ -840,7 +840,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     Map<String, Object> point = ((Map<String, Object>) entry.getValue());
                     /*Now the object 'cor' holds a *map* for a specific coordinate*/
                     String positionJSON = (String) point.get("position");
-                    Position position = retrievePositionFromJson(positionJSON);
+                    Position position = JsonParserManager.getInstance().retrievePositionFromJson(positionJSON);
 
                     /*Creating the marker on the map*/
                     LatLng latlng = new LatLng(
@@ -879,7 +879,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     Map<String, Object> cor = ((Map<String, Object>) entry.getValue());
                     /*Now the object 'cor' holds a *map* for a specific coordinate*/
                     String positionJSON = (String) cor.get("position");
-                    Position position = retrievePositionFromJson(positionJSON);
+                    Position position = JsonParserManager.getInstance().retrievePositionFromJson(positionJSON);
 
                     /*Creating the marker on the map*/
                     LatLng latlng = new LatLng(
@@ -1033,7 +1033,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                             Map<String, Object> track = ((Map<String, Object>) entry.getValue());
 
                             String route_st = (String)track.get("route");
-                            DirectionsRoute route = retrieveRouteFromJson(route_st);
+                            DirectionsRoute route = JsonParserManager.getInstance().retrieveRouteFromJson(route_st);
                             Polyline polyline = getPolyLineFromRoute(route);
 
 
@@ -1349,7 +1349,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             public void onClick(DialogInterface dialog, int id) {
                 String key = (String) track.get("db_key");
                 String route_st = (String)track.get("route");
-                DirectionsRoute route = retrieveRouteFromJson(route_st);
+                DirectionsRoute route = JsonParserManager.getInstance().retrieveRouteFromJson(route_st);
                 for(Polyline polyline: map.getPolylines()){
                     if (polyline.getPoints().toString().equals(getPolyLineFromRoute(route).getPoints().toString()))
                     {
@@ -1449,7 +1449,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         builder.setPositiveButton(R.string.dialog_ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 Intent i = new Intent(EditorPanelActivity.this, CreateNewCoordinateActivity.class);
-                i.putExtra(CHOSEN_COORDINATE, castLatLngToJson(point));
+                i.putExtra(CHOSEN_COORDINATE, JsonParserManager.getInstance().castLatLngToJson(point));
                 startActivityForResult(i, NEW_COORDINATE);
             }
         });
@@ -1463,48 +1463,6 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         dialog.show();
     }
 
-
-    /*Method casts LatLng object to Json, to be able to send it via intent*/
-    public String castLatLngToJson(LatLng point){
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        String json = gson.toJson(point, LatLng.class);
-        return json;
-    }
-
-    /*Method casts LatLng object to Json, to be able to send it via intent*/
-    public String castRouteToJson(DirectionsRoute route){
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        String json = gson.toJson(route, DirectionsRoute.class);
-        return json;
-    }
-
-    private LatLng retreiveLatLngFromJson(String stringExtra) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        LatLng obj = gson.fromJson(stringExtra, LatLng.class);
-        return obj;
-    }
-
-
-
-    /*Method get String that represents a Position Json object.
-    * Method retrieve the position object and returns it*/
-    public Position retrievePositionFromJson(String posJs) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        Position obj = gson.fromJson(posJs, Position.class);
-        return obj;
-    }
 
 
     @Override
@@ -1608,7 +1566,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
-                        Intent i = new Intent(EditorPanelActivity.this, Home.class);
+                        Intent i = new Intent(EditorPanelActivity.this, HomeActivity.class);
                         startActivity(i);
                     }});
     }
@@ -1619,7 +1577,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             super.onActivityResult(requestCode, resultCode, data);
 
             if(requestCode == NEW_COORDINATE && resultCode == COORDINATE_CREATED){
-                LatLng createdCoordinateLatLng = retreiveLatLngFromJson(data.getStringExtra(CREATED_COORDINATE_FOR_ZOOM));
+                LatLng createdCoordinateLatLng = JsonParserManager.getInstance().retreiveLatLngFromJson(data.getStringExtra(CREATED_COORDINATE_FOR_ZOOM));
 
                 String key = hashFunction(createdCoordinateLatLng.getLongitude());
                 updateScreenCoordinates(key, createdCoordinateLatLng, NEW_COORDINATE);
@@ -1630,7 +1588,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
             }
             if(requestCode == EDIT_COORDINATE && resultCode == COORDINATE_EDITED){
-                LatLng createdCoordinateLatLng = retreiveLatLngFromJson(data.getStringExtra(EDITED_COORDINATE_FOR_ZOOM));
+                LatLng createdCoordinateLatLng = JsonParserManager.getInstance().retreiveLatLngFromJson(data.getStringExtra(EDITED_COORDINATE_FOR_ZOOM));
                 String key = hashFunction(createdCoordinateLatLng.getLatitude());
                 updateScreenCoordinates(key, createdCoordinateLatLng, EDIT_COORDINATE);
 
@@ -1640,7 +1598,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             }
 
             if(requestCode == NEW_USER_UPDATE && resultCode == USER_UPDATE_CREATED){
-                LatLng createdUpdateCoordinateLatLang = retreiveLatLngFromJson(data.getStringExtra(CREATED_UPDATE_FOR_ZOOM));
+                LatLng createdUpdateCoordinateLatLang = JsonParserManager.getInstance().retreiveLatLngFromJson(data.getStringExtra(CREATED_UPDATE_FOR_ZOOM));
                 String key = userUpdateHashFunction(createdUpdateCoordinateLatLang.getLatitude(),data.getIntExtra("id",0));
                 updateScreenUserUpdatesValue(key, createdUpdateCoordinateLatLang, NEW_USER_UPDATE);
 
@@ -1901,9 +1859,27 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             showDefaultLocation();
         }
         else {
-            Intent i = new Intent(EditorPanelActivity.this, EditorHomeActivity.class);
-            startActivity(i);
+
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.dialog_exit_app_title)
+                    .setMessage(R.string.dialog_exit_app_body)
+                    .setPositiveButton(R.string.dialog_yes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                           /*Exits the application*/
+                            Intent intent = new Intent(Intent.ACTION_MAIN);
+                            intent.addCategory(Intent.CATEGORY_HOME);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+
+                        }
+                    })
+
+                    .setNegativeButton(R.string.dialog_cancel, null)
+                    .show();
         }
+
     }
 
     @Override

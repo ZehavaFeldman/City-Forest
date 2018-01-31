@@ -9,7 +9,10 @@ import java.util.ArrayList;
  * Created by avigail on 05/12/17.
  */
 
+
+// we use call backs to communicate between activitys and classes
 public interface ICallback {
+
     enum DRAGGABLE_CALSS {
         VIEW_MOVED,
         VIEW_TOUCHED

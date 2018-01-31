@@ -1,4 +1,4 @@
-package com.zehava.cityforest;
+package com.zehava.cityforest.Activitys;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -13,6 +13,8 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.firebase.auth.FirebaseAuth;
+import com.zehava.cityforest.MakeOwnTrackActivity;
+import com.zehava.cityforest.R;
 
 public class ContactUsActivity extends AppCompatActivity {
 
@@ -79,7 +81,7 @@ public class ContactUsActivity extends AppCompatActivity {
                 return true;
 
 //            case R.id.homeActivity:
-//                i = new Intent(this, Home.class);
+//                i = new Intent(this, HomeActivity.class);
 //                startActivity(i);
 //                return true;
 
@@ -119,7 +121,7 @@ public class ContactUsActivity extends AppCompatActivity {
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
-                        Intent i = new Intent(ContactUsActivity.this, Home.class);
+                        Intent i = new Intent(ContactUsActivity.this, HomeActivity.class);
                         startActivity(i);
                     }});
     }

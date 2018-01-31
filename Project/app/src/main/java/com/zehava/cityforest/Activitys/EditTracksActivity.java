@@ -1,4 +1,4 @@
-package com.zehava.cityforest;
+package com.zehava.cityforest.Activitys;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -28,6 +28,8 @@ import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.services.commons.geojson.LineString;
 import com.mapbox.services.commons.models.Position;
 import com.mapbox.services.directions.v5.models.DirectionsRoute;
+import com.zehava.cityforest.MyFirebaseListAdapter;
+import com.zehava.cityforest.R;
 
 import java.util.List;
 

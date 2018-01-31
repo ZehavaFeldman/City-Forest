@@ -1,11 +1,9 @@
-package com.zehava.cityforest;
+package com.zehava.cityforest.Activitys;
 
 import android.app.SearchManager;
 import android.content.Context;
 import android.os.Build;
-import android.support.annotation.NonNull;
 import android.support.v4.view.MenuItemCompat;
-import android.support.v4.widget.ImageViewCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -21,22 +19,16 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.support.v7.widget.SearchView;
 
-import com.algolia.instantsearch.helpers.InstantSearch;
-import com.algolia.instantsearch.helpers.Searcher;
-import com.algolia.instantsearch.model.AlgoliaResultListener;
-import com.algolia.instantsearch.model.SearchResults;
 import com.algolia.search.saas.AlgoliaException;
 import com.algolia.search.saas.Client;
 import com.algolia.search.saas.CompletionHandler;
 import com.algolia.search.saas.Index;
 import com.algolia.search.saas.Query;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.zehava.cityforest.HighlightRenderer;
+import com.zehava.cityforest.HighlightedResult;
 import com.zehava.cityforest.Models.PointOfInterest;
 import com.zehava.cityforest.Models.SearchResultsJsonParser;
+import com.zehava.cityforest.R;
 
 import org.json.JSONObject;
 import java.util.Collection;
@@ -58,11 +50,11 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
     // UI:
     private SearchView searchView;
     private ListView moviesListView;
-    private MovieAdapter moviesListAdapter;
+    private PointOfInterestAdapter moviesListAdapter;
 
     private HighlightRenderer highlightRenderer;
 
-    private ImageView dogFilter, smockFilter, cutloryFilter, bikeFilter,waterFilter, historyFilter;
+    private ImageView dogFilter, cutloryFilter, bikeFilter,waterFilter, historyFilter;
 
     // Constants
 
@@ -85,7 +77,7 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
 
         // Bind UI components.
         moviesListView = (ListView) findViewById(R.id.listview_movies);
-        moviesListView.setAdapter(moviesListAdapter = new MovieAdapter(this, R.layout.hits_item));
+        moviesListView.setAdapter(moviesListAdapter = new PointOfInterestAdapter(this, R.layout.hits_item));
         moviesListView.setOnScrollListener(this);
 
         // Init Algolia.
@@ -98,15 +90,14 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
         query.setAttributesToHighlight("title","snippet");
         query.setHitsPerPage(HITS_PER_PAGE);
 
+        //init filters and attach to click listener
         dogFilter = (ImageView)findViewById(R.id.dog);
-       // smockFilter = (ImageView)findViewById(R.id.smoking);
         cutloryFilter = (ImageView)findViewById(R.id.cutlery);
         bikeFilter = (ImageView)findViewById(R.id.bicycle);
         waterFilter = (ImageView)findViewById(R.id.water);
         historyFilter = (ImageView)findViewById(R.id.history);
 
         dogFilter.setOnClickListener(this);
-       // smockFilter.setOnClickListener(this);
         cutloryFilter.setOnClickListener(this);
         bikeFilter.setOnClickListener(this);
         waterFilter.setOnClickListener(this);
@@ -133,6 +124,7 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
 
     // Actions
 
+    //search- search for data by users input
     private void search() {
         final int currentSearchSeqNo = ++lastSearchedSeqNo;
         query.setQuery(searchView.getQuery().toString());
@@ -173,7 +165,7 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
     }
 
 
-
+    //filter- filter data by categorys
     private void filter() {
         final int currentSearchSeqNo = ++lastSearchedSeqNo;
         query.setFilters(filter);
@@ -213,6 +205,7 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
         });
     }
 
+    //load more only on user scroll- inhancing proformance
     private void loadMore() {
         Query loadMoreQuery = new Query(query);
         loadMoreQuery.setPage(++lastRequestedPage);
@@ -239,34 +232,14 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
         });
     }
 
-    private void queryTracks(String feild){
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference();
 
-        com.google.firebase.database.Query query = reference.child("tracks").orderByChild(feild).equalTo(true);
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    // dataSnapshot is the "track" node with all children with 'feild' true
-                    for (DataSnapshot tracks : dataSnapshot.getChildren()) {
-                        // do something with the individual "tracks"
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
 
 
 
     // Data sources
 
-    private class MovieAdapter extends ArrayAdapter<HighlightedResult<PointOfInterest>> {
-        public MovieAdapter(Context context, int resource) {
+    private class PointOfInterestAdapter extends ArrayAdapter<HighlightedResult<PointOfInterest>> {
+        public PointOfInterestAdapter(Context context, int resource) {
             super(context, resource);
         }
 
@@ -308,20 +281,16 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
     public void onClick(View view) {
         switch (view.getId()){
             case R.id.dog:
-                queryTracks("suitable_for_dogs");
                 break;
-//            case R.id.smoking:
-//                queryTracks("suitable_for_families");
-//                break;
+
             case R.id.water:
-                queryTracks("has_water");
+
                 break;
             case R.id.cutlery:
                 filter="type:\"בית קפה\"";
                 filter();
                 break;
             case R.id.bicycle:
-                queryTracks("suitable_for_bikes");
                 break;
             case R.id.history:
                 filter="type:\"אתר היסטורי\"";

@@ -1,4 +1,4 @@
-package com.zehava.cityforest;
+package com.zehava.cityforest.Activitys;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +12,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Models.Coordinate;
 import com.zehava.cityforest.Models.PointOfInterest;
 import com.google.firebase.database.DatabaseReference;
@@ -19,6 +20,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.zehava.cityforest.R;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -51,7 +53,7 @@ public class CreateNewCoordinateActivity extends AppCompatActivity {
         points_of_interest = database.getReference("points_of_interest");
 
         Intent i = getIntent();
-        chosenCoordinateLatLng = retreiveLatLngFromJson(i.getStringExtra(CHOSEN_COORDINATE));
+        chosenCoordinateLatLng = JsonParserManager.getInstance().retreiveLatLngFromJson(i.getStringExtra(CHOSEN_COORDINATE));
         titleField = (EditText)findViewById(R.id.titleField);
         snippetField = (EditText)findViewById(R.id.SummaryField);
         isPointOfInterest = (CheckBox)findViewById(R.id.isPointOfInterestCheckbox);
@@ -107,7 +109,7 @@ public class CreateNewCoordinateActivity extends AppCompatActivity {
 
 
                 Intent intent = getIntent();
-                intent.putExtra(CREATED_COORDINATE_FOR_ZOOM, castLatLngToJson(chosenCoordinateLatLng));
+                intent.putExtra(CREATED_COORDINATE_FOR_ZOOM, JsonParserManager.getInstance().castLatLngToJson(chosenCoordinateLatLng));
                 setResult(COORDINATE_CREATED, intent);
                 finish();
             }
@@ -130,24 +132,6 @@ public class CreateNewCoordinateActivity extends AppCompatActivity {
             return false;
         }
         return true;
-    }
-
-    private LatLng retreiveLatLngFromJson(String stringExtra) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        LatLng obj = gson.fromJson(stringExtra, LatLng.class);
-        return obj;
-    }
-
-    private String castLatLngToJson(LatLng coordinate) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        String json = gson.toJson(coordinate, LatLng.class);
-        return json;
     }
 
 

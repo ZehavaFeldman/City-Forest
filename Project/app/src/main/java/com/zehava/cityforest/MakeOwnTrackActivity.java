@@ -41,7 +41,6 @@ import com.mapbox.mapboxsdk.annotations.Marker;
 import com.mapbox.mapboxsdk.annotations.MarkerView;
 import com.mapbox.mapboxsdk.annotations.MarkerViewOptions;
 import com.mapbox.mapboxsdk.annotations.PolylineOptions;
-import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.constants.Style;
 import com.mapbox.mapboxsdk.geometry.LatLng;
@@ -60,9 +59,14 @@ import com.mapbox.services.directions.v5.DirectionsCriteria;
 import com.mapbox.services.directions.v5.MapboxDirections;
 import com.mapbox.services.directions.v5.models.DirectionsResponse;
 import com.mapbox.services.directions.v5.models.DirectionsRoute;
+import com.zehava.cityforest.Activitys.AboutUsActivity;
+import com.zehava.cityforest.Activitys.AdvancedSearchTracksActivity;
+import com.zehava.cityforest.Activitys.ContactUsActivity;
+import com.zehava.cityforest.Activitys.HomeActivity;
+import com.zehava.cityforest.Activitys.TracksActivity;
+import com.zehava.cityforest.Activitys.UserGuideActivity;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -683,7 +687,7 @@ public class MakeOwnTrackActivity extends AppCompatActivity implements Permissio
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
-                        Intent i = new Intent(MakeOwnTrackActivity.this, Home.class);
+                        Intent i = new Intent(MakeOwnTrackActivity.this, HomeActivity.class);
                         startActivity(i);
                     }});
     }
