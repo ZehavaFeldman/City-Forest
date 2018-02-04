@@ -13,6 +13,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -25,10 +26,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.PopupWindow;
@@ -37,6 +41,7 @@ import android.widget.RatingBar;
 import android.widget.LinearLayout;
 
 //import com.mapbox.mapboxsdk.Mapbox;
+import com.google.firebase.auth.FirebaseUser;
 import com.mapbox.mapboxsdk.MapboxAccountManager;
 import com.mapbox.services.geocoding.v5.GeocodingCriteria;
 import com.mapbox.services.geocoding.v5.MapboxGeocoding;
@@ -44,7 +49,9 @@ import com.mapbox.services.geocoding.v5.models.CarmenFeature;
 import com.mapbox.services.geocoding.v5.models.GeocodingResponse;
 import com.zehava.cityforest.DragAndDrop;
 import com.zehava.cityforest.ICallback;
+import com.zehava.cityforest.MakeOwnTrackActivity;
 import com.zehava.cityforest.Managers.JsonParserManager;
+import com.zehava.cityforest.Managers.LocaleManager;
 import com.zehava.cityforest.Models.Coordinate;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -83,9 +90,11 @@ import com.mapbox.services.directions.v5.DirectionsCriteria;
 import com.mapbox.services.directions.v5.MapboxDirections;
 import com.mapbox.services.directions.v5.models.DirectionsResponse;
 import com.mapbox.services.directions.v5.models.DirectionsRoute;
+import com.zehava.cityforest.MoveablePointActivity;
 import com.zehava.cityforest.R;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -978,7 +987,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     private void showDefaultLocation(){
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(
                 new LatLng(DEFAULT_JERUSALEM_COORDINATE.getLatitude(),
-                        DEFAULT_JERUSALEM_COORDINATE.getLongitude()), 10));
+                        DEFAULT_JERUSALEM_COORDINATE.getLongitude()), 12));
     }
 
     private class MyOnMapClickListener implements MapboxMap.OnMapClickListener{
@@ -1542,22 +1551,122 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.editor_home_menu, menu);
+        final MenuInflater inflater = getMenuInflater();
+
+        //user not loged in show login button
+        final FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null)
+            inflater.inflate(R.menu.not_signedin_menu, menu);
+        else {
+
+            inflater.inflate(R.menu.app_menu, menu);
+
+            MenuItem item = menu.findItem(R.id.spinner);
+            Spinner spinner = (Spinner) MenuItemCompat.getActionView(item);
+
+            ArrayList<String> temp = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.spinner_list_item_array)));
+
+            temp.remove(1);
+
+
+            String uname = currentUser.getDisplayName();
+            uid = currentUser.getUid();
+            temp.add(0, uname);
+
+            String carArr[] = temp.toArray(new String[temp.size()]);
+
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                    R.layout.propfile_spinner_item, carArr);
+            adapter.setDropDownViewResource(R.layout.propfile_spinner_item);
+            spinner.setAdapter(adapter);
+            spinner.setSelection(0, false);
+
+            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                public void onItemSelected(
+                        AdapterView<?> parent, View view, int position, long id) {
+
+                    //user name  nothing to do on click
+                    if (position == 0) {
+
+                    }
+
+                    if (position == 1) {
+                        signOut();
+                    }
+
+
+                }
+
+                public void onNothingSelected(AdapterView<?> parent) {
+
+                }
+            });
+        }
         return true;
+
+
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        Intent i;
         switch(item.getItemId()){
-            case R.id.signOut:
-                signOut();
+            case R.id.aboutActivity:
+                i = new Intent(this, MoveablePointActivity.class);
+                startActivity(i);
+                return true;
+
+            case R.id.contactUsActivity:
+                i = new Intent(this, ContactUsActivity.class);
+                startActivity(i);
+                return true;
+
+
+            case R.id.userGuideActivity:
+                i = new Intent(this, UserGuideActivity.class);
+                startActivity(i);
+                return true;
+
+            case R.id.searchTracksActivity:
+                i = new Intent(this, AlgoliaSearchActivity.class);
+                startActivity(i);
+                return true;
+
+            case R.id.makeOwnTrackActivity:
+                i = new Intent(this, MakeOwnTrackActivity.class);
+                startActivity(i);
+                return true;
+
+            case R.id.tracksActivity:
+                i = new Intent(this, TracksActivity.class);
+                startActivity(i);
+                return true;
+
+            case R.id.languageActivity:
+
+                toggleLanguage();
                 return true;
 
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    private void toggleLanguage() {
+
+        LocaleManager.toggaleLang(this);
+
+
+        Intent intent = getIntent();
+        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        finish();
+        startActivity(intent);
+
+    }
+
+
 
     /*Method signs out user's google account*/
     private void signOut() {

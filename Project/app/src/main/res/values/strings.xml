@@ -71,6 +71,7 @@
     <string name="hello">hello</string>
     <string name="created_by">Created by</string>
     <string name="at">At</string>
+
     <string-array name="train_stations">
         <item>Choose a station</item>
         <item>הר הרצל</item>
@@ -164,6 +165,7 @@
     <string name="sign_out_action">Log Out</string>
     <string name="sign_in_action">Log In</string>
     <string name="language">language</string>
+    <string name="sign_in_message">You must sign in first</string>
 
     <string name="permitted_editor" translatable="false">1UGTxtDh7UaO9WFi70CnG3njfE02</string>
     <string name="permitted_editor2" translatable="false">CIWYd1t3qVY1Kg63vmVPDUoTv903</string>

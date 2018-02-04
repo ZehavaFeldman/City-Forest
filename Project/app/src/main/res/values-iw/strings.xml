@@ -154,6 +154,7 @@
     <string name="sign_out_action">התנתק</string>
     <string name="sign_in_action">התחבר</string>
     <string name="language">שפה</string>
+    <string name="sign_in_message">אנא התחבר למערכת קודם</string>
 
     <string name="home_button">בית</string>
     <string name="editor_panel_button">פורצי דרכים</string>

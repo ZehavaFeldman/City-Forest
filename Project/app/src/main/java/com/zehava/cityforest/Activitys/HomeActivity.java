@@ -7,12 +7,15 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.databinding.adapters.LinearLayoutBindingAdapter;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -154,6 +157,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     String uid,uname;
     private FirebaseAuth mAuth;
 
+    Snackbar mySnackbar;
+
 //    private ClusterManagerPlugin<MyItem> clusterManagerPlugin;
 
     Intent serviceIntent;
@@ -235,6 +240,11 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         loading_map_progress_bar.setVisibility(View.VISIBLE);
 
         serviceIntent = new Intent(HomeActivity.this, UpdatesManagerService.class);
+
+        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.editor_layout);
+        mySnackbar = Snackbar.make(linearLayout,
+                R.string.sign_in_message, Snackbar.LENGTH_LONG)
+                .setAction(R.string.sign_in_action, new MySignInListener());
 
     }
 
@@ -631,10 +641,10 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     private void initPopupWindow(Object object){
 
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-        View customView = inflater.inflate(R.layout.coordinate_details_popup_view, null);
+       
 
         mPopupWindow = new PopupWindow(
-                customView,
+                inflater.inflate(R.layout.coordinate_details_popup_view, null),
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
@@ -643,9 +653,9 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         }
 
         if(object.getClass().equals(MarkerView.class))
-            initMarkerPopup((Marker) object, customView);
+            initMarkerPopup((Marker) object);
         else if(object.getClass().equals(HashMap.class))
-            initTrackPopup((Map<String, Object>)object, customView);
+            initTrackPopup((Map<String, Object>)object);
 
         mPopupWindow.setOutsideTouchable(true);
         mPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
@@ -658,14 +668,14 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
     }
 
-    private void initTrackPopup(final  Map<String, Object> track, View customView){
-        TextView title = (TextView)customView.findViewById(R.id.main_content);
+    private void initTrackPopup(final  Map<String, Object> track){
+        TextView title = (TextView)mPopupWindow.getContentView().findViewById(R.id.main_content);
         title.setText(track.get("track_name").toString());
 
-        TextView discreption = (TextView)customView.findViewById(R.id.minor_content);
+        TextView discreption = (TextView)mPopupWindow.getContentView().findViewById(R.id.minor_content);
         discreption.setText(track.get("additional_info").toString());
 
-        Button read_more = (Button) customView.findViewById(R.id.read_more);
+        Button read_more = (Button) mPopupWindow.getContentView().findViewById(R.id.read_more);
         read_more.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -675,24 +685,24 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             }
         });
 
-        RatingBar ratingBar = (RatingBar)customView.findViewById(R.id.ratingBar);
+        RatingBar ratingBar = (RatingBar)mPopupWindow.getContentView().findViewById(R.id.ratingBar);
         ratingBar.setVisibility(View.VISIBLE);
 
-//        Double d = Double.valueOf(track.get("star_count").toString());
-//        Object o = d;
-//
-//        ratingBar.setRating((long)o);
-//        if(uid == null)
-//            ratingBar.setIsIndicator(true);
-//
-//        ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
-//            @Override
-//            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-//                onStarClicked(track, rating);
-//            }
-//        });
+        Double d = Double.valueOf(track.get("star_count").toString());
+        Object o = d;
 
-        LinearLayout likesWrp = (LinearLayout) customView.findViewById(R.id.like_wrp);
+        ratingBar.setRating(7/2);
+        if(uid == null)
+            ratingBar.setIsIndicator(true);
+
+        ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+            @Override
+            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
+                onStarClicked(track, rating);
+            }
+        });
+
+        LinearLayout likesWrp = (LinearLayout) mPopupWindow.getContentView().findViewById(R.id.like_wrp);
         likesWrp.setVisibility(View.VISIBLE);
 
         likes_count = (TextView) mPopupWindow.getContentView().findViewById(R.id.like_count);
@@ -701,21 +711,28 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         likesWrp.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                onLikeClicked(track);
+                if(uid== null) {
+                    Toast.makeText(HomeActivity.this,  R.string.sign_in_message,
+                            Toast.LENGTH_LONG).show();
+                    return true;
+                }
+                   // mySnackbar.show();
+                else
+                    onLikeClicked(track);
                 return true;
 
             }
         });
     }
 
-    private void initMarkerPopup(final Marker marker, View customView){
-        TextView title = (TextView)customView.findViewById(R.id.main_content);
+    private void initMarkerPopup(final Marker marker){
+        TextView title = (TextView)mPopupWindow.getContentView().findViewById(R.id.main_content);
         title.setText(marker.getTitle());
 
-        TextView discreption = (TextView)customView.findViewById(R.id.minor_content);
+        TextView discreption = (TextView)mPopupWindow.getContentView().findViewById(R.id.minor_content);
         discreption.setText(marker.getSnippet());
 
-        Button read_more = (Button) customView.findViewById(R.id.read_more);
+        Button read_more = (Button) mPopupWindow.getContentView().findViewById(R.id.read_more);
         read_more.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -730,10 +747,10 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     private void initUpdateInfoWindow(final Marker update){
 
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-        final View customView = inflater.inflate(R.layout.user_update_infowindow, null);
+
 
         mPopupWindow = new PopupWindow(
-                customView,
+                inflater.inflate(R.layout.user_update_infowindow,null),
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
@@ -742,7 +759,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         }
 
 
-        TextView title = (TextView)customView.findViewById(R.id.update_main_content);
+        TextView title = (TextView)mPopupWindow.getContentView().findViewById(R.id.update_main_content);
         title.setText(update.getTitle());
 
         int type=type(update.getIcon());
@@ -759,8 +776,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                     Date time;
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yy | HH:mm");
 
-                    TextView update_created = (TextView)customView.findViewById(R.id.created);
-                    TextView update_owner= (TextView)customView.findViewById(R.id.owner);
+                    TextView update_created = (TextView)mPopupWindow.getContentView().findViewById(R.id.created);
+                    TextView update_owner= (TextView)mPopupWindow.getContentView().findViewById(R.id.owner);
                     if(u_update.get("uname")!=null && u_update.get("updated")!=null) {
                         owner = getResources().getString(R.string.created_by) + ": " + u_update.get("uname").toString();
                         time = new Date(((Number) u_update.get("updated")).longValue()*1000);
@@ -769,7 +786,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                         update_owner.setText(owner);
                     }
 
-                    ImageView img = (ImageView)customView.findViewById(R.id.img);
+                    ImageView img = (ImageView)mPopupWindow.getContentView().findViewById(R.id.img);
                     img.setBackgroundResource((int) (long)UserUpdate.whatIsTheLogoForType(u_update.get("type").toString()));
                 }
             }
@@ -780,14 +797,12 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             }
         });
 
-        TextView discreption = (TextView)customView.findViewById(R.id.update_minor_content);
+        TextView discreption = (TextView)mPopupWindow.getContentView().findViewById(R.id.update_minor_content);
         discreption.setText(update.getSnippet());
 
 
 
-
-
-        Button read_more = (Button) customView.findViewById(R.id.not_here);
+        Button read_more = (Button) mPopupWindow.getContentView().findViewById(R.id.not_here);
         read_more.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -795,7 +810,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             }
         });
 
-//        LinearLayout likesWrp = (LinearLayout) customView.findViewById(R.id.like_wrp);
+//        LinearLayout likesWrp = (LinearLayout) mPopupWindow.getContentView().findViewById(R.id.like_wrp);
 //        likesWrp.setVisibility(View.VISIBLE);
 //
 //        likes_count = (TextView) mPopupWindow.getContentView().findViewById(R.id.like_count);
@@ -925,6 +940,18 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                 Log.d(EditorPanelActivity.class.getSimpleName(), "postTransaction:onComplete:" + databaseError);
             }
         });
+    }
+
+
+
+    public class MySignInListener implements View.OnClickListener{
+
+        @Override
+        public void onClick(View v) {
+
+            // Code to sinin the user
+            signIn();
+        }
     }
 
     /* mp click listener- when click detected check if user touced a route*/
@@ -1117,7 +1144,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     private void showDefaultLocation(){
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(
                 new LatLng(DEFAULT_JERUSALEM_COORDINATE.getLatitude(),
-                        DEFAULT_JERUSALEM_COORDINATE.getLongitude()), 10));
+                        DEFAULT_JERUSALEM_COORDINATE.getLongitude()), 12));
     }
 
 

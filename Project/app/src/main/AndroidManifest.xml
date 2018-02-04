@@ -74,6 +74,10 @@
             android:name=".Activitys.SelectedTrackActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".Activitys.SelectedTrackDetailsActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
             android:name=".MakeOwnTrackActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="יצירת מסלול חדש" -->

@@ -27,6 +27,7 @@ import com.mapbox.mapboxsdk.annotations.MarkerViewOptions;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.services.commons.models.Position;
 import com.zehava.cityforest.Managers.JsonParserManager;
+import com.zehava.cityforest.Models.UserUpdate;
 
 import java.sql.Date;
 import java.util.Map;
@@ -214,9 +215,12 @@ public class UpdatesManagerService extends Service {
                 .title((String)point.get("title"))
                 .snippet((String)point.get("snippet"));
 
-        IconFactory iconFactory = IconFactory.getInstance(UpdatesManagerService.this);
-        Icon icon = iconFactory.fromResource((int) (long)point.get("logo"));
-        markerViewOptions.getMarker().setIcon(icon);
+        int logo = (int)(long)UserUpdate.whatIsTheLogoForType((String)point.get("title"));
+        if(logo !=-1) {
+            IconFactory iconFactory = IconFactory.getInstance(getApplicationContext());
+            Icon icon = iconFactory.fromResource(logo);
+            markerViewOptions.getMarker().setIcon(icon);
+        }
 
         if(old)
             oldmarkers.add(markerViewOptions.getMarker());
