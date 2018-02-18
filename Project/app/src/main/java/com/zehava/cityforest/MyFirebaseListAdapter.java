@@ -42,7 +42,7 @@ public class MyFirebaseListAdapter extends FirebaseListAdapter<Track> {
 
         startingPoint.setText(track.getStarting_point());
         endingPoint.setText(track.getEnding_point());
-        trackLevel.setText(track.getLevel());
+//        trackLevel.setText(track.getLevel());
 
         String distance = "" + track.getLength();
         trackDistance.setText(distance);

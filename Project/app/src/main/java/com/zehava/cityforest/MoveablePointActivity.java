@@ -21,10 +21,12 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import com.mapbox.mapboxsdk.MapboxAccountManager;
 import com.mapbox.mapboxsdk.annotations.Icon;
 import com.mapbox.mapboxsdk.annotations.IconFactory;
 import com.mapbox.mapboxsdk.annotations.Marker;
+import com.mapbox.mapboxsdk.annotations.MarkerOptions;
 import com.mapbox.mapboxsdk.annotations.MarkerView;
 import com.mapbox.mapboxsdk.annotations.MarkerViewOptions;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
@@ -39,6 +41,7 @@ import com.mapbox.services.android.telemetry.location.LocationEngineListener;
 import com.mapbox.services.android.telemetry.permissions.PermissionsListener;
 import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
 import com.mapbox.services.commons.ServicesException;
+import com.mapbox.services.commons.geojson.Feature;
 import com.mapbox.services.commons.models.Position;
 import com.mapbox.services.directions.v5.models.DirectionsRoute;
 import com.mapbox.services.geocoding.v5.GeocodingCriteria;
@@ -82,6 +85,7 @@ public class MoveablePointActivity extends AppCompatActivity implements Permissi
     private PermissionsManager permissionsManager;
     private FloatingActionButton floatingActionButton;
     private Marker droppedMarker;
+    private Marker featureMarker;
     private DragAndDrop hoveringMarker;
     private Projection projection;
     private FirebaseDatabase database;
@@ -204,10 +208,61 @@ public class MoveablePointActivity extends AppCompatActivity implements Permissi
                 }
             });
 
+            mapbox.setOnMapClickListener(new MapboxMap.OnMapClickListener() {
+                @Override
+                public void onMapClick(@NonNull LatLng point) {
+
+                    if (featureMarker != null) {
+                        mapboxMap.removeMarker(featureMarker);
+                    }
+
+                    final PointF pixel = mapboxMap.getProjection().toScreenLocation(point);
+                    List<Feature> features = mapboxMap.queryRenderedFeatures(pixel);
+
+                    if (features.size() > 0) {
+                        Feature feature = features.get(0);
+
+                        String property;
+
+                        StringBuilder stringBuilder = new StringBuilder();
+                        if (feature.getProperties() != null) {
+                            for (Map.Entry<String, JsonElement> entry : feature.getProperties().entrySet()) {
+                                stringBuilder.append(String.format("%s - %s", entry.getKey(), entry.getValue()));
+                                stringBuilder.append(System.getProperty("line.separator"));
+                            }
+
+                            featureMarker = mapboxMap.addMarker(new MarkerOptions()
+                                    .position(point)
+                                    .title(getString(R.string.query_feature_marker_title))
+                                    .snippet(stringBuilder.toString())
+                            );
+
+                        } else {
+                            property = getString(R.string.query_feature_marker_snippet);
+                            featureMarker = mapboxMap.addMarker(new MarkerOptions()
+                                    .position(point)
+                                    .snippet(property)
+                            );
+                        }
+                    } else {
+                        featureMarker = mapboxMap.addMarker(new MarkerOptions()
+                                .position(point)
+                                .snippet(getString(R.string.query_feature_marker_snippet))
+                        );
+
+
+                    }
+                    //            map.selectMarker(featureMarker);
+                    featureMarker.showInfoWindow(mapboxMap, mapView);
+
+                }
+            });
+
             showAllPointsOfInterest();
 
             showDefaultLocation();
         }
+
     }
 
 

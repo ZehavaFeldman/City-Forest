@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:weightSum="1"
-    android:background="@color/colorPrimary"
+    android:background="#ffff00"
     android:padding="10dp"
     tools:context="com.zehava.cityforest.Activitys.EditorPanelActivity">
 
@@ -23,7 +23,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true">
+            android:layout_alignParentTop="true"
+            android:layout_alignParentLeft="true">
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/location_toggle_fab"
@@ -105,22 +106,24 @@
                     android:id="@+id/addCoordinateButt"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    android:layout_marginEnd="10dp"
-                    android:layout_marginStart="10dp"
-                    android:background="@android:drawable/btn_default"
+                    android:layout_margin="10dp"
+                    style="?android:attr/borderlessButtonStyle"
                     android:contentDescription="@string/add_coordinates_button"
-                    app:srcCompat="@mipmap/ic_add_circle_outline_black_48dp" />
+                    app:srcCompat="@drawable/ic_action_name"
+                    android:background="@drawable/not_selected_btn"
+                    />
 
 
                 <ImageButton
                     android:id="@+id/addTrackButt"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-                    android:layout_marginEnd="10dp"
-                    android:layout_marginStart="10dp"
-                    android:background="@android:drawable/btn_default"
+
+                    android:layout_margin="10dp"
+                    style="?android:attr/borderlessButtonStyle"
                     android:contentDescription="@string/add_track_button"
-                    app:srcCompat="@mipmap/ic_timeline_black_48dp" />
+                    app:srcCompat="@drawable/ic_add_route"
+                    android:background="@drawable/not_selected_btn"/>
 
 
 

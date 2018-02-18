@@ -194,6 +194,7 @@ public class UpdatesManagerService extends Service {
     }
 
     public void stopCounter(){
+        lastupdated=0;
         handler.removeCallbacks(serviceRunnable);
     }
 

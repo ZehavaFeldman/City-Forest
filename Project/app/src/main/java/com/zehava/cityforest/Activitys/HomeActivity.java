@@ -1,5 +1,6 @@
 package com.zehava.cityforest.Activitys;
 
+import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
@@ -13,10 +14,12 @@ import android.location.Location;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -29,6 +32,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
@@ -60,6 +64,7 @@ import com.zehava.cityforest.ICallback;
 import com.zehava.cityforest.MakeOwnTrackActivity;
 import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Managers.LocaleManager;
+import com.zehava.cityforest.Models.PointOfInterest;
 import com.zehava.cityforest.Models.Track;
 import com.zehava.cityforest.Models.UserUpdate;
 import com.google.android.gms.auth.api.Auth;
@@ -158,11 +163,18 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     private FirebaseAuth mAuth;
 
     Snackbar mySnackbar;
+    Boolean expand=false;
+    Boolean expandable=false;
 
 //    private ClusterManagerPlugin<MyItem> clusterManagerPlugin;
 
     Intent serviceIntent;
     UpdatesManagerService myService;
+
+    TextView title;
+    TextView discreption;
+    Button track_details;
+    Button read_more;
 
 
     @Override
@@ -245,6 +257,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         mySnackbar = Snackbar.make(linearLayout,
                 R.string.sign_in_message, Snackbar.LENGTH_LONG)
                 .setAction(R.string.sign_in_action, new MySignInListener());
+
+        initPopupWindow();
 
     }
 
@@ -413,7 +427,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         {
             SHOW_DETAILS_POPUP = false;
             mPopupWindow.dismiss();
-            mPopupWindow = null;
+//            mPopupWindow = null;
             showDefaultLocation();
         }
         else {
@@ -582,8 +596,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                             position.getLongitude(),
                             position.getLatitude());
 
-                    long logo = (long)point.get("logo");
-                    addMarkerForPointOfInterest(latlng, (String)point.get("title"), (String)point.get("snippet"), (int) logo);
+                    addMarkerForPointOfInterest(latlng, (String)point.get("title"), (String)point.get("snippet"), (String) point.get("type"));
                 }
                 loading_map_progress_bar.setVisibility(View.INVISIBLE);
             }
@@ -636,9 +649,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     }
 
 
-
-
-    private void initPopupWindow(Object object){
+    private void initPopupWindow(){
 
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
        
@@ -652,11 +663,6 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             mPopupWindow.setElevation(5.0f);
         }
 
-        if(object.getClass().equals(MarkerView.class))
-            initMarkerPopup((Marker) object);
-        else if(object.getClass().equals(HashMap.class))
-            initTrackPopup((Map<String, Object>)object);
-
         mPopupWindow.setOutsideTouchable(true);
         mPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @Override
@@ -664,41 +670,80 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                 SHOW_DETAILS_POPUP=false;
             }
         });
-        mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+
+        title = (TextView)mPopupWindow.getContentView().findViewById(R.id.main_content);
+        discreption = (TextView)mPopupWindow.getContentView().findViewById(R.id.minor_content);
+        track_details = (Button) mPopupWindow.getContentView().findViewById(R.id.goto_full_des);
+        read_more = (Button) mPopupWindow.getContentView().findViewById(R.id.read_more);
+
 
     }
 
     private void initTrackPopup(final  Map<String, Object> track){
-        TextView title = (TextView)mPopupWindow.getContentView().findViewById(R.id.main_content);
-        title.setText(track.get("track_name").toString());
 
-        TextView discreption = (TextView)mPopupWindow.getContentView().findViewById(R.id.minor_content);
+        title.setText(track.get("track_name").toString());
         discreption.setText(track.get("additional_info").toString());
 
-        Button read_more = (Button) mPopupWindow.getContentView().findViewById(R.id.read_more);
-        read_more.setOnClickListener(new View.OnClickListener() {
+        track_details.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(View view) {
                 Intent intent = new Intent(HomeActivity.this, SelectedTrackDetailsActivity.class);
                 intent.putExtra(SELECTED_TRACK, String.valueOf(track.get("db_key")));
                 startActivity(intent);
             }
         });
 
+
+        read_more.setVisibility(View.INVISIBLE);
+        read_more.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+
+                if (!expand) {
+                    expand = true;
+                    ObjectAnimator animation = ObjectAnimator.ofInt(discreption, "maxLines", 40);
+                    animation.setDuration(100).start();
+                    read_more.setText(getString(R.string.read_less_butt));
+                } else {
+                    expand = false;
+                    ObjectAnimator animation = ObjectAnimator.ofInt(discreption, "maxLines",2);
+                    animation.setDuration(100).start();
+                    read_more.setText(getString(R.string.read_more_butt));
+                }
+
+            }
+        });
+
+
+        discreption.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                if(expandable) {
+                    expandable = false;
+                    if (discreption.getLineCount() > 2) {
+                        read_more.setVisibility(View.VISIBLE);
+                        ObjectAnimator animation = ObjectAnimator.ofInt(discreption, "maxLines", 2);
+                        animation.setDuration(0).start();
+                    }
+                }
+            }
+        });
+
+
         RatingBar ratingBar = (RatingBar)mPopupWindow.getContentView().findViewById(R.id.ratingBar);
         ratingBar.setVisibility(View.VISIBLE);
 
-        Double d = Double.valueOf(track.get("star_count").toString());
-        Object o = d;
+        Float d = Float.valueOf(track.get("star_count").toString());
+        Object o = (Object) d;
+        ratingBar.setRating((float) o);
 
-        ratingBar.setRating(7/2);
         if(uid == null)
             ratingBar.setIsIndicator(true);
 
         ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
             @Override
             public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-                onStarClicked(track, rating);
+                if(fromUser)
+                    onStarClicked(track, rating, ratingBar);
             }
         });
 
@@ -718,45 +763,66 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                 }
                    // mySnackbar.show();
                 else
-                    onLikeClicked(track);
+                    onLikeClicked(track, likes_count);
                 return true;
 
             }
         });
+
+        mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
     }
 
     private void initMarkerPopup(final Marker marker){
-        TextView title = (TextView)mPopupWindow.getContentView().findViewById(R.id.main_content);
-        title.setText(marker.getTitle());
+        expand=false;
+        expandable=true;
 
-        TextView discreption = (TextView)mPopupWindow.getContentView().findViewById(R.id.minor_content);
+
+        title.setText(marker.getTitle());
         discreption.setText(marker.getSnippet());
 
-        Button read_more = (Button) mPopupWindow.getContentView().findViewById(R.id.read_more);
+        track_details.setVisibility(View.GONE);
+
+        read_more.setVisibility(View.INVISIBLE);
         read_more.setOnClickListener(new View.OnClickListener() {
-            @Override
             public void onClick(View v) {
+
+                if (!expand) {
+                    expand = true;
+                    ObjectAnimator animation = ObjectAnimator.ofInt(discreption, "maxLines", 40);
+                    animation.setDuration(100).start();
+                    read_more.setText(getString(R.string.read_less_butt));
+                } else {
+                    expand = false;
+                    ObjectAnimator animation = ObjectAnimator.ofInt(discreption, "maxLines",2);
+                    animation.setDuration(100).start();
+                    read_more.setText(getString(R.string.read_more_butt));
+                }
 
             }
         });
 
+
+        discreption.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                if(expandable) {
+                    expandable = false;
+                    if (discreption.getLineCount() > 2) {
+                        read_more.setVisibility(View.VISIBLE);
+                        ObjectAnimator animation = ObjectAnimator.ofInt(discreption, "maxLines", 2);
+                        animation.setDuration(0).start();
+                    }
+                }
+            }
+        });
+
+
+        mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
 
     }
 
 
     private void initUpdateInfoWindow(final Marker update){
-
-        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-
-
-        mPopupWindow = new PopupWindow(
-                inflater.inflate(R.layout.user_update_infowindow,null),
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        );
-        if(Build.VERSION.SDK_INT>=21){
-            mPopupWindow.setElevation(5.0f);
-        }
 
 
         TextView title = (TextView)mPopupWindow.getContentView().findViewById(R.id.update_main_content);
@@ -810,37 +876,13 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             }
         });
 
-//        LinearLayout likesWrp = (LinearLayout) mPopupWindow.getContentView().findViewById(R.id.like_wrp);
-//        likesWrp.setVisibility(View.VISIBLE);
-//
-//        likes_count = (TextView) mPopupWindow.getContentView().findViewById(R.id.like_count);
-//        likes_count.setText(String.valueOf( track.get("like_count")));
-//
-//        likesWrp.setOnTouchListener(new View.OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View v, MotionEvent event) {
-//                onLikeClicked(track);
-//                return true;
-//
-//            }
-//        });
-
-
-        mPopupWindow.setOutsideTouchable(true);
-        mPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
-            @Override
-            public void onDismiss() {
-                SHOW_DETAILS_POPUP=false;
-            }
-        });
         mPopupWindow.showAtLocation(mRelativeLayout, Gravity.CENTER, 0, 0);
-
 
     }
 
 
 
-    private void onLikeClicked(final Map<String,Object> track) {
+    private void onLikeClicked(final Map<String,Object> track, final TextView textview) {
         String key= (String) track.get("db_key");
         DatabaseReference trackRef = tracks.child(key);
 
@@ -848,34 +890,40 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             @Override
             public Transaction.Result doTransaction(MutableData mutableData) {
 
-                Track t = mutableData.getValue(Track.class);
+                final Track t = mutableData.getValue(Track.class);
 
                 if(t == null) {
                     return Transaction.success(mutableData);
                 }
 
+                    /* when user clicked on like check if his uid is in tacks likes array-
+                    if found decrese likes count and remove him from array, user is deleting his vote. otherwise increse like count
+                     */
+
                 if (t.getLikes().containsKey(uid)) {
                     // Unstar the track and remove self from stars
                     t.setLike_count(t.getLike_count() - 1);
-//                    runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            textview.setText(String.valueOf(t.getLike_count()));
-//
-//                            popupWindow.dismiss();
-//                        }
-//                    });
-                    likes_count.setText(String.valueOf(Integer.valueOf(likes_count.getText().toString())-1));
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            textview.setText(String.valueOf((int)t.getLike_count()));
+                        }
+                    });
 
 
                     Map<String, Boolean> temp = t.getLikes();
                     temp.remove(uid);
                     t.setLikes(temp);
                 } else {
-                    // Star the track and add self to stars
+                   // Star the track and add self to stars
                     t.setLike_count(t.getLike_count() + 1);
-                    likes_count.setText(String.valueOf(Integer.valueOf(likes_count.getText().toString())+1));
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            textview.setText(String.valueOf((int)t.getLike_count()));
 
+                        }
+                    });
 
                     Map<String, Boolean> temp = t.getLikes();
                     temp.put(uid,true);
@@ -884,22 +932,22 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                 }
 
                 // Set value and report transaction success
-                mutableData.setValue(t);
+               mutableData.setValue(t);
 
-                return Transaction.success(mutableData);
-            }
+               return Transaction.success(mutableData);
+           }
 
             @Override
-            public void onComplete(DatabaseError databaseError, boolean b,
+           public void onComplete(DatabaseError databaseError, boolean b,
                                    DataSnapshot dataSnapshot) {
                 // Transaction completed
-                Log.d(EditorPanelActivity.class.getSimpleName(), "postTransaction:onComplete:" + databaseError);
+               Log.d(EditorPanelActivity.class.getSimpleName(), "postTransaction:onComplete:" + databaseError);
             }
-        });
+      });
     }
 
 
-    private void onStarClicked(final Map<String,Object> track, final Float stars) {
+    private void onStarClicked(final Map<String,Object> track, final Float stars, final RatingBar ratingBar) {
         String key= (String) track.get("db_key");
         DatabaseReference trackRef = tracks.child(key);
 
@@ -913,20 +961,33 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                     return Transaction.success(mutableData);
                 }
 
-                if (t.getStars().containsKey(uid)) {
+                float usersCount = t.getStars().size();
+                float newStarCount, oldStars;
 
+                if (t.getStars().containsKey(uid)) {
+                    oldStars= t.getStar_count()*(t.getStars().size()-1);
                     Map<String, Float> temp = t.getStars();
                     temp.remove(uid);
                     temp.put(uid,stars);
                     t.setStars(temp);
+
+                    newStarCount = (oldStars+stars)/usersCount;
                 } else {
+
+                    oldStars= t.getStar_count()*t.getStars().size();
 
                     Map<String, Float> temp = t.getStars();
                     temp.put(uid,stars);
                     t.setStars(temp);
 
+                    newStarCount = (oldStars+stars)/(usersCount+1);
+
                 }
-                t.setStar_count(stars);
+
+
+
+                t.setStar_count(newStarCount);
+//                ratingBar.setRating(newStarCount);
 
                 // Set value and report transaction success
                 mutableData.setValue(t);
@@ -993,7 +1054,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 //                                    Log.e(TAG, "Found @ "+clickCoords.latitude+" "+clickCoords.longitude);
                                     if(!SHOW_DETAILS_POPUP) {
                                         SHOW_DETAILS_POPUP = true;
-                                        initPopupWindow(track);
+                                        initTrackPopup(track);
+
                                     }
                                 }
 
@@ -1032,7 +1094,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                         String type = (String) point.get("type");
                         if (!type.equals("תחנת רכבת")) {
                             SHOW_DETAILS_POPUP = true;
-                            initPopupWindow(marker);
+                            initMarkerPopup(marker);
 
                         }
                     }
@@ -1054,7 +1116,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     }
 
 
-    private MarkerView addMarkerForPointOfInterest(LatLng point, String title, String snippet, int logo){
+    private MarkerView addMarkerForPointOfInterest(LatLng point, String title, String snippet, String type){
         MarkerViewOptions markerViewOptions = new MarkerViewOptions()
                 .position(point)
                 .title(title)
@@ -1062,7 +1124,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         map.addMarker(markerViewOptions);
 
 
-
+        int logo = (int)(long)PointOfInterest.whatIsTheLogoForType(type);
         if(logo != -1) {
             IconFactory iconFactory = IconFactory.getInstance(HomeActivity.this);
             Icon icon = iconFactory.fromResource(logo);

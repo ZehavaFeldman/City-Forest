@@ -92,17 +92,17 @@ public class EditTrackActivity extends AppCompatActivity {
                 track_name_field.setText((String)track.get("track_name"));
                 duration_field.setText(track.get("duration").toString());
                 distance_field.setText(track.get("length").toString());
-                has_water.setChecked((boolean)track.get("has_water"));
-                suitable_for_bikes.setChecked((boolean)track.get("suitable_for_bikes"));
-                suitable_for_dogs.setChecked((boolean)track.get("suitable_for_dogs"));
-                suitable_for_families.setChecked((boolean)track.get("suitable_for_families"));
-                is_romantic.setChecked((boolean)track.get("is_romantic"));
+//                has_water.setChecked((boolean)track.get("has_water"));
+//                suitable_for_bikes.setChecked((boolean)track.get("suitable_for_bikes"));
+//                suitable_for_dogs.setChecked((boolean)track.get("suitable_for_dogs"));
+//                suitable_for_families.setChecked((boolean)track.get("suitable_for_families"));
+//                is_romantic.setChecked((boolean)track.get("is_romantic"));
                 additional_info.setText((String)track.get("additional_info"));
-
-                initiateSpinner(starting_point, R.array.train_stations, (String)track.get("starting_point"));
-                initiateSpinner(ending_point, R.array.train_stations, (String)track.get("ending_point"));
-                initiateSpinner(track_level, R.array.track_level, (String)track.get("level"));
-                initiateSpinner(season, R.array.season, (String)track.get("season"));
+//
+//                initiateSpinner(starting_point, R.array.train_stations, (String)track.get("starting_point"));
+//                initiateSpinner(ending_point, R.array.train_stations, (String)track.get("ending_point"));
+//                initiateSpinner(track_level, R.array.track_level, (String)track.get("level"));
+//                initiateSpinner(season, R.array.season, (String)track.get("season"));
 
                 edited_track = new Track((String)track.get("route"),
                         track_db_key,
@@ -111,13 +111,13 @@ public class EditTrackActivity extends AppCompatActivity {
                         (String)track.get("ending_point"),
                         Double.parseDouble(track.get("duration").toString()),
                         Double.parseDouble(track.get("length").toString()),
-                        (String)track.get("level"),
-                        (String)track.get("season"),
-                        (boolean)track.get("has_water"),
-                        (boolean)track.get("suitable_for_bikes"),
-                        (boolean)track.get("suitable_for_dogs"),
-                        (boolean)track.get("suitable_for_families"),
-                        (boolean)track.get("is_romantic"),
+//                        (String)track.get("level"),
+//                        (String)track.get("season"),
+//                        (boolean)track.get("has_water"),
+//                        (boolean)track.get("suitable_for_bikes"),
+//                        (boolean)track.get("suitable_for_dogs"),
+//                        (boolean)track.get("suitable_for_families"),
+//                        (boolean)track.get("is_romantic"),
                         (String)track.get("additional_info"),
                         (String)track.get("starting_point_json_latlng"),
                         (String)track.get("ending_point_json_latlng"));
@@ -170,13 +170,13 @@ public class EditTrackActivity extends AppCompatActivity {
         edited_track.setEnding_point(ending_point.getSelectedItem().toString());
         edited_track.setDuration(duration);
         edited_track.setLength(distance);
-        edited_track.setLevel(track_level.getSelectedItem().toString());
-        edited_track.setSeason(season.getSelectedItem().toString());
-        edited_track.setHas_water(has_water.isChecked());
-        edited_track.setSuitable_for_bikes(suitable_for_bikes.isChecked());
-        edited_track.setSuitable_for_dogs(suitable_for_dogs.isChecked());
-        edited_track.setSuitable_for_families(suitable_for_families.isChecked());
-        edited_track.setIs_romantic(is_romantic.isChecked());
+//        edited_track.setLevel(track_level.getSelectedItem().toString());
+//        edited_track.setSeason(season.getSelectedItem().toString());
+//        edited_track.setHas_water(has_water.isChecked());
+//        edited_track.setSuitable_for_bikes(suitable_for_bikes.isChecked());
+//        edited_track.setSuitable_for_dogs(suitable_for_dogs.isChecked());
+//        edited_track.setSuitable_for_families(suitable_for_families.isChecked());
+//        edited_track.setIs_romantic(is_romantic.isChecked());
         edited_track.setAdditional_info(additional_info.getText().toString());
 
         /*Converting our track object to a map, that makes

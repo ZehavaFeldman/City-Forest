@@ -31,6 +31,7 @@
     <string name="edit_coordinates_button">Edit Coordinates</string>
     <string name="update_butt">Update</string>
     <string name="read_more_butt">Read More</string>
+    <string name="read_less_butt">Collapse</string>
     <string name="not_here_butt">Not Here</string>
     <string name="coordinates_selected_txt">Coordinates selected: </string>
     <string name="reached_limit_of_coordinates">You have reached the limit of selected coordinates to build a track.</string>
@@ -38,13 +39,13 @@
     <string name="distance_km_txt">Distance (km)</string>
     <string name="duration_hour_txt">Duration (hour)</string>
     <string name="ending_point_txt">Ending Point</string>
-    <string name="has_water_txt">Has water?</string>
-    <string name="is_romantic_txt">Is Romantic?</string>
+    <string name="has_water_txt">Has water</string>
+    <string name="is_romantic_txt">Is Romantic</string>
     <string name="season_txt">Season</string>
     <string name="starting_point_txt">Starting Point</string>
-    <string name="suitable_for_bikes_txt">Suitable For Bikes?</string>
-    <string name="suitable_for_dogs_txt">Suitable For Dogs?</string>
-    <string name="suitable_for_families_txt">Suitable For Families?</string>
+    <string name="suitable_for_bikes_txt">Suitable For Bikes</string>
+    <string name="suitable_for_dogs_txt">Suitable For Dogs</string>
+    <string name="suitable_for_families_txt">Suitable For Families</string>
     <string name="track_level_txt">Track Level</string>
     <string name="track_name_txt">Track Name</string>
     <string name="track_summary_txt">Track Summary</string>
@@ -178,4 +179,11 @@
     <string name="ALGOLIA_APP_ID" translatable="false">23AHHRJOBU</string>
     <string name="ALGOLIA_SEARCH_API_KEY" translatable="false">8fd54c914d7dd05b7a87265beb57cad4</string>
     <string name="ALGOLIA_INDEX_NAME" translatable="false">tracks</string>
+
+    <string name="query_feature_marker_title" translatable="false">Properties:</string>
+    <string name="query_feature_marker_snippet" translatable="false">No feature properties found</string>
+    <string name="query_feature_no_properties_found" translatable="false">No feature properties found</string>
+    <string name="goto_btn">Track Details</string>
+
+
 </resources>

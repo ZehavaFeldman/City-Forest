@@ -28,29 +28,36 @@
 
         <TextView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="42dp"
             android:paddingRight="15dp"
             android:paddingLeft="65dp"
+            android:paddingStart="15dp"
+            android:paddingEnd="65dp"
             android:paddingTop="5dp"
             android:paddingBottom="5dp"
-            android:textSize="20sp"
+
             android:id="@+id/minor_content"
             android:layout_centerHorizontal="true"
             android:layout_below="@+id/main_content"
-            tools:ignore="HardcodedText"/>
+            tools:ignore="HardcodedText"
+
+            android:maxLines="2"/>
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/minor_content"
-            android:layout_marginEnd="70dp"
+            android:layout_marginEnd="65dp"
             android:layout_alignParentEnd="true"
             android:text="@string/read_more_butt"
             android:id="@+id/read_more"
             android:background="@color/colorPrimaryDark"
             style="?android:attr/borderlessButtonStyle"
-            android:layout_marginRight="70dp"
-            android:layout_alignParentRight="true" />
+            android:layout_marginRight="65dp"
+            android:layout_alignParentRight="true"
+            android:textAlignment="viewEnd"
+            android:layout_gravity="end"
+            />
 
         <RatingBar
             android:layout_width="wrap_content"

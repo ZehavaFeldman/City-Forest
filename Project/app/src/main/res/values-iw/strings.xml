@@ -37,12 +37,12 @@
     <string name="duration_hour_txt">זמן (שעה)</string>
     <string name="ending_point_txt">נקודת סיום</string>
     <string name="has_water_txt">מסלול עם מים?</string>
-    <string name="is_romantic_txt">רומנטי?</string>
+    <string name="is_romantic_txt">רומנטי</string>
     <string name="season_txt">עונה</string>
     <string name="starting_point_txt">נקודת התחלה</string>
-    <string name="suitable_for_bikes_txt">מתאים לאופנים?</string>
-    <string name="suitable_for_dogs_txt">מתאים לכלבים?</string>
-    <string name="suitable_for_families_txt">מתאים למשפחות?</string>
+    <string name="suitable_for_bikes_txt">מתאים לאופנים</string>
+    <string name="suitable_for_dogs_txt">מתאים לכלבים</string>
+    <string name="suitable_for_families_txt">מתאים למשפחות</string>
     <string name="track_level_txt">רמת קושי מסלול</string>
     <string name="track_name_txt">שם המסלול</string>
     <string name="track_summary_txt">תאור קצר על המסלול</string>
@@ -168,4 +168,6 @@
     <string name="send_update">שלח</string>
     <string name="at">ב</string>
     <string name="created_by">פורסם ע\"י</string>
+    <string name="read_less_butt">צמצם</string>
+    <string name="goto_btn">פרטי המסלול</string>
 </resources>

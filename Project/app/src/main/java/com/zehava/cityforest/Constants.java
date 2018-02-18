@@ -19,6 +19,8 @@ public final class Constants {
     public static final String CREATED_UPDATE_FOR_ZOOM = "Created update for zoom";
     public static final String TRACK_STARTING_POINT = "Track Starting point";
     public static final String TRACK_ENDING_POINT = "Track Ending point";
+    public static final String TRACK_STARTING_POINT_NAME = "Track Starting name";
+    public static final String TRACK_ENDING_POINT_NAME = "Track Ending name";
 
     public static final String SEARCH_RESULT_QUERY = "Search Result query";
     public static final String Q_STARTING_POINT = "Starting point";

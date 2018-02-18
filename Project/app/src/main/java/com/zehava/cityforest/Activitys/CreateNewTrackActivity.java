@@ -8,6 +8,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -28,7 +29,10 @@ import java.util.Map;
 import static com.zehava.cityforest.Constants.CHOSEN_TRACK;
 import static com.zehava.cityforest.Constants.TRACK_CREATED;
 import static com.zehava.cityforest.Constants.TRACK_ENDING_POINT;
+import static com.zehava.cityforest.Constants.TRACK_ENDING_POINT_NAME;
 import static com.zehava.cityforest.Constants.TRACK_STARTING_POINT;
+import static com.zehava.cityforest.Constants.TRACK_STARTING_POINT_NAME;
+
 
 
 public class CreateNewTrackActivity extends AppCompatActivity {
@@ -38,10 +42,10 @@ public class CreateNewTrackActivity extends AppCompatActivity {
     private DirectionsRoute current_route;
 
     private EditText track_name_field;
-    private Spinner starting_point;
-    private Spinner ending_point;
-    private EditText duration_field;
-    private EditText distance_field;
+    private TextView starting_point;
+    private TextView ending_point;
+    private TextView duration_field;
+    private TextView distance_field;
     private Spinner track_level;
     private Spinner season;
     private CheckBox has_water;
@@ -52,6 +56,8 @@ public class CreateNewTrackActivity extends AppCompatActivity {
     private EditText additional_info;
     private String starting_point_JsonLatLng;
     private String ending_point_JsonLatLng;
+    private String starting_point_name;
+    private String ending_point_name;
     private ArrayList<Polyline> polyline;
 
     private Button save_button;
@@ -69,35 +75,38 @@ public class CreateNewTrackActivity extends AppCompatActivity {
         current_route = JsonParserManager.getInstance().retreiveRouteFromJson(i.getStringExtra(CHOSEN_TRACK));
         starting_point_JsonLatLng = i.getStringExtra(TRACK_STARTING_POINT);
         ending_point_JsonLatLng = i.getStringExtra(TRACK_ENDING_POINT);
+        starting_point_name = i.getStringExtra(TRACK_ENDING_POINT_NAME);
+        ending_point_name = i.getStringExtra(TRACK_STARTING_POINT_NAME);
 //        polyline= i.getParcelableArrayListExtra(TRACK_POLY_LINE);
 
 
         track_name_field = (EditText)findViewById(R.id.trackNameField);
-        starting_point = (Spinner)findViewById(R.id.startingPoint);
-        ending_point = (Spinner)findViewById(R.id.endingPoint);
-        duration_field = (EditText)findViewById(R.id.durationField);
-        distance_field = (EditText)findViewById(R.id.distanceField);
-        track_level = (Spinner)findViewById((R.id.trackLevel));
-        season = (Spinner)findViewById(R.id.season);
-        has_water = (CheckBox)findViewById(R.id.hasWaterCheckbox);
-        suitable_for_bikes = (CheckBox)findViewById(R.id.suitableForBikesCheckbox);
-        suitable_for_families = (CheckBox)findViewById(R.id.suitableForFamiliesCheckbox);
-        suitable_for_dogs = (CheckBox)findViewById(R.id.suitableForDogsCheckbox);
-        is_romantic = (CheckBox)findViewById(R.id.isRomanticCheckbox);
+        starting_point = (TextView)findViewById(R.id.startingPoint);
+        ending_point = (TextView)findViewById(R.id.endingPoint);
+        duration_field = (TextView)findViewById(R.id.durationField);
+        distance_field = (TextView)findViewById(R.id.distanceField);
+//        track_level = (Spinner)findViewById((R.id.trackLevel));
+//        season = (Spinner)findViewById(R.id.season);
+//        has_water = (CheckBox)findViewById(R.id.hasWaterCheckbox);
+//        suitable_for_bikes = (CheckBox)findViewById(R.id.suitableForBikesCheckbox);
+//        suitable_for_families = (CheckBox)findViewById(R.id.suitableForFamiliesCheckbox);
+//        suitable_for_dogs = (CheckBox)findViewById(R.id.suitableForDogsCheckbox);
+//        is_romantic = (CheckBox)findViewById(R.id.isRomanticCheckbox);
         additional_info = (EditText)findViewById(R.id.trackSummaryField);
         save_button = (Button)findViewById(R.id.saveButton);
         cancel_button = (Button)findViewById(R.id.cancelButton);
 
-
-        initiateSpinner(starting_point, R.array.train_stations);
-        initiateSpinner(ending_point, R.array.train_stations);
-        initiateSpinner(track_level, R.array.track_level);
-        initiateSpinner(season, R.array.season);
+//
+//        initiateSpinner(track_level, R.array.track_level);
+//        initiateSpinner(season, R.array.season);
 
         double temp_duration = current_route.getDuration()/3600;
         double temp_distance = current_route.getDistance()/1000;
         duration_field.setText(""+Math.floor(temp_duration * 100) / 100);
         distance_field.setText(""+Math.floor(temp_distance * 100) / 100);
+
+        ending_point.setText(ending_point_name);
+        starting_point.setText(starting_point_name);
 
         save_button.setOnClickListener(new MyClickListener());
         cancel_button.setOnClickListener(new MyClickListener());
@@ -107,14 +116,14 @@ public class CreateNewTrackActivity extends AppCompatActivity {
         @Override
         public void onClick(View v) {
             if(v.getId() == save_button.getId()){
-                boolean canSave = checkFields();
-                if(canSave){
+//                boolean canSave = checkFields();
+//                if(canSave){
                     writeNewTrack();
 
                     Intent i = new Intent(CreateNewTrackActivity.this, EditorPanelActivity.class);
                     setResult(TRACK_CREATED);
                     startActivity(i);
-                }
+//                }
             }
             if(v.getId() == cancel_button.getId()){
                 onBackPressed();
@@ -122,25 +131,16 @@ public class CreateNewTrackActivity extends AppCompatActivity {
         }
     }
 
-    private boolean checkFields(){
-        if(starting_point.getSelectedItem().toString().equals(getResources().getString(R.string.choose_a_station))
-                || ending_point.getSelectedItem().toString().equals(getResources().getString(R.string.choose_a_station))){
-            Toast.makeText(this, R.string.choose_station_empty, Toast.LENGTH_LONG).show();
-            return false;
-        }
-
-        if(distance_field.getText().toString().equals("")){
-            Toast.makeText(this, R.string.choose_distance_empty, Toast.LENGTH_LONG).show();
-            return false;
-        }
-
-        if(track_level.getSelectedItem().toString().equals(getResources().getString(R.string.choose_a_level))){
-            Toast.makeText(this, R.string.choose_level_empty, Toast.LENGTH_LONG).show();
-            return false;
-        }
-
-        return true;
-    }
+//    private boolean checkFields(){
+//
+//
+//        if(track_level.getSelectedItem().toString().equals(getResources().getString(R.string.choose_a_level))){
+//            Toast.makeText(this, R.string.choose_level_empty, Toast.LENGTH_LONG).show();
+//            return false;
+//        }
+//
+//        return true;
+//    }
 
     private void initiateSpinner(Spinner spinner,  int spinner_type){
         // Create an ArrayAdapter using the string array and a default spinner layout
@@ -164,20 +164,21 @@ public class CreateNewTrackActivity extends AppCompatActivity {
                 JsonParserManager.getInstance().castRouteToJson(this.current_route),
                 key,
                 track_name_field.getText().toString(),
-                starting_point.getSelectedItem().toString(),
-                ending_point.getSelectedItem().toString(),
+                starting_point.getText().toString(),
+                ending_point.getText().toString(),
                 duration,
                 distance,
-                track_level.getSelectedItem().toString(),
-                season.getSelectedItem().toString(),
-                has_water.isChecked(),
-                suitable_for_bikes.isChecked(),
-                suitable_for_dogs.isChecked(),
-                suitable_for_families.isChecked(),
-                is_romantic.isChecked(),
+//                track_level.getSelectedItem().toString(),
+//                season.getSelectedItem().toString(),
+//                has_water.isChecked(),
+//                suitable_for_bikes.isChecked(),
+//                suitable_for_dogs.isChecked(),
+//                suitable_for_families.isChecked(),
+//                is_romantic.isChecked(),
                 additional_info.getText().toString(),
                 starting_point_JsonLatLng,
                 ending_point_JsonLatLng);
+
 
         /*Converting our track object to a map, that makes
         * the track ready to be entered to the JSON tree*/

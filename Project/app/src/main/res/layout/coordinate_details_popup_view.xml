@@ -33,24 +33,41 @@
             android:paddingLeft="15dp"
             android:paddingTop="5dp"
             android:paddingBottom="5dp"
-            android:textSize="20sp"
             android:id="@+id/minor_content"
             android:layout_centerHorizontal="true"
             android:layout_below="@+id/main_content"
-            tools:ignore="HardcodedText"/>
+            tools:ignore="HardcodedText"
+            android:maxLines="2"/>
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/minor_content"
-            android:layout_marginEnd="5dp"
+            android:layout_marginEnd="15dp"
             android:layout_alignParentEnd="true"
             android:text="@string/read_more_butt"
             android:id="@+id/read_more"
             android:background="@color/colorPrimaryDark"
             style="?android:attr/borderlessButtonStyle"
-            android:layout_marginRight="5dp"
-            android:layout_alignParentRight="true" />
+            android:layout_marginRight="15dp"
+            android:layout_alignParentRight="true"
+            android:textAlignment="viewEnd"
+            android:layout_gravity="end"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/minor_content"
+            android:layout_marginStart="15dp"
+            android:layout_alignParentStart="true"
+            android:text="@string/goto_btn"
+            android:id="@+id/goto_full_des"
+            android:background="@color/colorPrimaryDark"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_marginLeft="15dp"
+            android:layout_alignParentLeft="true"
+            android:textAlignment="viewStart"
+            android:layout_gravity="start"/>
 
         <RatingBar
             android:layout_width="wrap_content"
@@ -61,7 +78,7 @@
             style="@style/Base.Widget.AppCompat.RatingBar.Indicator"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="10dp"
-            android:layout_below="@+id/read_more"
+            android:layout_below="@+id/goto_full_des"
             android:visibility="gone"
 
             />
@@ -71,7 +88,7 @@
             android:layout_width="wrap_content"
             android:layout_height="60dp"
             android:orientation="horizontal"
-            android:layout_below="@+id/read_more"
+            android:layout_below="@+id/goto_full_des"
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
             android:id="@+id/like_wrp"

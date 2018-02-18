@@ -22,6 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="20sp"
+            android:gravity="start"
             android:text="@string/track_name_txt" />
 
         <EditText
@@ -29,6 +30,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
+            android:gravity="start"
             android:inputType="textPersonName"
             tools:ignore="LabelFor" />
 
@@ -37,7 +39,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="start">
 
             <TextView
                 android:id="@+id/startingPointTxt"
@@ -45,13 +48,15 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:text="@string/starting_point_txt"
+                android:gravity="start"
                 android:textSize="20sp" />
 
-            <Spinner
+            <TextView
                 android:id="@+id/startingPoint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:gravity="start" />
         </LinearLayout>
 
         <LinearLayout
@@ -59,7 +64,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="start">
 
             <TextView
                 android:id="@+id/endingPointTxt"
@@ -67,223 +73,94 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:text="@string/ending_point_txt"
+                android:gravity="start"
                 android:textSize="20sp" />
 
-            <Spinner
+            <TextView
                 android:id="@+id/endingPoint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="start"
                 android:layout_weight="1" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/durationTxt"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
-            android:layout_weight="1"
-            android:text="@string/duration_hour_txt"
-            android:textSize="20sp" />
-
-        <EditText
-            android:id="@+id/durationField"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:inputType="number"
-            tools:ignore="LabelFor" />
-
-        <TextView
-            android:id="@+id/distanceTxt"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
-            android:textSize="20sp"
-            android:text="@string/distance_km_txt" />
-
-        <EditText
-            android:id="@+id/distanceField"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:inputType="number"
-            tools:ignore="LabelFor" />
-
         <LinearLayout
-            android:id="@+id/trackLevelLayout"
+            android:id="@+id/durationLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="start"
+            android:weightSum="2">
 
             <TextView
-                android:id="@+id/trackLevelTxt"
-                android:layout_width="match_parent"
+                android:id="@+id/durationTxt"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:text="@string/track_level_txt"
+                android:text="@string/duration_hour_txt"
+                android:gravity="start"
                 android:textSize="20sp" />
 
-            <Spinner
-                android:id="@+id/trackLevel"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/durationField"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:gravity="start"
+                android:ems="10"
+                tools:ignore="LabelFor"
+                android:inputType="number"
+                />
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/seasonLayout"
+            android:id="@+id/distanceLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:weightSum="2"
+            android:gravity="start">
 
             <TextView
-                android:id="@+id/seasonTxt"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/season_txt"
-                android:textSize="20sp" />
-
-            <Spinner
-                android:id="@+id/season"
-                android:layout_width="match_parent"
+                android:id="@+id/distanceTxt"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/hasWaterLayout"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:layout_marginTop="30dp"
-            android:orientation="horizontal">
+                android:layout_weight="1"
+                android:textSize="20sp"
+                android:text="@string/distance_km_txt"
+                android:gravity="start"/>
 
             <TextView
-                android:id="@+id/hasWaterTxt"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/has_water_txt"
-                android:textSize="20sp" />
-
-            <CheckBox
-                android:id="@+id/hasWaterCheckbox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/suitableForBikesLayout"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginTop="30dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/suitableForBikesTxt"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/suitable_for_bikes_txt"
-                android:textSize="20sp" />
-
-            <CheckBox
-                android:id="@+id/suitableForBikesCheckbox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
-
-        </LinearLayout>
-
-        <LinearLayout
-        android:id="@+id/suitableForFamiliesLayout"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_marginTop="30dp"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/suitableForFamiliesTxt"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="@string/suitable_for_families_txt"
-            android:textSize="20sp" />
-
-        <CheckBox
-            android:id="@+id/suitableForFamiliesCheckbox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/suitableForDogsLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/suitableForDogsTxt"
-                android:layout_width="match_parent"
+                android:id="@+id/distanceField"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/suitable_for_dogs_txt"
-                android:textSize="20sp" />
-
-            <CheckBox
-                android:id="@+id/suitableForDogsCheckbox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/isRomanticLayout"
-            android:layout_width="match_parent"
-            android:layout_height="30dp"
-            android:layout_marginTop="30dp"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/isRomanticTxt"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="@string/is_romantic_txt"
-                android:textSize="20sp" />
-
-            <CheckBox
-                android:id="@+id/isRomanticCheckbox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
-
+                android:ems="10"
+                android:gravity="start"
+                android:inputType="number"
+                tools:ignore="LabelFor" />
         </LinearLayout>
 
         <TextView
             android:id="@+id/additionalInfoTxt"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/track_summary_txt"
             android:layout_marginTop="30dp"
+            android:gravity="start"
             android:textSize="20sp"/>
 
         <EditText
             android:id="@+id/trackSummaryField"
             android:layout_width="match_parent"
-            android:layout_height="400dp"
+            android:layout_height="wrap_content"
+            android:minHeight="100dp"
             android:layout_gravity="center_horizontal"
             android:ems="10"
-            android:gravity="top"
+            android:gravity="top|start"
             android:inputType="textMultiLine"
             android:paddingBottom="5dp"
             android:paddingLeft="5dp"

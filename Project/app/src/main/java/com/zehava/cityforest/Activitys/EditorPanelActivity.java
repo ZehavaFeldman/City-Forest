@@ -11,11 +11,13 @@ import android.location.Location;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Layout;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -24,6 +26,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
@@ -42,7 +45,10 @@ import android.widget.LinearLayout;
 
 //import com.mapbox.mapboxsdk.Mapbox;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.gson.JsonElement;
 import com.mapbox.mapboxsdk.MapboxAccountManager;
+import com.mapbox.mapboxsdk.annotations.MarkerOptions;
+import com.mapbox.services.commons.geojson.Feature;
 import com.mapbox.services.geocoding.v5.GeocodingCriteria;
 import com.mapbox.services.geocoding.v5.MapboxGeocoding;
 import com.mapbox.services.geocoding.v5.models.CarmenFeature;
@@ -90,6 +96,7 @@ import com.mapbox.services.directions.v5.DirectionsCriteria;
 import com.mapbox.services.directions.v5.MapboxDirections;
 import com.mapbox.services.directions.v5.models.DirectionsResponse;
 import com.mapbox.services.directions.v5.models.DirectionsRoute;
+import com.zehava.cityforest.Models.PointOfInterest;
 import com.zehava.cityforest.MoveablePointActivity;
 import com.zehava.cityforest.R;
 
@@ -128,7 +135,9 @@ import static com.zehava.cityforest.Constants.ROUTE_LINE_WIDTH;
 import static com.zehava.cityforest.Constants.SHOW_DETAILS_POPUP;
 import static com.zehava.cityforest.Constants.TRACK_EDIT;
 import static com.zehava.cityforest.Constants.TRACK_ENDING_POINT;
+import static com.zehava.cityforest.Constants.TRACK_ENDING_POINT_NAME;
 import static com.zehava.cityforest.Constants.TRACK_STARTING_POINT;
+import static com.zehava.cityforest.Constants.TRACK_STARTING_POINT_NAME;
 import static com.zehava.cityforest.Constants.UPDATE_POSITION;
 import static com.zehava.cityforest.Constants.USER_UPDATE_CREATED;
 import static com.zehava.cityforest.Constants.ZOOM_LEVEL_CURRENT_LOCATION;
@@ -179,6 +188,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     /*marker and imageview nedded for fragging points on map*/
     private Marker droppedMarker;
     private DragAndDrop hoveringMarker;
+
+    private Marker featureMarker;
 
     String uid;
 
@@ -289,6 +300,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         });
         loading_map_progress_bar.setVisibility(View.VISIBLE);
 
+        initPopupWindow();
+
     }
 
     /*In order to be able to sign out from the logged in account, I have to
@@ -302,7 +315,9 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
         mGoogleApiClient.connect();
-        uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        final FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if(currentUser != null)
+           uid = currentUser.getUid();
         super.onStart();
     }
 
@@ -372,22 +387,22 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             if(v.getId() == add_coordinate_button.getId()) {
                 if(ADD_COORDINATE_MODE){
                     ADD_COORDINATE_MODE = false;
-                    add_coordinate_button.setBackgroundResource(android.R.drawable.btn_default);
+                    add_coordinate_button.setBackgroundResource(R.drawable.not_selected_btn);
                 }
                 else{
                     ADD_COORDINATE_MODE = true;
                     ADD_TRACK_MODE = false;
                     SHOW_DETAILS_POPUP = false;
 
-                    add_coordinate_button.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
-                    add_track_button.setBackgroundResource(android.R.drawable.btn_default);
+                    add_coordinate_button.setBackgroundResource(R.drawable.selected_btn);
+                    add_track_button.setBackgroundResource(R.drawable.not_selected_btn);
                 }
             }
 
             if(v.getId() == add_track_button.getId()){
                 if(ADD_TRACK_MODE){
                     ADD_TRACK_MODE = false;
-                    add_track_button.setBackgroundResource(android.R.drawable.btn_default);
+                    add_track_button.setBackgroundResource(R.drawable.not_selected_btn);
 
                     /*
                     Passing on track_coordinates markers
@@ -416,8 +431,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     SHOW_DETAILS_POPUP = false;
                     ADD_TRACK_MODE = true;
 
-                    add_track_button.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
-                    add_coordinate_button.setBackgroundResource(android.R.drawable.btn_default);
+                    add_coordinate_button.setBackgroundResource(R.drawable.not_selected_btn);
+                    add_track_button.setBackgroundResource(R.drawable.selected_btn);
 
 
                     updateScreenCounter();
@@ -503,6 +518,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 i.putExtra(CHOSEN_TRACK, JsonParserManager.getInstance().castRouteToJson(currentRoute));
                 i.putExtra(TRACK_STARTING_POINT, JsonParserManager.getInstance().castLatLngToJson(track_markers.get(0).getPosition()));
                 i.putExtra(TRACK_ENDING_POINT, JsonParserManager.getInstance().castLatLngToJson(track_markers.get(track_markers.size()-1).getPosition()));
+                i.putExtra(TRACK_STARTING_POINT_NAME, track_markers.get(0).getTitle());
+                i.putExtra(TRACK_ENDING_POINT_NAME, track_markers.get(track_markers.size()-1).getTitle());
                 startActivityForResult(i, NEW_TRACK);
             }
 
@@ -525,12 +542,14 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     }
 
     // details window shown to user when clicked on marker or route
-    private void initPopupWindow(Object object){
+
+    private void initPopupWindow(){
 
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
 
+
         mPopupWindow = new PopupWindow(
-                inflater.inflate(R.layout.coordinate_details_popup, null),
+                inflater.inflate(R.layout.coordinate_details_popup_view, null),
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
@@ -541,22 +560,14 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         delete_coordinate_button = (ImageButton)mPopupWindow.getContentView().findViewById(R.id.deleteCoordinateButt);
         edit_coordinate_button = (ImageButton)mPopupWindow.getContentView().findViewById(R.id.editCoordinateButt);
 
-
-        if(object.getClass().equals(MarkerView.class))
-            initMarkerPopup((Marker) object);
-        else if(object.getClass().equals(HashMap.class))
-            initTrackPopup((Map<String, Object>)object);
-
         mPopupWindow.setOutsideTouchable(true);
-        mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
-
         mPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @Override
             public void onDismiss() {
                 SHOW_DETAILS_POPUP=false;
-                mPopupWindow=null;
             }
         });
+
 
     }
 
@@ -565,16 +576,32 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         TextView title = (TextView)mPopupWindow.getContentView().findViewById(R.id.main_content);
         title.setText(track.get("track_name").toString());
 
-        TextView discreption = (TextView)mPopupWindow.getContentView().findViewById(R.id.minor_content);
-        discreption.setText(track.get("additional_info").toString());
-
-        Button read_more = (Button) mPopupWindow.getContentView().findViewById(R.id.read_more);
+        final Button read_more = (Button) mPopupWindow.getContentView().findViewById(R.id.read_more);
         read_more.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
             }
         });
+
+        final TextView discreption = (TextView)mPopupWindow.getContentView().findViewById(R.id.minor_content);
+        discreption.setText(track.get("additional_info").toString());
+        read_more.setVisibility(View.GONE);
+
+        discreption.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+            @Override
+            public void onGlobalLayout() {
+
+                //check is latest line fully visible
+                if (discreption.getLineCount() >2 ) {
+                    // TODO you text is cut
+                    read_more.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+
+
 
         //add click listeners for editing and removing track
         delete_coordinate_button.setOnClickListener(new View.OnClickListener() {
@@ -595,6 +622,9 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
         //editor can only view current rating
         ratingBar.setIsIndicator(true);
+        Float d = Float.valueOf(track.get("star_count").toString());
+        Object o = (Object) d;
+        ratingBar.setRating((float) o);
 
 
         LinearLayout likesWrp = (LinearLayout) mPopupWindow.getContentView().findViewById(R.id.like_wrp);
@@ -603,15 +633,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         likes_count = (TextView) mPopupWindow.getContentView().findViewById(R.id.like_count);
         likes_count.setText(String.valueOf( track.get("like_count")));
 
-//        ImageView likeImg = (ImageView) mPopupWindow.getContentView().findViewById(R.id.likes);
-//        likeImg.setOnTouchListener(new View.OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View v, MotionEvent event) {
-//                onLikeClicked(track,likes_count);
-//                return true;
-//
-//            }
-//        });
+        mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
     }
 
     //point of interest popup
@@ -623,12 +645,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         discreption.setText(marker.getSnippet());
 
         Button read_more = (Button) mPopupWindow.getContentView().findViewById(R.id.read_more);
-        read_more.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
+        read_more.setVisibility(View.GONE);
 
         //add click listeners for editing and removing point of intereset
         delete_coordinate_button.setOnClickListener(new View.OnClickListener() {
@@ -644,120 +661,9 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             }
         });
 
+        mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+
     }
-/* adding likes and staing track using Transaction to insure users vote will be saved in database.
-* this is needed since many users can be voting at once and writing to database might be rejected*/
-
-//    private void onLikeClicked(final Map<String,Object> track, final TextView textview) {
-//        String key= (String) track.get("db_key");
-//        DatabaseReference trackRef = tracks.child(key);
-//
-//        trackRef.runTransaction(new Transaction.Handler() {
-//            @Override
-//            public Transaction.Result doTransaction(MutableData mutableData) {
-//
-//                final Track t = mutableData.getValue(Track.class);
-//
-//                if(t == null) {
-//                    return Transaction.success(mutableData);
-//                }
-
-                    /* when user clicked on like check if his uid is in tacks likes array-
-                    if found decrese likes count and remove him from array, user is deleting his vote. otherwise increse like count
-                     */
-//
-//                if (t.getLikes().containsKey(uid)) {
-//                    // Unstar the track and remove self from stars
-//                    t.setLike_count(t.getLike_count() - 1);
-//                    runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            textview.setText(String.valueOf((int)t.getLike_count()));
-//                        }
-//                    });
-//
-//
-//                    Map<String, Boolean> temp = t.getLikes();
-//                    temp.remove(uid);
-//                    t.setLikes(temp);
-//                } else {
-//                    // Star the track and add self to stars
-//                    t.setLike_count(t.getLike_count() + 1);
-//                    runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            textview.setText(String.valueOf((int)t.getLike_count()));
-//
-//                        }
-//                    });
-//
-//                    Map<String, Boolean> temp = t.getLikes();
-//                    temp.put(uid,true);
-//                    t.setLikes(temp);
-//
-//                }
-//
-//                // Set value and report transaction success
-//                mutableData.setValue(t);
-//
-//                return Transaction.success(mutableData);
-//            }
-//
-//            @Override
-//            public void onComplete(DatabaseError databaseError, boolean b,
-//                                   DataSnapshot dataSnapshot) {
-//                // Transaction completed
-//                Log.d(EditorPanelActivity.class.getSimpleName(), "postTransaction:onComplete:" + databaseError);
-//            }
-//        });
-//    }
-
-
-//    private void onStarClicked(final Map<String,Object> track, final Float stars) {
-//        String key= (String) track.get("db_key");
-//        DatabaseReference trackRef = tracks.child(key);
-//
-//        trackRef.runTransaction(new Transaction.Handler() {
-//            @Override
-//            public Transaction.Result doTransaction(MutableData mutableData) {
-//
-//                Track t = mutableData.getValue(Track.class);
-//
-//                if(t == null) {
-//                    return Transaction.success(mutableData);
-//                }
-//
-                     /* when user clicked on rating bar if his uid is in tacks stars array-
-                    if found update his rating , other wise add him to array- update star count
-                     */
-//                if (t.getStars().containsKey(uid)) {
-//
-//                    Map<String, Float> temp = t.getStars();
-//                    temp.remove(uid);
-//                    temp.put(uid,stars);
-//                    t.setStars(temp);
-//                } else {
-//
-//                    Map<String, Float> temp = t.getStars();
-//                    temp.put(uid,stars);
-//                    t.setStars(temp);
-//
-//                }
-//                t.setStar_count(stars);
-//
-//                // Set value and report transaction success
-//                mutableData.setValue(t);
-//                return Transaction.success(mutableData);
-//            }
-//
-//            @Override
-//            public void onComplete(DatabaseError databaseError, boolean b,
-//                                   DataSnapshot dataSnapshot) {
-//                // Transaction completed
-//                Log.d(EditorPanelActivity.class.getSimpleName(), "postTransaction:onComplete:" + databaseError);
-//            }
-//        });
-//    }
 
     private void showAllTracks() {
         tracks.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -777,7 +683,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
                     String route_st = (String)track.get("route");
                     DirectionsRoute route = JsonParserManager.getInstance().retrieveRouteFromJson(route_st);
-                    drawRoute(route);
+                    drawRoute(route, false);
                 }
                 loading_map_progress_bar.setVisibility(View.INVISIBLE);
             }
@@ -817,8 +723,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                             position.getLongitude(),
                             position.getLatitude());
 
-                    long logo = (long)point.get("logo");
-                    addMarkerForPointOfInterest(latlng, (String)point.get("title"), (String)point.get("snippet"), (int) logo);
+                    addMarkerForPointOfInterest(latlng, (String)point.get("title"), (String)point.get("snippet"), (String)point.get("type"));
                 }
                 loading_map_progress_bar.setVisibility(View.INVISIBLE);
             }
@@ -934,7 +839,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                         Toast.LENGTH_LONG).show();
 
                 // Draw the route on the map
-                drawRoute(currentRoute);
+                drawRoute(currentRoute,true);
             }
 
             @Override
@@ -945,7 +850,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
     }
 
-    private void drawRoute(DirectionsRoute route) {
+    private void drawRoute(DirectionsRoute route, boolean newPolyline) {
         // Convert LineString coordinates into LatLng[]
         LineString lineString = LineString.fromPolyline(route.getGeometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
         List<Position> coordinates = lineString.getCoordinates();
@@ -957,10 +862,18 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         }
 
         // Draw Points on MapView
-        routeLine = new PolylineOptions()
-                .add(points)
-                .color(Color.RED)
-                .width(ROUTE_LINE_WIDTH);
+        if(newPolyline){
+            routeLine = new PolylineOptions()
+                    .add(points)
+                    .color(Color.DKGRAY)
+                    .width(ROUTE_LINE_WIDTH);
+        }
+        else if(!newPolyline) {
+            routeLine = new PolylineOptions()
+                    .add(points)
+                    .color(Color.RED)
+                    .width(ROUTE_LINE_WIDTH);
+        }
         map.addPolyline(routeLine);
 
     }
@@ -993,10 +906,15 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     private class MyOnMapClickListener implements MapboxMap.OnMapClickListener{
         @Override
         public void onMapClick(@NonNull final LatLng point) {
+
+
+
+
+
+
             if(SHOW_DETAILS_POPUP){
                 mPopupWindow.dismiss();
 
-                //return;
             }
 
             if(ADD_COORDINATE_MODE)
@@ -1028,7 +946,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             else if(ADD_TRACK_MODE && count_coordinates_selected >= MAX_NUM_OF_TRACK_COORDINATES){
                 Toast.makeText(EditorPanelActivity.this, R.string.reached_limit_of_coordinates, Toast.LENGTH_SHORT).show();
             }
-            else{
+            else if(!ADD_TRACK_MODE){
                 tracks.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -1055,7 +973,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                                     // If distance is less than 100 meters, this is your polyline
 //                                    Log.e(TAG, "Found @ "+clickCoords.latitude+" "+clickCoords.longitude);
                                     SHOW_DETAILS_POPUP = true;
-                                    initPopupWindow(track);
+                                    initTrackPopup(track);
                                 }
 
                             }
@@ -1120,12 +1038,14 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         return markerViewOptions.getMarker();
     }
 
-    private MarkerView addMarkerForPointOfInterest(LatLng point, String title, String snippet, int logo){
+    private MarkerView addMarkerForPointOfInterest(LatLng point, String title, String snippet, String type){
         MarkerViewOptions markerViewOptions = new MarkerViewOptions()
                 .position(point)
                 .title(title)
                 .snippet(snippet);
         map.addMarker(markerViewOptions);
+
+        int logo = (int) (long) PointOfInterest.whatIsTheLogoForType(type);
 
         if(logo != -1) {
             IconFactory iconFactory = IconFactory.getInstance(EditorPanelActivity.this);
@@ -1175,11 +1095,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     private class MyOnMarkerClickListener implements MapboxMap.OnMarkerClickListener{
         @Override
         public boolean onMarkerClick(@NonNull final Marker marker) {
-//            if(SHOW_DETAILS_POPUP) {
-//                mPopupWindow.dismiss();
-//
-//                return true;
-//            }
+
             if(!ADD_TRACK_MODE) {
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(marker.getPosition().getLatitude(),
                         marker.getPosition().getLongitude()), ZOOM_LEVEL_MARKER_CLICK));
@@ -1194,7 +1110,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                             String type = (String) point.get("type");
                             if (!type.equals("תחנת רכבת")) {
                                 SHOW_DETAILS_POPUP = true;
-                                initPopupWindow(marker);
+                                initMarkerPopup(marker);
                             }
                         }
                     }
@@ -1204,11 +1120,14 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
                     }
                 });
+                return true;
             }
 
 
             if(ADD_TRACK_MODE) {
                 for(int i=0; i<track_markers.size(); i++) {
+
+
                     /*If the editor clicked a marker that is already part of the track
                     * we want to remove it from the track coordinates array*/
                     if(track_markers.get(i).toString().equals(marker.toString())){
@@ -1260,6 +1179,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
                             marker.setIcon(icon);
 
+
                         }
 
                         @Override
@@ -1267,7 +1187,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
                         }
                     });
-
+                    return true;
                 }
                 else{
                     IconFactory iconFactory = IconFactory.getInstance(EditorPanelActivity.this);
@@ -1793,7 +1713,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 if(mode == NEW_COORDINATE){
                     addMarkerForPointOfInterest(createdCoordinate,
                             (String)point.get("title"), (String)point.get("snippet"),
-                            (int)logo);
+                            (String)point.get("type"));
                 }
                 else if(mode == EDIT_COORDINATE){
                     List<Marker> markers = map.getMarkers();
@@ -1806,7 +1726,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                         LatLng tempLatLng = new LatLng(createdCoordinate.getLongitude(), createdCoordinate.getLatitude());
                         addMarkerForPointOfInterest(tempLatLng,
                                 (String)point.get("title"), (String)point.get("snippet"),
-                                (int)logo);
+                                (String)point.get("type"));
                     }
                 }
 
