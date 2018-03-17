@@ -20,14 +20,14 @@ public class PointOfInterestJsonParser
         if (jsonObject == null)
             return null;
         String title = jsonObject.optString("title");
-        String image = jsonObject.optString("snippet");
+        String snippet = jsonObject.optString("snippet");
         String type = jsonObject.optString("type");
         String position = jsonObject.optString("position");
         Position pos = JsonParserManager.getInstance().retrievePositionFromJson(position);
-        double rating = pos.getLatitude();
-        double year = pos.getLongitude();
-        if (title != null && image != null && rating >= 0 && year != 0)
-            return new PointOfInterest(rating, year,title, image,type);
+        double lat = pos.getLatitude();
+        double longitude = pos.getLongitude();
+        if (title != null && snippet != null && lat != 0 && longitude != 0)
+            return new PointOfInterest(lat, longitude,title, snippet,type);
         return null;
     }
 

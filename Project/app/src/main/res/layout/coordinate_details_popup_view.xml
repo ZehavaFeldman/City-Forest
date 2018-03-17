@@ -9,8 +9,8 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="5dp"
-        android:paddingBottom="10dp"
+        android:paddingBottom="5dp"
+
         >
 
         <TextView
@@ -24,6 +24,8 @@
             android:paddingBottom="5dp"
             android:textSize="20sp"
             android:textStyle="bold"
+            android:layout_toEndOf="@+id/firebase_storage_image"
+            android:layout_toRightOf="@+id/firebase_storage_image"
             tools:ignore="HardcodedText,RtlHardcoded"/>
 
         <TextView
@@ -36,6 +38,8 @@
             android:id="@+id/minor_content"
             android:layout_centerHorizontal="true"
             android:layout_below="@+id/main_content"
+            android:layout_toEndOf="@+id/firebase_storage_image"
+            android:layout_toRightOf="@+id/firebase_storage_image"
             tools:ignore="HardcodedText"
             android:maxLines="2"/>
 
@@ -54,68 +58,82 @@
             android:textAlignment="viewEnd"
             android:layout_gravity="end"/>
 
-        <Button
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/camera"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/minor_content"
-            android:layout_marginStart="15dp"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="10dp"
+            android:layout_alignBottom="@id/firebase_storage_image"
+            android:layout_marginStart="10dp"
+            android:textAlignment="viewEnd"
+            android:layout_gravity="end"
+            app:backgroundTint="@color/colorPrimary"
+            app:srcCompat="@drawable/camera"
+            app:fabSize="mini"
+            tools:ignore="VectorDrawableCompat" />
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/show_all_imges"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_toEndOf="@+id/camera"
+            android:layout_toRightOf="@+id/camera"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="5dp"
+            android:layout_alignBottom="@+id/firebase_storage_image"
+            android:textAlignment="viewEnd"
+            android:layout_gravity="end"
+            app:backgroundTint="@color/colorPrimary"
+            app:srcCompat="@drawable/gallary"
+            tools:ignore="VectorDrawableCompat"
+            app:fabSize="mini"
+           />
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/cancle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="10dp"
+            android:layout_alignBottom="@id/firebase_storage_image"
+            android:layout_marginStart="10dp"
+            android:textAlignment="viewEnd"
+            android:layout_gravity="end"
+            app:backgroundTint="@color/colorPrimary"
+            app:srcCompat="@drawable/cancale_white"
+            tools:ignore="VectorDrawableCompat"
+            app:fabSize="mini"
+            android:visibility="gone"/>
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/upload_imge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_toEndOf="@+id/cancle"
+            android:layout_toRightOf="@+id/cancle"
+            android:layout_marginBottom="5dp"
+            android:layout_marginLeft="5dp"
+            android:layout_alignBottom="@+id/firebase_storage_image"
+            android:textAlignment="viewEnd"
+            android:layout_gravity="end"
+            app:backgroundTint="@color/colorPrimary"
+            app:srcCompat="@drawable/upload_image"
+            tools:ignore="VectorDrawableCompat"
+            app:fabSize="mini"
+            android:visibility="invisible"/>
+        <ImageView
+            android:id="@+id/firebase_storage_image"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+
+            android:layout_marginStart="10dp"
             android:layout_alignParentStart="true"
-            android:text="@string/goto_btn"
-            android:id="@+id/goto_full_des"
-            android:background="@color/colorPrimaryDark"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_marginLeft="15dp"
-            android:layout_alignParentLeft="true"
-            android:textAlignment="viewStart"
-            android:layout_gravity="start"/>
 
-        <RatingBar
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/ratingBar"
-            android:numStars="5"
-            android:isIndicator="false"
-            style="@style/Base.Widget.AppCompat.RatingBar.Indicator"
-            android:layout_centerHorizontal="true"
+            android:layout_marginLeft="10dp"
             android:layout_marginTop="10dp"
-            android:layout_below="@+id/goto_full_des"
-            android:visibility="gone"
-
-            />
-
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="60dp"
-            android:orientation="horizontal"
-            android:layout_below="@+id/goto_full_des"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:id="@+id/like_wrp"
-            android:gravity="center"
-            android:visibility="gone"
-            >
-
-
-            <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:background="@color/colorPrimaryDark"
-                android:contentDescription="@string/delete_coordinates_button"
-                app:srcCompat="@drawable/like"
-                android:id="@+id/likes"
-                />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="12dp"
-                android:layout_gravity="end|center"
-                android:layout_marginStart="10dp"
-                android:id="@+id/like_count"
-                android:layout_marginLeft="10dp" />
-        </LinearLayout>
-
-
+            android:layout_alignParentLeft="true"
+           />
     </RelativeLayout>
 </LinearLayout>

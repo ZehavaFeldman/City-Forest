@@ -2,6 +2,7 @@ package com.zehava.cityforest.Activitys;
 
 import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -9,8 +10,10 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.databinding.adapters.LinearLayoutBindingAdapter;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
@@ -48,22 +51,40 @@ import android.widget.Toast;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ImageView.ScaleType;
 
+import android.provider.MediaStore;
+
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
+import com.firebase.ui.storage.images.FirebaseImageLoader;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 //import com.mapbox.mapboxsdk.Mapbox;
 //import com.mapbox.mapboxsdk.plugins.cluster.clustering.ClusterItem;
 //import com.mapbox.mapboxsdk.plugins.cluster.clustering.ClusterManagerPlugin;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.mapbox.mapboxsdk.MapboxAccountManager;
+
 import com.zehava.cityforest.ICallback;
 import com.zehava.cityforest.MakeOwnTrackActivity;
 import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Managers.LocaleManager;
+import com.zehava.cityforest.Models.Image;
 import com.zehava.cityforest.Models.PointOfInterest;
 import com.zehava.cityforest.Models.Track;
 import com.zehava.cityforest.Models.UserUpdate;
@@ -108,6 +129,7 @@ import com.zehava.cityforest.MoveablePointActivity;
 import com.zehava.cityforest.R;
 import com.zehava.cityforest.UpdatesManagerService;
 
+import java.io.IOException;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -116,13 +138,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
-
+import 	java.util.UUID;
 
 import static com.zehava.cityforest.Constants.CURRENT_USER_NAME;
 import static com.zehava.cityforest.Constants.CURRENT_USER_UID;
 import static com.zehava.cityforest.Constants.DEFAULT_JERUSALEM_COORDINATE;
+import static com.zehava.cityforest.Constants.IMAGE_NAME;
 import static com.zehava.cityforest.Constants.MOVE_MARKER;
 import static com.zehava.cityforest.Constants.NEW_USER_UPDATE;
+import static com.zehava.cityforest.Constants.PICK_IMAGE_REQUEST;
 import static com.zehava.cityforest.Constants.RC_SIGN_IN;
 import static com.zehava.cityforest.Constants.ROUTE_LINE_WIDTH;
 import static com.zehava.cityforest.Constants.SELECTED_TRACK;
@@ -147,20 +171,26 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
     private PolylineOptions routeLine;
     private FirebaseDatabase database;
-    private DatabaseReference coordinates;
     private DatabaseReference tracks;
     private DatabaseReference points_of_interest;
     private DatabaseReference user_updates;
+    private DatabaseReference images;
+
+    private FirebaseStorage storage;
+    private StorageReference storageReference;
 
     private TextView likes_count;
 
     private FloatingActionButton createUserUpdate;
+    private FloatingActionButton camera, cancle;
+    private FloatingActionButton uploadImage, showAllImages;
 
     private PopupWindow mPopupWindow;
     private RelativeLayout mRelativeLayout;
 
     String uid,uname;
     private FirebaseAuth mAuth;
+    private StorageReference reallImgref;
 
     Snackbar mySnackbar;
     Boolean expand=false;
@@ -175,7 +205,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     TextView discreption;
     Button track_details;
     Button read_more;
-
+    ImageView pointOfInterestImageView;
+    Uri filePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -195,18 +226,21 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         locationEngine = getLocationEngine(this);
         locationEngine.activate();
 
-        mapView = (MapView) findViewById(R.id.mapview);
+        mapView = findViewById(R.id.mapview);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(new myOnMapReadyCallback());
 
         database = FirebaseDatabase.getInstance();
-        coordinates = database.getReference("coordinates");
         points_of_interest = database.getReference("points_of_interest");
         tracks = database.getReference("tracks");
         user_updates = database.getReference("user_updates");
+        images = database.getReference("storage_images");
+
+        storage = FirebaseStorage.getInstance();
+        storageReference = storage.getReference();
 
 
-        mRelativeLayout = (RelativeLayout) findViewById(R.id.mapLayout);
+        mRelativeLayout = findViewById(R.id.mapLayout);
 
         SHOW_DETAILS_POPUP = false;
         MOVE_MARKER = false;
@@ -427,7 +461,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         {
             SHOW_DETAILS_POPUP = false;
             mPopupWindow.dismiss();
-//            mPopupWindow = null;
+
             showDefaultLocation();
         }
         else {
@@ -671,15 +705,18 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             }
         });
 
-        title = (TextView)mPopupWindow.getContentView().findViewById(R.id.main_content);
-        discreption = (TextView)mPopupWindow.getContentView().findViewById(R.id.minor_content);
-        track_details = (Button) mPopupWindow.getContentView().findViewById(R.id.goto_full_des);
-        read_more = (Button) mPopupWindow.getContentView().findViewById(R.id.read_more);
-
-
     }
 
     private void initTrackPopup(final  Map<String, Object> track){
+
+        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+        View view = inflater.inflate(R.layout.track_details_popup_view, null);
+        mPopupWindow.setContentView(view);
+
+        title = mPopupWindow.getContentView().findViewById(R.id.main_content);
+        discreption = mPopupWindow.getContentView().findViewById(R.id.minor_content);
+        track_details = mPopupWindow.getContentView().findViewById(R.id.goto_full_des);
+        read_more = mPopupWindow.getContentView().findViewById(R.id.read_more);
 
         title.setText(track.get("track_name").toString());
         discreption.setText(track.get("additional_info").toString());
@@ -729,8 +766,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         });
 
 
-        RatingBar ratingBar = (RatingBar)mPopupWindow.getContentView().findViewById(R.id.ratingBar);
-        ratingBar.setVisibility(View.VISIBLE);
+        RatingBar ratingBar = mPopupWindow.getContentView().findViewById(R.id.ratingBar);
+       
 
         Float d = Float.valueOf(track.get("star_count").toString());
         Object o = (Object) d;
@@ -747,10 +784,9 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             }
         });
 
-        LinearLayout likesWrp = (LinearLayout) mPopupWindow.getContentView().findViewById(R.id.like_wrp);
-        likesWrp.setVisibility(View.VISIBLE);
+        LinearLayout likesWrp = mPopupWindow.getContentView().findViewById(R.id.like_wrp);
 
-        likes_count = (TextView) mPopupWindow.getContentView().findViewById(R.id.like_count);
+        likes_count = mPopupWindow.getContentView().findViewById(R.id.like_count);
         likes_count.setText(String.valueOf( track.get("like_count")));
 
         likesWrp.setOnTouchListener(new View.OnTouchListener() {
@@ -772,15 +808,99 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
     }
 
-    private void initMarkerPopup(final Marker marker){
+    private void initMarkerPopup(final Marker marker, final String type, final String imageUUID){
         expand=false;
         expandable=true;
 
+        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+        View view = inflater.inflate(R.layout.coordinate_details_popup_view, null);
+        mPopupWindow.setContentView(view);
 
+        title = mPopupWindow.getContentView().findViewById(R.id.main_content);
+        discreption = mPopupWindow.getContentView().findViewById(R.id.minor_content);
+        read_more = mPopupWindow.getContentView().findViewById(R.id.read_more);
+        camera = mPopupWindow.getContentView().findViewById(R.id.camera);
+        cancle = mPopupWindow.getContentView().findViewById(R.id.cancle);
+        showAllImages = mPopupWindow.getContentView().findViewById(R.id.show_all_imges);
+        uploadImage = mPopupWindow.getContentView().findViewById(R.id.upload_imge);
+        pointOfInterestImageView = mPopupWindow.getContentView().findViewById(R.id.firebase_storage_image);
+
+        final String imageName = getMarkerHashKey(marker);
+        if(imageUUID != null) {
+            reallImgref = storageReference.child(imageUUID);
+        }
+
+        if(cancle != null && imageUUID != null) {
+            cancle.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+
+                    Glide.with(HomeActivity.this /* context */)
+                            .using(new FirebaseImageLoader())
+                            .load(reallImgref)
+                            .listener(new RequestListener<StorageReference, GlideDrawable>() {
+                                @Override
+                                public boolean onException(Exception e, StorageReference model, Target<GlideDrawable> target, boolean isFirstResource) {
+                                    mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+                                    return false;
+                                }
+
+                                @Override
+                                public boolean onResourceReady(GlideDrawable resource, StorageReference model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
+                                    mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+                                    return false;
+                                }
+                            })
+                            .into(pointOfInterestImageView);
+                    cancle.setVisibility(View.INVISIBLE);
+                    uploadImage.setVisibility(View.INVISIBLE);
+                    showAllImages.setVisibility(View.VISIBLE);
+                    camera.setVisibility(View.VISIBLE);
+                    showAllImages.setVisibility(View.VISIBLE);
+                }
+
+            });
+        }
+
+        if(camera != null) {
+            camera.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent();
+                    intent.setType("image/*");
+                    intent.setAction(Intent.ACTION_GET_CONTENT);
+                    startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+                }
+            });
+        }
+
+        if(showAllImages != null){
+            showAllImages.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(HomeActivity.this, PointOfInterestGallary.class);
+                    intent.putExtra(IMAGE_NAME, getMarkerHashKey(marker));
+                    startActivity(intent);
+                }
+            });
+        }
+
+        if(uploadImage != null) {
+            uploadImage.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    PointOfInterest pointOfInterest = new PointOfInterest(
+                            marker.getPosition().getLongitude(),
+                            marker.getPosition().getLatitude(),
+                            marker.getTitle(),
+                            marker.getSnippet(),
+                            type);
+                    uploadImage(getMarkerHashKey(marker), pointOfInterest);
+                }
+            });
+        }
         title.setText(marker.getTitle());
         discreption.setText(marker.getSnippet());
-
-        track_details.setVisibility(View.GONE);
 
         read_more.setVisibility(View.INVISIBLE);
         read_more.setOnClickListener(new View.OnClickListener() {
@@ -817,7 +937,41 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         });
 
 
-        mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+        if(imageUUID != null) {
+            Glide.with(HomeActivity.this /* context */)
+                    .using(new FirebaseImageLoader())
+                    .load(reallImgref)
+                    .listener(new RequestListener<StorageReference, GlideDrawable>() {
+                        @Override
+                        public boolean onException(Exception e, StorageReference model, Target<GlideDrawable> target, boolean isFirstResource) {
+                            mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onResourceReady(GlideDrawable resource, StorageReference model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
+                            mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+                            return false;
+                        }
+                    })
+                    .into(pointOfInterestImageView);
+        }
+        else{
+            pointOfInterestImageView.setImageResource(android.R.color.transparent);
+            mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+        }
+
+
+        pointOfInterestImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent imagePreview = new Intent(HomeActivity.this, ImageFullScreenPreview.class);
+                imagePreview.putExtra(IMAGE_NAME, imageUUID);
+                startActivity(imagePreview);
+            }
+        });
+
+//        mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
 
     }
 
@@ -825,7 +979,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     private void initUpdateInfoWindow(final Marker update){
 
 
-        TextView title = (TextView)mPopupWindow.getContentView().findViewById(R.id.update_main_content);
+        TextView title = mPopupWindow.getContentView().findViewById(R.id.update_main_content);
         title.setText(update.getTitle());
 
         int type=type(update.getIcon());
@@ -842,8 +996,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                     Date time;
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yy | HH:mm");
 
-                    TextView update_created = (TextView)mPopupWindow.getContentView().findViewById(R.id.created);
-                    TextView update_owner= (TextView)mPopupWindow.getContentView().findViewById(R.id.owner);
+                    TextView update_created = mPopupWindow.getContentView().findViewById(R.id.created);
+                    TextView update_owner= mPopupWindow.getContentView().findViewById(R.id.owner);
                     if(u_update.get("uname")!=null && u_update.get("updated")!=null) {
                         owner = getResources().getString(R.string.created_by) + ": " + u_update.get("uname").toString();
                         time = new Date(((Number) u_update.get("updated")).longValue()*1000);
@@ -852,7 +1006,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                         update_owner.setText(owner);
                     }
 
-                    ImageView img = (ImageView)mPopupWindow.getContentView().findViewById(R.id.img);
+                    ImageView img = mPopupWindow.getContentView().findViewById(R.id.img);
                     img.setBackgroundResource((int) (long)UserUpdate.whatIsTheLogoForType(u_update.get("type").toString()));
                 }
             }
@@ -863,18 +1017,19 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             }
         });
 
-        TextView discreption = (TextView)mPopupWindow.getContentView().findViewById(R.id.update_minor_content);
+        TextView discreption = mPopupWindow.getContentView().findViewById(R.id.update_minor_content);
         discreption.setText(update.getSnippet());
 
 
 
-        Button read_more = (Button) mPopupWindow.getContentView().findViewById(R.id.not_here);
+        Button read_more =  mPopupWindow.getContentView().findViewById(R.id.not_here);
         read_more.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
             }
         });
+
 
         mPopupWindow.showAtLocation(mRelativeLayout, Gravity.CENTER, 0, 0);
 
@@ -1092,9 +1247,10 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                     Map<String, Object> point = ((Map<String, Object>)pointsMap.get(key));
                     if(point != null) {
                         String type = (String) point.get("type");
+                        String imageUUId = (String) point.get("imagePath");
                         if (!type.equals("תחנת רכבת")) {
                             SHOW_DETAILS_POPUP = true;
-                            initMarkerPopup(marker);
+                            initMarkerPopup(marker, type,imageUUId);
 
                         }
                     }
@@ -1337,6 +1493,65 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                     }});
     }
 
+
+    private void uploadImage(final String imageName, final PointOfInterest pointOfInterest) {
+
+        if(filePath != null)
+        {
+            final ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setTitle("Uploading...");
+            progressDialog.show();
+
+            final String uuid = UUID.randomUUID().toString();
+            StorageReference ref = storageReference.child("images/"+ imageName +"/"+ uuid);
+            ref.putFile(filePath)
+                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            progressDialog.dismiss();
+                            Toast.makeText(HomeActivity.this, "Uploaded", Toast.LENGTH_SHORT).show();
+                            String newPath = storageReference.child("images/"+ imageName +"/"+ uuid).getPath();
+                            pointOfInterest.setImage(newPath);
+                            Map<String, Object> pointMap = pointOfInterest.toMap();
+
+                            Map<String, Object> childUpdates = new HashMap<>();
+                            childUpdates.put(imageName, pointMap);
+                            points_of_interest.updateChildren(childUpdates);
+
+                            Image image = new Image(newPath);
+                            Map<String, Object> imageMap = image.toMap();
+
+                            String key = images.child(imageName).push().getKey();
+                            childUpdates.clear();
+                            childUpdates.put(key, imageMap);
+                            images.child(imageName).updateChildren(childUpdates);
+
+                            uploadImage.setVisibility(View.INVISIBLE);
+                            cancle.setVisibility(View.INVISIBLE);
+                            camera.setVisibility(View.VISIBLE);
+                            showAllImages.setVisibility(View.VISIBLE);
+
+
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            progressDialog.dismiss();
+                            Toast.makeText(HomeActivity.this, "Failed "+e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                            double progress = (100.0*taskSnapshot.getBytesTransferred()/taskSnapshot
+                                    .getTotalByteCount());
+                            progressDialog.setMessage("Uploaded "+(int)progress+"%");
+                        }
+                    });
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         try {
@@ -1348,10 +1563,23 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                 GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
                 handleSignInResult(result);
             }
+            else if(requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK
+                    && data != null && data.getData() != null )
+            {
+                filePath = data.getData();
+
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), filePath);
+                pointOfInterestImageView.setImageBitmap(bitmap);
+                uploadImage.setVisibility(View.VISIBLE);
+                camera.setVisibility(View.INVISIBLE);
+                cancle.setVisibility(View.VISIBLE);
+                showAllImages.setVisibility(View.INVISIBLE);
 
 
-        } catch (Exception ex) {
-            Toast.makeText(HomeActivity.this, ex.toString(),
+            }
+
+
+        } catch (Exception ex) {Toast.makeText(HomeActivity.this, ex.toString(),
                     Toast.LENGTH_SHORT).show();
         }
 

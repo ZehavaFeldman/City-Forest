@@ -16,7 +16,8 @@
     <string name="dialog_change_point">What would you like to do with this point?</string>
     <string name="dialog_remove_point">Delete</string>
     <string name="dialog_move_point">Move</string>
-
+    <string name="dialog_edit_first_stop">Change route starting point?</string>
+    <string name="dialog_edit_track">Edit this track info?</string>
     <!--End of dialogs -->
 
 
@@ -105,6 +106,12 @@
         <item>Editor</item>
     </string-array>
 
+    <string-array name="spinner_editor_list_item_array">
+
+        <item>Home</item>
+        <item>Sign Out</item>
+    </string-array>
+
     <string-array name="track_level">
         <item>Choose track level</item>
         <item>Easy</item>
@@ -179,6 +186,7 @@
     <string name="ALGOLIA_APP_ID" translatable="false">23AHHRJOBU</string>
     <string name="ALGOLIA_SEARCH_API_KEY" translatable="false">8fd54c914d7dd05b7a87265beb57cad4</string>
     <string name="ALGOLIA_INDEX_NAME" translatable="false">tracks</string>
+    <string name="ALGOLIA_POINTS_OF_INTEREST" translatable="false">points_of_interest</string>
 
     <string name="query_feature_marker_title" translatable="false">Properties:</string>
     <string name="query_feature_marker_snippet" translatable="false">No feature properties found</string>

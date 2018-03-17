@@ -111,6 +111,7 @@
                     android:contentDescription="@string/add_coordinates_button"
                     app:srcCompat="@drawable/ic_action_name"
                     android:background="@drawable/not_selected_btn"
+                    android:tooltipText="@string/add_coordinates_button"
                     />
 
 
@@ -118,7 +119,7 @@
                     android:id="@+id/addTrackButt"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
-
+                    android:tooltipText="@string/add_track_button"
                     android:layout_margin="10dp"
                     style="?android:attr/borderlessButtonStyle"
                     android:contentDescription="@string/add_track_button"

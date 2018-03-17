@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.CheckBox;
+import android.view.View;
 import android.widget.TextView;
 
 import com.google.firebase.database.DataSnapshot;
@@ -44,14 +44,9 @@ public class SelectedTrackDetailsActivity extends AppCompatActivity {
     private TextView ending_point_field;
     private TextView distance_field;
     private TextView duration_field;
-    private TextView level_field;
-    private TextView season_field;
+
     private TextView summary_field;
-    private CheckBox has_water_checkbox;
-    private CheckBox suitable_for_bikes_checkbox;
-    private CheckBox suitable_for_dogs_checkbox;
-    private CheckBox suitable_for_families_checkbox;
-    private CheckBox is_romantic_checkbox;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,20 +64,19 @@ public class SelectedTrackDetailsActivity extends AppCompatActivity {
         ending_point_field = (TextView) findViewById(R.id.endingPointField);
         distance_field = (TextView) findViewById(R.id.distanceField);
         duration_field = (TextView) findViewById(R.id.durationField);
-        level_field = (TextView) findViewById(R.id.levelField);
-        season_field = (TextView) findViewById(R.id.seasonField);
-        summary_field = (TextView) findViewById(R.id.summaryField);
-        has_water_checkbox = (CheckBox) findViewById(R.id.hasWaterCheckbox);
-        suitable_for_bikes_checkbox = (CheckBox) findViewById(R.id.suitableForBikesCheckbox);
-        suitable_for_dogs_checkbox = (CheckBox) findViewById(R.id.suitableForDogsCheckbox);
-        suitable_for_families_checkbox = (CheckBox) findViewById(R.id.suitableForFamiliesCheckbox);
-        is_romantic_checkbox = (CheckBox) findViewById(R.id.isRomanticCheckbox);
 
-        has_water_checkbox.setClickable(false);
-        suitable_for_bikes_checkbox.setClickable(false);
-        suitable_for_dogs_checkbox.setClickable(false);
-        suitable_for_families_checkbox.setClickable(false);
-        is_romantic_checkbox.setClickable(false);
+        summary_field = (TextView) findViewById(R.id.summaryField);
+
+        floatingActionButton = (FloatingActionButton) findViewById(R.id.location_toggle_fab);
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(SelectedTrackDetailsActivity.this, SelectedTrackMapActivity.class);
+                intent.putExtra(SELECTED_TRACK, track_db_key);
+                startActivity(intent);
+            }
+        });
+
 
         initiateScreenValues();
 
@@ -109,14 +103,7 @@ public class SelectedTrackDetailsActivity extends AppCompatActivity {
                 ending_point_field.setText((String) track.get("ending_point"));
                 distance_field.setText(track.get("length").toString());
                 duration_field.setText(track.get("duration").toString());
-                level_field.setText((String) track.get("level"));
-                season_field.setText((String) track.get("season"));
                 summary_field.setText((String) track.get("additional_info"));
-                has_water_checkbox.setChecked((boolean) track.get("has_water"));
-                suitable_for_bikes_checkbox.setChecked((boolean) track.get("suitable_for_bikes"));
-                suitable_for_families_checkbox.setChecked((boolean) track.get("suitable_for_families"));
-                suitable_for_dogs_checkbox.setChecked((boolean) track.get("suitable_for_dogs"));
-                is_romantic_checkbox.setChecked((boolean) track.get("is_romantic"));
 
             }
 

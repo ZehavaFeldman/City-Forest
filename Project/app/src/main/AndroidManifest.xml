@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -47,9 +48,7 @@
 
         <activity
             android:name=".Activitys.HomeActivity"
-            android:screenOrientation="portrait">
-
-        </activity>
+            android:screenOrientation="portrait"></activity>
         <activity
             android:name=".Activitys.SplashActivity"
             android:screenOrientation="portrait"
@@ -71,12 +70,11 @@
         <!-- android:label="תוצאות חיפוש" -->
 
         <activity
-            android:name=".Activitys.SelectedTrackActivity"
+            android:name=".Activitys.SelectedTrackMapActivity"
             android:screenOrientation="portrait" />
         <activity
             android:name=".Activitys.SelectedTrackDetailsActivity"
             android:screenOrientation="portrait" />
-
         <activity
             android:name=".MakeOwnTrackActivity"
             android:screenOrientation="portrait" />
@@ -107,6 +105,10 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Dialog" />
         <activity
+            android:name=".Activitys.ImageFullScreenPreview"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Dialog" />
+        <activity
             android:name=".MoveablePointActivity"
             android:screenOrientation="portrait">
 
@@ -122,14 +124,23 @@
             android:name=".UpdatesManagerService"
             android:exported="false" />
         <!-- android:label="" -->
-        <activity android:name=".Activitys.AlgoliaSearchActivity"
+        <activity
+            android:name=".Activitys.AlgoliaSearchActivity"
             android:screenOrientation="portrait">
 
-             <!--<intent-filter>-->
-                 <!--<action android:name="android.intent.action.MAIN" />-->
-                 <!--<category android:name="android.intent.category.LAUNCHER" />-->
-             <!--</intent-filter>-->
+            <!-- <intent-filter> -->
+            <!-- <action android:name="android.intent.action.MAIN" /> -->
+            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
+            <!-- </intent-filter> -->
         </activity>
+        <!--<activity-->
+            <!--android:name=".Activitys.NavigationActivity"-->
+           <!--&gt;-->
+
+
+        <!--</activity>-->
+        <activity android:name=".Activitys.PointOfInterestGallary"
+            android:screenOrientation="portrait"></activity>
     </application>
 
 </manifest>

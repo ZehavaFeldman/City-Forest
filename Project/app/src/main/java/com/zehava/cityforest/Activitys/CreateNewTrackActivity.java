@@ -46,19 +46,12 @@ public class CreateNewTrackActivity extends AppCompatActivity {
     private TextView ending_point;
     private TextView duration_field;
     private TextView distance_field;
-    private Spinner track_level;
-    private Spinner season;
-    private CheckBox has_water;
-    private CheckBox suitable_for_bikes;
-    private CheckBox suitable_for_families;
-    private CheckBox suitable_for_dogs;
-    private CheckBox is_romantic;
+  
     private EditText additional_info;
     private String starting_point_JsonLatLng;
     private String ending_point_JsonLatLng;
     private String starting_point_name;
     private String ending_point_name;
-    private ArrayList<Polyline> polyline;
 
     private Button save_button;
     private Button cancel_button;
@@ -77,28 +70,17 @@ public class CreateNewTrackActivity extends AppCompatActivity {
         ending_point_JsonLatLng = i.getStringExtra(TRACK_ENDING_POINT);
         starting_point_name = i.getStringExtra(TRACK_ENDING_POINT_NAME);
         ending_point_name = i.getStringExtra(TRACK_STARTING_POINT_NAME);
-//        polyline= i.getParcelableArrayListExtra(TRACK_POLY_LINE);
 
+        track_name_field = findViewById(R.id.trackNameField);
+        starting_point = findViewById(R.id.startingPoint);
+        ending_point = findViewById(R.id.endingPoint);
+        duration_field = findViewById(R.id.durationField);
+        distance_field = findViewById(R.id.distanceField);
 
-        track_name_field = (EditText)findViewById(R.id.trackNameField);
-        starting_point = (TextView)findViewById(R.id.startingPoint);
-        ending_point = (TextView)findViewById(R.id.endingPoint);
-        duration_field = (TextView)findViewById(R.id.durationField);
-        distance_field = (TextView)findViewById(R.id.distanceField);
-//        track_level = (Spinner)findViewById((R.id.trackLevel));
-//        season = (Spinner)findViewById(R.id.season);
-//        has_water = (CheckBox)findViewById(R.id.hasWaterCheckbox);
-//        suitable_for_bikes = (CheckBox)findViewById(R.id.suitableForBikesCheckbox);
-//        suitable_for_families = (CheckBox)findViewById(R.id.suitableForFamiliesCheckbox);
-//        suitable_for_dogs = (CheckBox)findViewById(R.id.suitableForDogsCheckbox);
-//        is_romantic = (CheckBox)findViewById(R.id.isRomanticCheckbox);
-        additional_info = (EditText)findViewById(R.id.trackSummaryField);
-        save_button = (Button)findViewById(R.id.saveButton);
-        cancel_button = (Button)findViewById(R.id.cancelButton);
+        additional_info = findViewById(R.id.trackSummaryField);
+        save_button = findViewById(R.id.saveButton);
+        cancel_button = findViewById(R.id.cancelButton);
 
-//
-//        initiateSpinner(track_level, R.array.track_level);
-//        initiateSpinner(season, R.array.season);
 
         double temp_duration = current_route.getDuration()/3600;
         double temp_distance = current_route.getDistance()/1000;
@@ -131,26 +113,6 @@ public class CreateNewTrackActivity extends AppCompatActivity {
         }
     }
 
-//    private boolean checkFields(){
-//
-//
-//        if(track_level.getSelectedItem().toString().equals(getResources().getString(R.string.choose_a_level))){
-//            Toast.makeText(this, R.string.choose_level_empty, Toast.LENGTH_LONG).show();
-//            return false;
-//        }
-//
-//        return true;
-//    }
-
-    private void initiateSpinner(Spinner spinner,  int spinner_type){
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                spinner_type, R.layout.spinner_item);
-        // Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        // Apply the adapter to the spinner
-        spinner.setAdapter(adapter);
-    }
 
 
     private void writeNewTrack(){
@@ -168,13 +130,6 @@ public class CreateNewTrackActivity extends AppCompatActivity {
                 ending_point.getText().toString(),
                 duration,
                 distance,
-//                track_level.getSelectedItem().toString(),
-//                season.getSelectedItem().toString(),
-//                has_water.isChecked(),
-//                suitable_for_bikes.isChecked(),
-//                suitable_for_dogs.isChecked(),
-//                suitable_for_families.isChecked(),
-//                is_romantic.isChecked(),
                 additional_info.getText().toString(),
                 starting_point_JsonLatLng,
                 ending_point_JsonLatLng);

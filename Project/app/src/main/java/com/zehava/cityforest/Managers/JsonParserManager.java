@@ -105,4 +105,13 @@ public class JsonParserManager {
         DirectionsRoute obj = gson.fromJson(stringExtra, DirectionsRoute.class);
         return obj;
     }
+
+        public LatLng retrieveLatLngFromJson(String posJs) {
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.serializeSpecialFloatingPointValues();
+
+        Gson gson = gsonBuilder.create();
+        LatLng obj = gson.fromJson(posJs, LatLng.class);
+        return obj;
+    }
 }

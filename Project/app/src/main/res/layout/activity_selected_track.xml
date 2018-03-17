@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:weightSum="1"
-    tools:context="com.zehava.cityforest.Activitys.SelectedTrackActivity">
+    tools:context="com.zehava.cityforest.Activitys.SelectedTrackMapActivity">
 
 
     <LinearLayout
@@ -17,40 +17,7 @@
         tools:ignore="ScrollViewSize">
 
 
-        <!--<RelativeLayout-->
-        <!--android:id="@+id/mapLayout"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--tools:ignore="UselessParent">-->
 
-        <!--<com.mapbox.mapboxsdk.maps.MapView-->
-        <!--android:id="@+id/mapview"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="300dp"-->
-        <!--android:layout_alignParentStart="true"-->
-        <!--android:layout_alignParentTop="true">-->
-
-        <!--<android.support.design.widget.FloatingActionButton-->
-        <!--android:id="@+id/location_toggle_fab"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_gravity="end|bottom"-->
-        <!--android:layout_margin="16dp"-->
-        <!--app:backgroundTint="@color/colorPrimary"-->
-        <!--app:srcCompat="@drawable/ic_my_location_24dp"-->
-        <!--tools:ignore="VectorDrawableCompat" />-->
-
-
-        <!--<ImageView-->
-        <!--android:id="@+id/smallLogo"-->
-        <!--app:srcCompat="@drawable/cf_small_logo"-->
-        <!--android:layout_width="50dp"-->
-        <!--android:layout_height="50dp"-->
-        <!--android:contentDescription="@string/cityforest_logo" />-->
-
-        <!--</com.mapbox.mapboxsdk.maps.MapView>-->
-
-        <!--</RelativeLayout>-->
 
         <TextView
             android:id="@+id/trackNameField"
@@ -127,30 +94,7 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="20dp"
             android:background="@color/colorPrimaryDark"
-            android:columnCount="4">
-
-            <TextView
-                android:id="@+id/seasonTxt"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_columnWeight="1"
-                android:layout_rowWeight="1"
-                android:gravity="center_horizontal"
-                android:text="עונה"
-                android:textStyle="bold"
-                tools:ignore="HardcodedText"
-                tools:targetApi="lollipop" />
-
-            <TextView
-                android:id="@+id/levelTxt"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_columnWeight="1"
-                android:layout_rowWeight="1"
-                android:gravity="center_horizontal"
-                android:text="רמת קושי"
-                android:textStyle="bold"
-                tools:ignore="HardcodedText,UnusedAttribute" />
+            android:columnCount="2">
 
             <TextView
                 android:id="@+id/durationTxt"
@@ -175,23 +119,23 @@
                 android:textStyle="bold"
                 tools:ignore="HardcodedText,UnusedAttribute" />
 
-            <TextView
-                android:id="@+id/seasonField"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_columnWeight="1"
-                android:layout_rowWeight="1"
-                android:gravity="center_horizontal"
-                tools:ignore="UnusedAttribute" />
+            <!--<TextView-->
+                <!--android:id="@+id/seasonField"-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_columnWeight="1"-->
+                <!--android:layout_rowWeight="1"-->
+                <!--android:gravity="center_horizontal"-->
+                <!--tools:ignore="UnusedAttribute" />-->
 
-            <TextView
-                android:id="@+id/levelField"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_columnWeight="1"
-                android:layout_rowWeight="1"
-                android:gravity="center_horizontal"
-                tools:ignore="UnusedAttribute" />
+            <!--<TextView-->
+                <!--android:id="@+id/levelField"-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_columnWeight="1"-->
+                <!--android:layout_rowWeight="1"-->
+                <!--android:gravity="center_horizontal"-->
+                <!--tools:ignore="UnusedAttribute" />-->
 
             <TextView
                 android:id="@+id/durationField"
@@ -221,213 +165,16 @@
             android:layout_marginTop="20dp"
             android:textSize="20sp" />
 
-        <LinearLayout
-            android:id="@+id/hasWaterLayout"
-            android:layout_width="match_parent"
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/location_toggle_fab"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:layout_marginTop="30dp"
-            android:layout_marginStart="15dp"
-            android:layout_marginEnd="15dp"
-            android:orientation="horizontal"
-            android:weightSum="2">
+            android:layout_gravity="end|bottom"
+            android:layout_margin="16dp"
+            app:backgroundTint="@color/colorPrimary"
+            app:srcCompat="@drawable/ic_my_location_24dp"
+            tools:ignore="VectorDrawableCompat" />
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0.5"
-                android:orientation="horizontal"
-                android:gravity="end">
-                <CheckBox
-                    android:id="@+id/hasWaterCheckbox"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1.5"
-                android:orientation="horizontal"
-                android:gravity="end">
-
-                <TextView
-                    android:id="@+id/hasWaterTxt"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:text="@string/has_water_heb"
-                    android:textSize="20sp" />
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/suitableForBikesLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:layout_marginTop="10dp"
-            android:layout_marginStart="15dp"
-            android:layout_marginEnd="15dp"
-            android:orientation="horizontal"
-            android:weightSum="2">
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0.5"
-                android:orientation="horizontal"
-                android:gravity="end">
-
-                <CheckBox
-                    android:id="@+id/suitableForBikesCheckbox"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    />
-
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1.5"
-                android:orientation="horizontal"
-                android:gravity="end">
-
-                <TextView
-                    android:id="@+id/suitableForBikesTxt"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:text="@string/suitable_for_bikes_heb"
-                    android:textSize="20sp" />
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/suitableForFamiliesLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:layout_marginTop="10dp"
-            android:layout_marginStart="15dp"
-            android:layout_marginEnd="15dp"
-            android:orientation="horizontal"
-            android:weightSum="2">
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0.5"
-                android:orientation="horizontal"
-                android:gravity="end">
-
-                <CheckBox
-                    android:id="@+id/suitableForFamiliesCheckbox"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1.5"
-                android:orientation="horizontal"
-                android:gravity="end">
-
-                <TextView
-                    android:id="@+id/suitableForFamiliesTxt"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:text="@string/suitable_for_families_heb"
-                    android:textSize="20sp" />
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/suitableForDogsLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:layout_marginTop="10dp"
-            android:layout_marginStart="15dp"
-            android:layout_marginEnd="15dp"
-            android:orientation="horizontal"
-            android:weightSum="2">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0.5"
-                android:orientation="horizontal"
-                android:gravity="end">
-
-                <CheckBox
-                    android:id="@+id/suitableForDogsCheckbox"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1.5"
-                android:orientation="horizontal"
-                android:gravity="end">
-
-                <TextView
-                    android:id="@+id/suitableForDogsTxt"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="end"
-                    android:text="@string/suitable_for_dogs_heb"
-                    android:textSize="20sp" />
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/isRomanticLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="end"
-            android:layout_marginTop="10dp"
-            android:layout_marginStart="15dp"
-            android:layout_marginEnd="15dp"
-            android:orientation="horizontal"
-            android:weightSum="2">
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0.5"
-                android:orientation="horizontal"
-                android:gravity="end">
-
-                <CheckBox
-                    android:id="@+id/isRomanticCheckbox"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1.5"
-                android:orientation="horizontal"
-                android:gravity="end">
-
-                <TextView
-                    android:id="@+id/isRomanticTxt"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:text="@string/is_romantic_heb"
-                    android:textSize="20sp" />
-            </LinearLayout>
-
-        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>

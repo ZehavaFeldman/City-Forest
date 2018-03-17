@@ -45,6 +45,7 @@ import android.widget.LinearLayout;
 
 //import com.mapbox.mapboxsdk.Mapbox;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.Query;
 import com.google.gson.JsonElement;
 import com.mapbox.mapboxsdk.MapboxAccountManager;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
@@ -103,6 +104,7 @@ import com.zehava.cityforest.R;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -190,6 +192,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     private DragAndDrop hoveringMarker;
 
     private Marker featureMarker;
+    String touchedmarkertype;
+    boolean markerIsPointOfInterest;
 
     String uid;
 
@@ -233,14 +237,14 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         user_updates = database.getReference("user_updates");
 
         /*Buttons for different edit map modes*/
-        add_coordinate_button = (ImageButton) findViewById(R.id.addCoordinateButt);
-        add_track_button = (ImageButton) findViewById(R.id.addTrackButt);
-        loading_map_progress_bar = (ProgressBar) findViewById(R.id.loadingMapProgress);
-        finish_edit_track_butt = (Button) findViewById(R.id.finishEditTrack);
-        save_track = (Button) findViewById(R.id.saveTrack);
-        continue_editing = (Button) findViewById(R.id.continueEditTrack);
-        counter_coordinates = (TextView) findViewById(R.id.counterCoordinates);
-        mRelativeLayout = (RelativeLayout) findViewById(R.id.mapLayout);
+        add_coordinate_button = findViewById(R.id.addCoordinateButt);
+        add_track_button = findViewById(R.id.addTrackButt);
+        loading_map_progress_bar = findViewById(R.id.loadingMapProgress);
+        finish_edit_track_butt = findViewById(R.id.finishEditTrack);
+        save_track = findViewById(R.id.saveTrack);
+        continue_editing = findViewById(R.id.continueEditTrack);
+        counter_coordinates = findViewById(R.id.counterCoordinates);
+        mRelativeLayout = findViewById(R.id.mapLayout);
 
         ClickListener clickListener = new ClickListener();
         add_coordinate_button.setOnClickListener(clickListener);
@@ -373,10 +377,39 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     }
 
     @Override
-    public void onUserUpdateNotify(USER_UPDATES_CLASS userUpdatesClass, ArrayList<Marker> markers) {
+    public void onUserUpdateNotify(USER_UPDATES_CLASS userUpdatesClass, ArrayList<Marker> updateMarkers) {
         //new user updates added to database, add markers to map
+        if(userUpdatesClass == USER_UPDATES_CLASS.UPDATE_CREATED) {
+            for (Marker marker: updateMarkers) {
 
+                MarkerViewOptions markerViewOptions = new MarkerViewOptions()
+                        .position(marker.getPosition())
+                        .title(marker.getTitle())
+                        .snippet(marker.getSnippet());
+                map.addMarker(markerViewOptions);
+
+                markerViewOptions.getMarker().setIcon(marker.getIcon());
+
+            }
+        }
         //remove old updates from map
+        else if(userUpdatesClass == USER_UPDATES_CLASS.UPDATE_REMOVED){
+
+            Iterator<Marker> allMarkersIterator = map.getMarkers().iterator();
+
+            while(allMarkersIterator.hasNext()) {
+                Marker markerItemAll = allMarkersIterator.next();
+
+                for (Marker markerItemRemove : updateMarkers) {
+                    if (markerItemAll.toString().equals(markerItemRemove.toString())) {
+                        allMarkersIterator.remove();
+                        map.removeMarker(markerItemAll);
+                    }
+                }
+            }
+
+        }
+
     }
 
 
@@ -557,8 +590,6 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             mPopupWindow.setElevation(5.0f);
         }
 
-        delete_coordinate_button = (ImageButton)mPopupWindow.getContentView().findViewById(R.id.deleteCoordinateButt);
-        edit_coordinate_button = (ImageButton)mPopupWindow.getContentView().findViewById(R.id.editCoordinateButt);
 
         mPopupWindow.setOutsideTouchable(true);
         mPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
@@ -573,6 +604,15 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
     //track popup
     private void initTrackPopup(final  Map<String, Object> track){
+
+        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+        View view = inflater.inflate(R.layout.track_details_popup, null);
+        mPopupWindow.setContentView(view);
+
+        delete_coordinate_button = (ImageButton)mPopupWindow.getContentView().findViewById(R.id.deleteCoordinateButt);
+        edit_coordinate_button = (ImageButton)mPopupWindow.getContentView().findViewById(R.id.editCoordinateButt);
+
+
         TextView title = (TextView)mPopupWindow.getContentView().findViewById(R.id.main_content);
         title.setText(track.get("track_name").toString());
 
@@ -638,6 +678,15 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
     //point of interest popup
     private void initMarkerPopup(final Marker marker){
+
+
+        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+        View view = inflater.inflate(R.layout.coordinate_details_popup, null);
+        mPopupWindow.setContentView(view);
+
+        delete_coordinate_button = (ImageButton)mPopupWindow.getContentView().findViewById(R.id.deleteCoordinateButt);
+        edit_coordinate_button = (ImageButton)mPopupWindow.getContentView().findViewById(R.id.editCoordinateButt);
+
         TextView title = (TextView)mPopupWindow.getContentView().findViewById(R.id.main_content);
         title.setText(marker.getTitle());
 
@@ -1125,13 +1174,41 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
 
             if(ADD_TRACK_MODE) {
+
+
                 for(int i=0; i<track_markers.size(); i++) {
 
 
                     /*If the editor clicked a marker that is already part of the track
                     * we want to remove it from the track coordinates array*/
                     if(track_markers.get(i).toString().equals(marker.toString())){
-                        dialogEditMarker(marker);
+                        if(i==0){
+                            dialogChangeFirstStop();
+                            return true;
+                        }
+                        touchedmarkertype = "";
+                        markerIsPointOfInterest = false;
+                        final String key = getMarkerHashKey(marker);
+                        points_of_interest.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
+                                Map<String, Object> point = ((Map<String, Object>)pointsMap.get(key));
+                                if(point != null) {
+                                    dialogEditMarker(marker, (String) point.get("type"), true);
+                                }
+                                else{
+                                    dialogEditMarker(marker, null, false);
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
+                            }
+                        });
+
+//                        dialogEditMarker(marker, touchedmarkertype, markerIsPointOfInterest);
                         markerIndex=i;
 
                         return true;
@@ -1147,7 +1224,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
                 /*We want to make sure that the first chosen coordinate is train station*/
                 if(count_coordinates_selected == 0){
-                    final String key = getMarkerHashKey(marker);
+                    final String key1 = getMarkerHashKey(marker);
                     points_of_interest.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
@@ -1156,7 +1233,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                                 Toast.makeText(EditorPanelActivity.this, R.string.toast_starting_point, Toast.LENGTH_SHORT).show();
                                 return;
                             }
-                            Map<String, Object> point = ((Map<String, Object>)pointsMap.get(key));
+                            Map<String, Object> point = ((Map<String, Object>)pointsMap.get(key1));
 
 
                             if(point == null){
@@ -1215,13 +1292,15 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     }
 
 
-    private void dialogEditMarker(final Marker marker){
+    private void dialogEditMarker(final Marker marker,final  String touchedmarkertype,
+            final boolean markerIsPointOfInterest){
+
         AlertDialog.Builder builder = new AlertDialog.Builder(EditorPanelActivity.this);
         builder.setMessage(getResources().getString(R.string.dialog_change_point));
 
         builder.setPositiveButton(R.string.dialog_remove_point, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                removePointFromTrack(marker);
+                removePointFromTrack(marker, markerIsPointOfInterest, touchedmarkertype);
             }
         });
         builder.setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
@@ -1229,24 +1308,75 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             return;
             }
         });
-
-        builder.setNeutralButton(R.string.dialog_move_point, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                movePointOnMap(marker);
-            }
-        });
+        if(!markerIsPointOfInterest) {
+            builder.setNeutralButton(R.string.dialog_move_point, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    movePointOnMap(marker);
+                }
+            });
+        }
 
         AlertDialog dialog = builder.create();
         dialog.show();
     }
 
+    private void dialogChangeFirstStop(){
 
+        final AlertDialog.Builder builder = new AlertDialog.Builder(EditorPanelActivity.this);
+        builder.setMessage(getResources().getString(R.string.dialog_edit_first_stop));
+
+        builder.setPositiveButton(R.string.dialog_ok, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(EditorPanelActivity.this);
+
+
+                ArrayList<String> temp = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.train_stations)));
+
+                builder.setTitle(temp.get(0).toString());
+                temp.remove(0);
+                String stops[] = temp.toArray(new String[temp.size()]);
+                builder.setSingleChoiceItems(stops, -1,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                                // dialog.dismiss();
+                                switchbusstation(which);
+                                dialog.dismiss();
+                            }
+                        });
+                builder.setNegativeButton("cancel",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                AlertDialog alert = builder.create();
+                alert.show();
+
+
+                    }
+
+
+        });
+        builder.setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                return;
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+    }
 
 
     private void dialogEditTrack(final Map<String,Object> track){
         AlertDialog.Builder builder = new AlertDialog.Builder(EditorPanelActivity.this);
-        builder.setMessage(getResources().getString(R.string.dialog_edit_coordinate));
+        builder.setMessage(getResources().getString(R.string.dialog_edit_track));
 
         builder.setPositiveButton(R.string.dialog_ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
@@ -1484,10 +1614,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             MenuItem item = menu.findItem(R.id.spinner);
             Spinner spinner = (Spinner) MenuItemCompat.getActionView(item);
 
-            ArrayList<String> temp = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.spinner_list_item_array)));
-
-            temp.remove(1);
-
+            ArrayList<String> temp = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.spinner_editor_list_item_array)));
 
             String uname = currentUser.getDisplayName();
             uid = currentUser.getUid();
@@ -1512,6 +1639,11 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     }
 
                     if (position == 1) {
+                        Intent i = new Intent(EditorPanelActivity.this, HomeActivity.class);
+                        startActivity(i);
+                    }
+
+                    if (position == 2) {
                         signOut();
                     }
 
@@ -1855,13 +1987,53 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     }
 
 
-    private void removePointFromTrack(Marker marker){
+    private void removePointFromTrack(Marker marker, boolean isPointOfInterest, String type){
         removeTrackPoint(marker);
         count_coordinates_selected--;
         updateScreenCounter();
-        addMarkerForCoordinate(marker.getPosition(), marker.getTitle(), marker.getSnippet());
+        if(isPointOfInterest){
+            int logo = (int) (long) PointOfInterest.whatIsTheLogoForType(type);
 
-        map.removeMarker(marker);
+            if(logo != -1) {
+                IconFactory iconFactory = IconFactory.getInstance(EditorPanelActivity.this);
+                Icon icon = iconFactory.fromResource(logo);
+                marker.setIcon(icon);
+            }
+        }
+
+        else {
+            addMarkerForCoordinate(marker.getPosition(), marker.getTitle(), marker.getSnippet());
+            map.removeMarker(marker);
+        }
+
+    }
+
+    private void switchbusstation(int pos) {
+        ArrayList<String> temp = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.train_stations)));
+        temp.remove(0);
+        String stops[] = temp.toArray(new String[temp.size()]);
+        String name = stops[pos];
+
+        List<Marker> markers = map.getMarkers();
+        for(int i=0; i<markers.size(); i++){
+            if(markers.get(i).getTitle().equalsIgnoreCase(name)){
+                Marker tempMarker = markers.get(i);
+                IconFactory iconFactory = IconFactory.getInstance(EditorPanelActivity.this);
+                Icon icon = iconFactory.fromResource(R.drawable.blue_marker);
+                tempMarker.setIcon(icon);
+                Marker curMarker = track_markers.get(0);
+                int logo = (int) (long) PointOfInterest.whatIsTheLogoForType("תחנת רכבת");
+
+                if(logo != -1) {
+
+                    icon = iconFactory.fromResource(logo);
+                    curMarker.setIcon(icon);
+                }
+
+                track_markers.set(0,tempMarker);
+                break;
+            }
+        }
     }
 
     private String hashFunction(double value) {

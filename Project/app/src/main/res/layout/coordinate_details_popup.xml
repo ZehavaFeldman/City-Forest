@@ -59,52 +59,8 @@
             android:layout_gravity="end"
             />
 
-        <RatingBar
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/ratingBar"
-            android:numStars="5"
-            android:isIndicator="false"
-            style="@style/Base.Widget.AppCompat.RatingBar.Indicator"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="10dp"
-            android:layout_below="@+id/read_more"
-            android:visibility="gone"
-
-            />
 
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="60dp"
-            android:orientation="horizontal"
-            android:layout_below="@+id/read_more"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:id="@+id/like_wrp"
-            android:gravity="center"
-            android:visibility="gone"
-           >
-
-
-            <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:background="@color/colorPrimaryDark"
-                android:contentDescription="@string/delete_coordinates_button"
-                app:srcCompat="@drawable/like"
-                android:id="@+id/likes"
-                />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="12dp"
-                android:layout_gravity="end|center"
-                android:layout_marginStart="10dp"
-                android:id="@+id/like_count"
-                android:layout_marginLeft="10dp" />
-        </LinearLayout>
 
         <GridLayout
             android:layout_width="wrap_content"

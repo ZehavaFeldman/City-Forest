@@ -23,34 +23,41 @@ import com.algolia.search.saas.AlgoliaException;
 import com.algolia.search.saas.Client;
 import com.algolia.search.saas.CompletionHandler;
 import com.algolia.search.saas.Index;
+import com.algolia.search.saas.IndexQuery;
 import com.algolia.search.saas.Query;
 import com.zehava.cityforest.HighlightRenderer;
 import com.zehava.cityforest.HighlightedResult;
 import com.zehava.cityforest.Models.PointOfInterest;
 import com.zehava.cityforest.Models.SearchResultsJsonParser;
+import com.zehava.cityforest.Models.Track;
 import com.zehava.cityforest.R;
+import com.zehava.cityforest.SeparatedListAdapter;
 
 import org.json.JSONObject;
 import java.util.Collection;
 import java.util.List;
+import java.util.ArrayList;
 
 public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnClickListener, SearchView.OnQueryTextListener, AbsListView.OnScrollListener {
 
     private Client client;
     private Index index;
+    List<IndexQuery> queries;
     private Query query;
+    private Client.MultipleQueriesStrategy strategy;
     private SearchResultsJsonParser resultsParser = new SearchResultsJsonParser();
     private int lastSearchedSeqNo;
     private int lastDisplayedSeqNo;
     private int lastRequestedPage;
     private int lastDisplayedPage;
-    private boolean endReached;
+    private boolean endReached , endTrackReached;
     private String filter =null;
 
     // UI:
     private SearchView searchView;
-    private ListView moviesListView;
-    private PointOfInterestAdapter moviesListAdapter;
+    private ListView resultListView;
+    private PointOfInterestAdapter pointsListAdapter;
+    private TracksListAdapter tracksListAdapter;
 
     private HighlightRenderer highlightRenderer;
 
@@ -75,10 +82,16 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
 
         setContentView(R.layout.activity_algolia_serach);
 
+        pointsListAdapter = new PointOfInterestAdapter(this, R.layout.hits_item);
+        tracksListAdapter = new TracksListAdapter(this, R.layout.hits_item);
+        SeparatedListAdapter sla = new SeparatedListAdapter(this);
+        sla.addSection("Tracks",tracksListAdapter);
+        sla.addSection("PointsOfInterest",pointsListAdapter);
+        
         // Bind UI components.
-        moviesListView = (ListView) findViewById(R.id.listview_movies);
-        moviesListView.setAdapter(moviesListAdapter = new PointOfInterestAdapter(this, R.layout.hits_item));
-        moviesListView.setOnScrollListener(this);
+        resultListView = (ListView) findViewById(R.id.listview_movies);
+        resultListView.setAdapter(sla);
+        resultListView.setOnScrollListener(this);
 
         // Init Algolia.
         client = new Client(getString(R.string.ALGOLIA_APP_ID),getString(R.string.ALGOLIA_SEARCH_API_KEY));
@@ -89,6 +102,7 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
         query.setAttributesToRetrieve("title", "snippet", "position", "type");
         query.setAttributesToHighlight("title","snippet");
         query.setHitsPerPage(HITS_PER_PAGE);
+
 
         //init filters and attach to click listener
         dogFilter = (ImageView)findViewById(R.id.dog);
@@ -104,6 +118,13 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
         historyFilter.setOnClickListener(this);
 
         highlightRenderer = new HighlightRenderer(this);
+
+        queries = new ArrayList<>();
+
+        queries.add(new IndexQuery(getString(R.string.ALGOLIA_INDEX_NAME), query));
+        strategy = Client.MultipleQueriesStrategy.NONE; // Execute the sequence of queries until the end.
+
+
     }
 
     @Override
@@ -132,36 +153,9 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
         lastRequestedPage = 0;
         lastDisplayedPage = -1;
         endReached = false;
-        index.searchAsync(query, new CompletionHandler() {
-            @Override
-            public void requestCompleted(JSONObject content, AlgoliaException error) {
-                if (content != null && error == null) {
-                    // NOTE: Check that the received results are newer that the last displayed results.
-                    //
-                    // Rationale: Although TCP imposes a server to send responses in the same order as
-                    // requests, nothing prevents the system from opening multiple connections to the
-                    // same server, nor the Algolia client to transparently switch to another server
-                    // between two requests. Therefore the order of responses is not guaranteed.
-                    if (currentSearchSeqNo <= lastDisplayedSeqNo) {
-                        return;
-                    }
-
-                    List<HighlightedResult<PointOfInterest>> results = resultsParser.parseResults(content);
-                    if (results.isEmpty()) {
-                        endReached = true;
-                    } else {
-                        moviesListAdapter.clear();
-                        moviesListAdapter.addAll(results);
-                        moviesListAdapter.notifyDataSetChanged();
-                        lastDisplayedSeqNo = currentSearchSeqNo;
-                        lastDisplayedPage = 0;
-                    }
-
-                    // Scroll the list back to the top.
-                    moviesListView.smoothScrollToPosition(0);
-                }
-            }
-        });
+        endTrackReached = false;
+        endTrackReached = false;
+        startAlgoliaSearch(currentSearchSeqNo);
     }
 
 
@@ -173,9 +167,17 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
         lastRequestedPage = 0;
         lastDisplayedPage = -1;
         endReached = false;
-        index.searchAsync(query, new CompletionHandler() {
+        startAlgoliaSearch(currentSearchSeqNo);
+    }
+
+
+    private void startAlgoliaSearch(final int currentSearchSeqNo){
+        //        index.searchAsync(query, new CompletionHandler() {
+
+        client.multipleQueriesAsync(queries, strategy, new CompletionHandler() {
             @Override
             public void requestCompleted(JSONObject content, AlgoliaException error) {
+
                 if (content != null && error == null) {
                     // NOTE: Check that the received results are newer that the last displayed results.
                     //
@@ -191,26 +193,40 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
                     if (results.isEmpty()) {
                         endReached = true;
                     } else {
-                        moviesListAdapter.clear();
-                        moviesListAdapter.addAll(results);
-                        moviesListAdapter.notifyDataSetChanged();
+                        pointsListAdapter.clear();
+                        pointsListAdapter.addAll(results);
+                        pointsListAdapter.notifyDataSetChanged();
+                        lastDisplayedSeqNo = currentSearchSeqNo;
+                        lastDisplayedPage = 0;
+                    }
+
+                    List<HighlightedResult<Track>> tracksResults = resultsParser.parseTrackResults(content);
+                    if (tracksResults.isEmpty()) {
+                        endTrackReached = true;
+                    } else {
+                        tracksListAdapter.clear();
+                        tracksListAdapter.addAll(tracksResults);
+                        tracksListAdapter.notifyDataSetChanged();
                         lastDisplayedSeqNo = currentSearchSeqNo;
                         lastDisplayedPage = 0;
                     }
 
                     // Scroll the list back to the top.
-                    moviesListView.smoothScrollToPosition(0);
+                    resultListView.smoothScrollToPosition(0);
                 }
             }
         });
+
     }
 
     //load more only on user scroll- inhancing proformance
     private void loadMore() {
         Query loadMoreQuery = new Query(query);
         loadMoreQuery.setPage(++lastRequestedPage);
+
         final int currentSearchSeqNo = lastSearchedSeqNo;
-        index.searchAsync(loadMoreQuery, new CompletionHandler() {
+//        index.searchAsync(loadMoreQuery, new CompletionHandler() {
+        client.multipleQueriesAsync(queries, strategy, new CompletionHandler() {
             @Override
             public void requestCompleted(JSONObject content, AlgoliaException error) {
                 if (content != null && error == null) {
@@ -223,8 +239,17 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
                     if (results.isEmpty()) {
                         endReached = true;
                     } else {
-                        moviesListAdapter.addAll(results);
-                        moviesListAdapter.notifyDataSetChanged();
+                        pointsListAdapter.addAll(results);
+                        pointsListAdapter.notifyDataSetChanged();
+                        lastDisplayedPage = lastRequestedPage;
+                    }
+
+                    List<HighlightedResult<Track>> tracksResults = resultsParser.parseTrackResults(content);
+                    if (tracksResults.isEmpty()) {
+                        endTrackReached = true;
+                    } else {
+                        tracksListAdapter.addAll(tracksResults);
+                        tracksListAdapter.notifyDataSetChanged();
                         lastDisplayedPage = lastRequestedPage;
                     }
                 }
@@ -254,7 +279,7 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
             TextView titleTextView = (TextView) cell.findViewById(R.id.product_name);
             TextView yearTextView = (TextView) cell.findViewById(R.id.product_price);
 
-            HighlightedResult<PointOfInterest> result = moviesListAdapter.getItem(position);
+            HighlightedResult<PointOfInterest> result = pointsListAdapter.getItem(position);
 
             titleTextView.setText(highlightRenderer.renderHighlights(result.getHighlight("title").getHighlightedValue()));
             yearTextView.setText( result.getResult().getSnippet());
@@ -268,6 +293,42 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
                 super.addAll(items);
             } else {
                 for (HighlightedResult<PointOfInterest> item : items) {
+                    add(item);
+                }
+            }
+        }
+    }
+
+    private class TracksListAdapter extends ArrayAdapter<HighlightedResult<Track>> {
+        public TracksListAdapter(Context context, int resource) {
+            super(context, resource);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            ViewGroup cell = (ViewGroup) convertView;
+            if (cell == null) {
+                cell = (ViewGroup) getLayoutInflater().inflate(R.layout.hits_item, null);
+            }
+
+
+            TextView titleTextView = (TextView) cell.findViewById(R.id.product_name);
+            TextView yearTextView = (TextView) cell.findViewById(R.id.product_price);
+
+            HighlightedResult<Track> result = tracksListAdapter.getItem(position);
+
+            titleTextView.setText(highlightRenderer.renderHighlights(result.getHighlight("track_name").getHighlightedValue()));
+            yearTextView.setText( result.getResult().getAdditional_info());
+
+            return cell;
+        }
+
+        @Override
+        public void addAll(Collection<? extends HighlightedResult<Track>> items) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                super.addAll(items);
+            } else {
+                for (HighlightedResult<Track> item : items) {
                     add(item);
                 }
             }
@@ -325,7 +386,7 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
     @Override
     public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
         // Abort if list is empty or the end has already been reached.
-        if (totalItemCount == 0 || endReached) {
+        if (totalItemCount == 0 || (endReached && endTrackReached)) {
             return;
         }
 

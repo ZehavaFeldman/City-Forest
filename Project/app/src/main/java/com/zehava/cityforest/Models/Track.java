@@ -32,7 +32,6 @@ public class Track {
     private Map<String, Float> stars = new HashMap<>();
     private float  like_count = 0;
     private Map<String, Boolean> likes = new HashMap<>();
-//    private ArrayList<Polyline> poly_line;
 
     public Track(){
 
@@ -40,9 +39,6 @@ public class Track {
 
     public Track(String route, String db_key, String track_name, String starting_point,
                  String ending_point, double duration, double length,
-//                 String level,
-//                 String season, boolean has_water, boolean suitable_for_bikes,
-//                 boolean suitable_for_dogs, boolean suitable_for_families, boolean is_romantic,
                  String additional_info, String starting_point_JsonLatLng,
                  String ending_point_JsonLatLng){
 
@@ -53,17 +49,9 @@ public class Track {
         this.ending_point = ending_point;
         this.duration = duration;
         this.length = length;
-//        this.level = level;
-//        this.season = season;
-//        this.has_water = has_water;
-//        this.suitable_for_bikes = suitable_for_bikes;
-//        this.suitable_for_dogs = suitable_for_dogs;
-//        this.suitable_for_families = suitable_for_families;
-//        this.is_romantic = is_romantic;
         this.additional_info = additional_info;
         this.starting_point_JsonLatLng = starting_point_JsonLatLng;
         this.ending_point_JsonLatLng = ending_point_JsonLatLng;
-//        this.poly_line = poly_line;
     }
 
     /*building the JSON branch in the database that will include the track*/
@@ -77,13 +65,6 @@ public class Track {
         result.put("ending_point", this.ending_point);
         result.put("duration", this.duration);
         result.put("length", this.length);
-//        result.put("level", this.level);
-//        result.put("season", this.season);
-//        result.put("has_water", this.has_water);
-//        result.put("suitable_for_bikes", this.suitable_for_bikes);
-//        result.put("suitable_for_dogs", this.suitable_for_dogs);
-//        result.put("suitable_for_families", this.suitable_for_families);
-//        result.put("is_romantic", this.is_romantic);
         result.put("additional_info", this.additional_info);
         result.put("starting_point_json_latlng", this.starting_point_JsonLatLng);
         result.put("ending_point_json_latlng", this.ending_point_JsonLatLng);
@@ -91,7 +72,7 @@ public class Track {
         result.put("starts", this.stars);
         result.put("like_count", this.like_count);
         result.put("likes", this.likes);
-//        result.put("poly_line", this.poly_line);
+
 
         return result;
     }

@@ -82,7 +82,7 @@ public class SearchTracksResultsActivity extends AppCompatActivity {
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             Track track = (Track) parent.getItemAtPosition(position);
 
-            Intent i = new Intent(SearchTracksResultsActivity.this, SelectedTrackActivity.class);
+            Intent i = new Intent(SearchTracksResultsActivity.this, SelectedTrackMapActivity.class);
             i.putExtra(SELECTED_TRACK, track.getDb_key());
             startActivity(i);
         }

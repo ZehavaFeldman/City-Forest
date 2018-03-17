@@ -15,6 +15,7 @@ public class PointOfInterest extends Coordinate {
 
     protected String type;
     protected long logo;
+    private String image;
 
     public PointOfInterest(){
 
@@ -29,6 +30,8 @@ public class PointOfInterest extends Coordinate {
         setLogo(type);
     }
 
+
+
     /*building the JSON branch in the database that will include the coordinate*/
     public Map<String, Object> toMap(){
         HashMap<String, Object> result = new HashMap<>();
@@ -37,7 +40,8 @@ public class PointOfInterest extends Coordinate {
         result.put("snippet", this.snippet);
         result.put("type", this.type);
         result.put("logo", this.logo);
-
+        if(this.image != null)
+            result.put("imagePath", this.image);
         return result;
     }
 
@@ -48,6 +52,14 @@ public class PointOfInterest extends Coordinate {
     public void setType(String type){
         this.type = type;
         setLogo(type);
+    }
+
+    public String getImage(){
+        return image;
+    }
+
+    public void setImage(String imagePath){
+        this.image = imagePath;
     }
 
     public long getLogo(){

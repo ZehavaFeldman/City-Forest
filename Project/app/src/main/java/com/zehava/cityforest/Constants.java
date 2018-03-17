@@ -50,6 +50,7 @@ public final class Constants {
     public static final int NEW_USER_UPDATE = 300;
     public static final int USER_UPDATE_CREATED = 301;
     public static final int USER_UPDATE_EDITED = 302;
+    public static final int PICK_IMAGE_REQUEST = 400;
 
     public static boolean ADD_COORDINATE_MODE = false;
     public static boolean DELETE_COORDINATE_MODE = false;
@@ -68,5 +69,7 @@ public final class Constants {
     public static final String CURRENT_USER_UID = "current user uid";
     public static final String CURRENT_USER_NAME = "current user name";
     public static final String UPDATE_POSITION = "update position";
+    public static final String IMAGE_NAME = "image name";
+    public static final String IMAGE_EXTRA = "image extra";
 
 }

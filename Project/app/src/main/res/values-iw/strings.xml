@@ -71,6 +71,12 @@
         <item>פורצי דרכים</item>
     </string-array>
 
+    <string-array name="spinner_editor_list_item_array">
+
+        <item>ראשי</item>
+        <item>התנתק</item>
+    </string-array>
+
     <string-array name="train_stations">
         <item>בחר תחנה</item>
         <item>הר הרצל</item>
@@ -170,4 +176,6 @@
     <string name="created_by">פורסם ע\"י</string>
     <string name="read_less_butt">צמצם</string>
     <string name="goto_btn">פרטי המסלול</string>
+    <string name="dialog_edit_first_stop">החלף תחנה ראשונה במסלול?</string>
+    <string name="dialog_edit_track">ערוך פרטי מסלול?</string>
 </resources>

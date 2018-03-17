@@ -20,6 +20,8 @@ then send parsed result back to activity to show to user
 public class SearchResultsJsonParser
 {
     private PointOfInterestJsonParser pointOfInterestJsonParser = new PointOfInterestJsonParser();
+    private TrackJsonParser trackJsonParser = new TrackJsonParser();
+
     public List<HighlightedResult<PointOfInterest>> parseResults(JSONObject jsonObject)
     {
         if (jsonObject == null)
@@ -32,8 +34,11 @@ public class SearchResultsJsonParser
             JSONObject hit = hits.optJSONObject(i);
             if (hit == null)
                 continue;
-            PointOfInterest movie = pointOfInterestJsonParser.parse(hit);
-            if (movie == null)
+            PointOfInterest point = pointOfInterestJsonParser.parse(hit);
+            if (point == null)
+                continue;
+            String indexName = hit.optString("index");
+            if(indexName == null || !indexName.equalsIgnoreCase("points_of_interest"))
                 continue;
             JSONObject highlightResult = hit.optJSONObject("_highlightResult");
             if (highlightResult == null)
@@ -44,8 +49,42 @@ public class SearchResultsJsonParser
             String value = highlightTitle.optString("value");
             if (value == null)
                 continue;
-            HighlightedResult<PointOfInterest> result = new HighlightedResult<>(movie);
+            HighlightedResult<PointOfInterest> result = new HighlightedResult<>(point);
             result.addHighlight("title", new Highlight("title", value));
+            results.add(result);
+        }
+        return results;
+    }
+
+    public List<HighlightedResult<Track>> parseTrackResults(JSONObject jsonObject)
+    {
+        if (jsonObject == null)
+            return null;
+        List<HighlightedResult<Track>> results = new ArrayList<>();
+        JSONArray hits = jsonObject.optJSONArray("hits");
+        if (hits == null)
+            return null;
+        for (int i = 0; i < hits.length(); ++i) {
+            JSONObject hit = hits.optJSONObject(i);
+            if (hit == null)
+                continue;
+            Track track = trackJsonParser.parse(hit);
+            if (track == null)
+                continue;
+            String indexName = hit.optString("index");
+            if(indexName == null || !indexName.equalsIgnoreCase("track"))
+                continue;
+            JSONObject highlightResult = hit.optJSONObject("_highlightResult");
+            if (highlightResult == null)
+                continue;
+            JSONObject highlightTitle = highlightResult.optJSONObject("track_name");
+            if (highlightTitle == null)
+                continue;
+            String value = highlightTitle.optString("value");
+            if (value == null)
+                continue;
+            HighlightedResult<Track> result = new HighlightedResult<>(track);
+            result.addHighlight("track_name", new Highlight("track_name", value));
             results.add(result);
         }
         return results;

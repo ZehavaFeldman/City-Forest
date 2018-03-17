@@ -69,7 +69,7 @@ public class TracksActivity extends AppCompatActivity {
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             Track track = (Track) parent.getItemAtPosition(position);
 
-            Intent i = new Intent(TracksActivity.this, SelectedTrackActivity.class);
+            Intent i = new Intent(TracksActivity.this, SelectedTrackDetailsActivity.class);
             i.putExtra(SELECTED_TRACK, track.getDb_key());
             startActivity(i);
         }
