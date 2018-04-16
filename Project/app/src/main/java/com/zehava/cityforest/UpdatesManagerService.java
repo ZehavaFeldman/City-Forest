@@ -2,6 +2,7 @@ package com.zehava.cityforest;
 
 import android.app.Activity;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Binder;
@@ -26,6 +27,7 @@ import com.mapbox.mapboxsdk.annotations.MarkerView;
 import com.mapbox.mapboxsdk.annotations.MarkerViewOptions;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.services.commons.models.Position;
+import com.zehava.cityforest.Managers.IconManager;
 import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Models.UserUpdate;
 
@@ -185,6 +187,7 @@ public class UpdatesManagerService extends Service {
     //Here Activity register to the service as Callbacks client
     public void registerClient(Activity activity){
         this.iCallback = (ICallback) activity;
+        IconManager.getInstance().generateIcons(IconFactory.getInstance(this));
     }
 
     public void startCounter(){
@@ -216,12 +219,9 @@ public class UpdatesManagerService extends Service {
                 .title((String)point.get("title"))
                 .snippet((String)point.get("snippet"));
 
-        int logo = (int)(long)UserUpdate.whatIsTheLogoForType((String)point.get("title"));
-        if(logo !=-1) {
-            IconFactory iconFactory = IconFactory.getInstance(getApplicationContext());
-            Icon icon = iconFactory.fromResource(logo);
-            markerViewOptions.getMarker().setIcon(icon);
-        }
+
+        markerViewOptions.getMarker().setIcon(IconManager.getInstance().getIconForType((String)point.get("type")));
+
 
         if(old)
             oldmarkers.add(markerViewOptions.getMarker());

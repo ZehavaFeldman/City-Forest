@@ -9,7 +9,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.databinding.adapters.LinearLayoutBindingAdapter;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Location;
@@ -17,12 +16,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -51,7 +47,6 @@ import android.widget.Toast;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.ImageView.ScaleType;
 
 import android.provider.MediaStore;
 
@@ -74,14 +69,12 @@ import com.google.firebase.storage.StorageReference;
 //import com.mapbox.mapboxsdk.Mapbox;
 //import com.mapbox.mapboxsdk.plugins.cluster.clustering.ClusterItem;
 //import com.mapbox.mapboxsdk.plugins.cluster.clustering.ClusterManagerPlugin;
-import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
-import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.mapbox.mapboxsdk.MapboxAccountManager;
 
 import com.zehava.cityforest.ICallback;
-import com.zehava.cityforest.MakeOwnTrackActivity;
+import com.zehava.cityforest.Managers.IconManager;
 import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Managers.LocaleManager;
 import com.zehava.cityforest.Models.Image;
@@ -129,7 +122,9 @@ import com.zehava.cityforest.MoveablePointActivity;
 import com.zehava.cityforest.R;
 import com.zehava.cityforest.UpdatesManagerService;
 
-import java.io.IOException;
+import org.json.JSONArray;
+import org.json.JSONException;
+
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -151,6 +146,8 @@ import static com.zehava.cityforest.Constants.RC_SIGN_IN;
 import static com.zehava.cityforest.Constants.ROUTE_LINE_WIDTH;
 import static com.zehava.cityforest.Constants.SELECTED_TRACK;
 import static com.zehava.cityforest.Constants.SHOW_DETAILS_POPUP;
+import static com.zehava.cityforest.Constants.SHOW_TRACK_POPUP;
+import static com.zehava.cityforest.Constants.SHOW_UPDATE_POPUP;
 import static com.zehava.cityforest.Constants.UPDATE_POSITION;
 import static com.zehava.cityforest.Constants.ZOOM_LEVEL_CURRENT_LOCATION;
 import static com.zehava.cityforest.Constants.ZOOM_LEVEL_MARKER_CLICK;
@@ -169,7 +166,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     private MapView mapView;
     private MapboxMap map;
 
-    private PolylineOptions routeLine;
+    private PolylineOptions routeLine,currRouteLine;
     private FirebaseDatabase database;
     private DatabaseReference tracks;
     private DatabaseReference points_of_interest;
@@ -178,6 +175,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
     private FirebaseStorage storage;
     private StorageReference storageReference;
+    
+    private IconFactory iconFactory;
 
     private TextView likes_count;
 
@@ -185,7 +184,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     private FloatingActionButton camera, cancle;
     private FloatingActionButton uploadImage, showAllImages;
 
-    private PopupWindow mPopupWindow;
+    private PopupWindow mPopupWindow, mTrackPopupWindow;
     private RelativeLayout mRelativeLayout;
 
     String uid,uname;
@@ -207,12 +206,16 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     Button read_more;
     ImageView pointOfInterestImageView;
     Uri filePath;
+    Map<String,Marker> points_for_track;
+    Map<String,Object> u_update;
+    DirectionsRoute currRoute;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         LocaleManager.setLocale(this);
+        IconManager.getInstance().generateIcons(IconFactory.getInstance(this));
 
         /*Mapbox and firebase initializations*/
 //        Mapbox.getInstance(this, getString(R.string.access_token));
@@ -236,6 +239,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         user_updates = database.getReference("user_updates");
         images = database.getReference("storage_images");
 
+        iconFactory = IconFactory.getInstance(HomeActivity.this);
+
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
 
@@ -243,8 +248,10 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         mRelativeLayout = findViewById(R.id.mapLayout);
 
         SHOW_DETAILS_POPUP = false;
+        SHOW_TRACK_POPUP = false;
         MOVE_MARKER = false;
         loading_map_progress_bar = (ProgressBar)findViewById(R.id.loadingMapProgress);
+
         floatingActionButton = (FloatingActionButton) findViewById(R.id.location_toggle_fab);
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -284,7 +291,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         mAuth = FirebaseAuth.getInstance();
 
         loading_map_progress_bar.setVisibility(View.VISIBLE);
-
+        points_for_track = new HashMap<>();
         serviceIntent = new Intent(HomeActivity.this, UpdatesManagerService.class);
 
         LinearLayout linearLayout = (LinearLayout) findViewById(R.id.editor_layout);
@@ -355,7 +362,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             //check if user has editor permissions, if not remove editor option
             String userUid = currentUser.getUid();
             if(!userUid.equals(getResources().getString(R.string.permitted_editor)) &&
-                    !userUid.equals(getResources().getString(R.string.permitted_editor2))&&!(userUid.equals("TNHu1lOD4vfz9SY8EEf4bsiQQuG2"))) {
+                    !userUid.equals(getResources().getString(R.string.permitted_editor2))) {
                 temp.remove(1);
             }
 
@@ -430,8 +437,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                 return true;
 
             case R.id.makeOwnTrackActivity:
-                i = new Intent(this, MakeOwnTrackActivity.class);
-                startActivity(i);
+
                 return true;
 
             case R.id.tracksActivity:
@@ -458,12 +464,9 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     @Override
     public void onBackPressed() {
         if(SHOW_DETAILS_POPUP)
-        {
-            SHOW_DETAILS_POPUP = false;
             mPopupWindow.dismiss();
-
-            showDefaultLocation();
-        }
+        else if(SHOW_TRACK_POPUP)
+            mTrackPopupWindow.dismiss();
         else {
                 new AlertDialog.Builder(this)
                         .setTitle(R.string.dialog_exit_app_title)
@@ -593,7 +596,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
                     String route_st = (String)track.get("route");
                     DirectionsRoute route = JsonParserManager.getInstance().retrieveRouteFromJson(route_st);
-                    drawRoute(route);
+                    drawRoute(route, Color.RED);
                 }
                 loading_map_progress_bar.setVisibility(View.INVISIBLE);
             }
@@ -644,7 +647,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     }
 
 
-    private void drawRoute(DirectionsRoute route) {
+    private void drawRoute(DirectionsRoute route,int color) {
         // Convert LineString coordinates into LatLng[]
         LineString lineString = LineString.fromPolyline(route.getGeometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
         List<Position> coordinates = lineString.getCoordinates();
@@ -658,8 +661,11 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         // Draw Points on MapView
         routeLine = new PolylineOptions()
                 .add(points)
-                .color(Color.RED)
+                .color(color)
                 .width(ROUTE_LINE_WIDTH);
+        if(color == Color.BLUE) {
+            currRouteLine = routeLine;
+        }
         map.addPolyline(routeLine);
 
     }
@@ -686,7 +692,42 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     private void initPopupWindow(){
 
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-       
+
+
+        mTrackPopupWindow = new PopupWindow(
+                inflater.inflate(R.layout.track_details_popup_view, null),
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        if(Build.VERSION.SDK_INT>=21){
+            mTrackPopupWindow.setElevation(5.0f);
+        }
+
+        mTrackPopupWindow.setOutsideTouchable(true);
+        mTrackPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                    if(!SHOW_DETAILS_POPUP) {
+                        Iterator it = points_for_track.entrySet().iterator();
+                        while (it.hasNext()) {
+                            Map.Entry pair = (Map.Entry) it.next();
+                            
+
+                            Marker marker = (Marker) pair.getValue();
+                            marker.setIcon(IconManager.getInstance().getIconForType((String) pair.getKey()));
+                            it.remove();
+                        }
+                        map.removePolyline(currRouteLine.getPolyline());
+                        drawRoute(currRoute,Color.RED);
+
+                        SHOW_TRACK_POPUP = false;
+                        showDefaultLocation();
+                    }
+
+
+            }
+        });
+
 
         mPopupWindow = new PopupWindow(
                 inflater.inflate(R.layout.coordinate_details_popup_view, null),
@@ -701,7 +742,14 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         mPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @Override
             public void onDismiss() {
-                SHOW_DETAILS_POPUP=false;
+
+                SHOW_DETAILS_POPUP = false;
+                if(!points_for_track.isEmpty()){
+                    //SHOW_TRACK_POPUP = true;
+                    mTrackPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+                }
+                showDefaultLocation();
+
             }
         });
 
@@ -711,15 +759,16 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
         View view = inflater.inflate(R.layout.track_details_popup_view, null);
-        mPopupWindow.setContentView(view);
+        mTrackPopupWindow.setContentView(view);
 
-        title = mPopupWindow.getContentView().findViewById(R.id.main_content);
-        discreption = mPopupWindow.getContentView().findViewById(R.id.minor_content);
-        track_details = mPopupWindow.getContentView().findViewById(R.id.goto_full_des);
-        read_more = mPopupWindow.getContentView().findViewById(R.id.read_more);
+        title = mTrackPopupWindow.getContentView().findViewById(R.id.main_content);
+        discreption = mTrackPopupWindow.getContentView().findViewById(R.id.minor_content);
+        track_details = mTrackPopupWindow.getContentView().findViewById(R.id.goto_full_des);
+        read_more = mTrackPopupWindow.getContentView().findViewById(R.id.read_more);
 
         title.setText(track.get("track_name").toString());
         discreption.setText(track.get("additional_info").toString());
+
 
         track_details.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -766,7 +815,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         });
 
 
-        RatingBar ratingBar = mPopupWindow.getContentView().findViewById(R.id.ratingBar);
+        RatingBar ratingBar = mTrackPopupWindow.getContentView().findViewById(R.id.ratingBar);
        
 
         Float d = Float.valueOf(track.get("star_count").toString());
@@ -784,9 +833,9 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             }
         });
 
-        LinearLayout likesWrp = mPopupWindow.getContentView().findViewById(R.id.like_wrp);
+        LinearLayout likesWrp = mTrackPopupWindow.getContentView().findViewById(R.id.like_wrp);
 
-        likes_count = mPopupWindow.getContentView().findViewById(R.id.like_count);
+        likes_count = mTrackPopupWindow.getContentView().findViewById(R.id.like_count);
         likes_count.setText(String.valueOf( track.get("like_count")));
 
         likesWrp.setOnTouchListener(new View.OnTouchListener() {
@@ -805,7 +854,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             }
         });
 
-        mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+        mTrackPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
     }
 
     private void initMarkerPopup(final Marker marker, final String type, final String imageUUID){
@@ -957,19 +1006,22 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                     .into(pointOfInterestImageView);
         }
         else{
-            pointOfInterestImageView.setImageResource(android.R.color.transparent);
+            if(pointOfInterestImageView != null)
+                 pointOfInterestImageView.setImageResource(android.R.color.transparent);
             mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
         }
 
+        if(pointOfInterestImageView != null) {
+            pointOfInterestImageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent imagePreview = new Intent(HomeActivity.this, ImageFullScreenPreview.class);
+                    imagePreview.putExtra(IMAGE_NAME, imageUUID);
+                    startActivity(imagePreview);
 
-        pointOfInterestImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent imagePreview = new Intent(HomeActivity.this, ImageFullScreenPreview.class);
-                imagePreview.putExtra(IMAGE_NAME, imageUUID);
-                startActivity(imagePreview);
-            }
-        });
+                }
+            });
+        }
 
 //        mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
 
@@ -978,19 +1030,22 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
     private void initUpdateInfoWindow(final Marker update){
 
+        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+        View view = inflater.inflate(R.layout.user_update_infowindow, null);
+        mPopupWindow.setContentView(view);
 
         TextView title = mPopupWindow.getContentView().findViewById(R.id.update_main_content);
         title.setText(update.getTitle());
 
-        int type=type(update.getIcon());
-        final String key =getUserUpdateHashKey(update,type);
+        
+        final String key = getUserUpdateHashKey(update);
         user_updates.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Map<String, Object> updates = (Map<String, Object>)dataSnapshot.getValue();
 
 
-                Map<String,Object> u_update = (Map<String,Object>)updates.get(key);
+                u_update = (Map<String,Object>)updates.get(key);
                 if(u_update!=null){
                     String created, owner;
                     Date time;
@@ -1007,7 +1062,9 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                     }
 
                     ImageView img = mPopupWindow.getContentView().findViewById(R.id.img);
-                    img.setBackgroundResource((int) (long)UserUpdate.whatIsTheLogoForType(u_update.get("type").toString()));
+                    int res = IconManager.getInstance().getResourceFrType(u_update.get("type").toString());
+                    if(res != -1)
+                      img.setBackgroundResource(IconManager.getInstance().getResourceFrType(u_update.get("type").toString()));
                 }
             }
 
@@ -1026,6 +1083,76 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         read_more.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                boolean enableGps = !map.isMyLocationEnabled();
+                if (enableGps) {
+                    // Check if user has granted location permission
+                    permissionsManager = new PermissionsManager(HomeActivity.this);
+                    if (!PermissionsManager.areLocationPermissionsGranted(HomeActivity.this)) {
+                        permissionsManager.requestLocationPermissions(HomeActivity.this);
+                    } else {
+                        Location lastLocation = getLastLocation();
+                        if(lastLocation!= null) {
+                            LatLng currentLoc = new LatLng(lastLocation);
+                            LatLng updateLoc = new LatLng(update.getPosition());
+                            if(currentLoc.distanceTo(updateLoc) <= 50.0){
+                                user_updates.child(key).removeValue();
+                                Iterator<Marker> allMarkersIterator = map.getMarkers().iterator();
+
+                                while(allMarkersIterator.hasNext()) {
+                                    Marker markerItemAll = allMarkersIterator.next();
+
+                                    if (getUserUpdateHashKey(markerItemAll).equals(key)) {
+                                        allMarkersIterator.remove();
+                                        map.removeMarker(markerItemAll);
+                                    }
+
+                                }
+                                mPopupWindow.dismiss();
+                                Toast.makeText(HomeActivity.this, "Notification reoved.",
+                                        Toast.LENGTH_LONG).show();
+                            }
+                            else{
+                                Toast.makeText(HomeActivity.this, "Must be with in 50m from  location to send an update.",
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        }
+                        else{
+                            Toast.makeText(HomeActivity.this, "Location not found, cant send update.",
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
+                } else {
+                    Location lastLocation = getLastLocation();
+                    if(lastLocation!= null) {
+                        LatLng currentLoc = new LatLng(lastLocation);
+                        LatLng updateLoc = new LatLng(update.getPosition());
+                        if(currentLoc.distanceTo(updateLoc) <= 50.0){
+                            user_updates.child(key).removeValue();
+                            Iterator<Marker> allMarkersIterator = map.getMarkers().iterator();
+
+                            while(allMarkersIterator.hasNext()) {
+                                Marker markerItemAll = allMarkersIterator.next();
+
+                                if (markerItemAll.toString().equals(update.toString())) {
+                                    allMarkersIterator.remove();
+                                    map.removeMarker(markerItemAll);
+                                }
+
+                            }
+                            Toast.makeText(HomeActivity.this, "Notification reoved.",
+                                    Toast.LENGTH_LONG).show();
+                            mPopupWindow.dismiss();
+                        }
+                        else{
+                            Toast.makeText(HomeActivity.this, "Must be with in 50m from  location to send an update.",
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
+                    else{
+                        Toast.makeText(HomeActivity.this, "Location not found, cant send update.",
+                                Toast.LENGTH_LONG).show();
+                    }
+                }
 
             }
         });
@@ -1085,7 +1212,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                     t.setLikes(temp);
 
                 }
-
+                Toast.makeText(HomeActivity.this, R.string.success_message,
+                        Toast.LENGTH_LONG).show();
                 // Set value and report transaction success
                mutableData.setValue(t);
 
@@ -1143,7 +1271,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
                 t.setStar_count(newStarCount);
 //                ratingBar.setRating(newStarCount);
-
+                Toast.makeText(HomeActivity.this, R.string.success_message,
+                        Toast.LENGTH_LONG).show();
                 // Set value and report transaction success
                 mutableData.setValue(t);
                 return Transaction.success(mutableData);
@@ -1176,8 +1305,9 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         public void onMapClick(@NonNull final LatLng point) {
 
             //if popup open user touched map to dissmis
-            if(SHOW_DETAILS_POPUP){
+            if(SHOW_DETAILS_POPUP || SHOW_TRACK_POPUP){
                 mPopupWindow.dismiss();
+                mTrackPopupWindow.dismiss();
             }
 
             //loop through tacks and check if touch point is in route points
@@ -1207,8 +1337,39 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                                 if (results[0] < 100) {
                                     // If distance is less than 100 meters, this is your polyline
 //                                    Log.e(TAG, "Found @ "+clickCoords.latitude+" "+clickCoords.longitude);
-                                    if(!SHOW_DETAILS_POPUP) {
-                                        SHOW_DETAILS_POPUP = true;
+                                    if(!SHOW_TRACK_POPUP) {
+                                        List<Polyline> mapPolylines = map.getPolylines();
+                                        for(int i=0; i<mapPolylines.size();i++){
+                                            Polyline map_polyline = mapPolylines.get(i);
+                                            if (polyline.getPoints().toString().equals(map_polyline.getPoints().toString()))
+                                            {
+                                                map.removePolyline(map_polyline);
+                                                i=mapPolylines.size();
+                                            }
+                                        }
+                                        currRoute = route;
+                                        drawRoute(route,Color.BLUE);
+                                        SHOW_TRACK_POPUP = true;
+                                        points_for_track.clear();
+                                        Map<String,String> pointsL =  (HashMap<String,String>)track.get("points");
+                                        if (pointsL != null) {
+
+                                            Iterator<Marker> allMarkersIterator = map.getMarkers().iterator();
+
+                                            while(allMarkersIterator.hasNext()) {
+                                                Marker markerItemAll = allMarkersIterator.next();
+
+//                                                for (String point : pointsL) {
+                                                String markerKey = getMarkerHashKey(markerItemAll);
+                                                if (pointsL.containsKey(markerKey)) {
+                                                    String large = pointsL.get(markerKey)+ " ג";
+                                                    markerItemAll.setIcon(IconManager.getInstance().getIconForType(large));
+                                                    points_for_track.put(pointsL.get(markerKey), markerItemAll);
+
+                                                }
+                                            }
+                                        }
+
                                         initTrackPopup(track);
 
                                     }
@@ -1236,6 +1397,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     private class MyOnMarkerClickListener implements MapboxMap.OnMarkerClickListener{
         @Override
         public boolean onMarkerClick(@NonNull final Marker marker) {
+            if(points_for_track.isEmpty())
+                mTrackPopupWindow.dismiss();
             map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(marker.getPosition().getLatitude(),
                     marker.getPosition().getLongitude()), ZOOM_LEVEL_MARKER_CLICK));
 
@@ -1250,12 +1413,14 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                         String imageUUId = (String) point.get("imagePath");
                         if (!type.equals("תחנת רכבת")) {
                             SHOW_DETAILS_POPUP = true;
+                            mTrackPopupWindow.dismiss();
                             initMarkerPopup(marker, type,imageUUId);
 
                         }
                     }
                     else{
                         SHOW_DETAILS_POPUP = true;
+                        mTrackPopupWindow.dismiss();
                         initUpdateInfoWindow(marker);
                     }
 
@@ -1278,33 +1443,15 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                 .title(title)
                 .snippet(snippet);
         map.addMarker(markerViewOptions);
+            
+
+        markerViewOptions.getMarker().setIcon(IconManager.getInstance().getIconForType(type));
+        MarkerView m = markerViewOptions.getMarker();
+        return m;
 
 
-        int logo = (int)(long)PointOfInterest.whatIsTheLogoForType(type);
-        if(logo != -1) {
-            IconFactory iconFactory = IconFactory.getInstance(HomeActivity.this);
-            Icon icon = iconFactory.fromResource(logo);
-            markerViewOptions.getMarker().setIcon(icon);
-            MarkerView m = markerViewOptions.getMarker();
-            return m;
-        }
-        else {
-            MarkerView m = markerViewOptions.getMarker();
-            return m;
-        }
     }
-
-
-    private int type(Icon icon){
-        for(int i=0;i<10;i++) {
-            IconFactory iconFactory = IconFactory.getInstance(HomeActivity.this);
-            Icon icon1 = iconFactory.fromResource(UserUpdate.whatIsTheLogoForId(1));
-            if(icon==icon1)
-                return i;
-        }
-
-        return 1;
-    }
+    
 
 
     private String getMarkerHashKey(final Marker marker) {
@@ -1315,11 +1462,12 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         return "" + hash;
     }
 
-    private String getUserUpdateHashKey(final Marker marker, int id) {
+    private String getUserUpdateHashKey(final Marker marker) {
+        int id =IconManager.getInstance().getIdForType(marker.getTitle());
         double longitude = marker.getPosition().getLongitude();
         //double latitude = chosenCoordinateLatLng.getLatitude();
 
-        int hash = ((int) (10000000*longitude))+id;
+        long hash = ((long) (100000000*longitude))+id;
         return "" + hash;
     }
 
@@ -1715,8 +1863,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 //                String snippet = null;
 //                JSONObject object = array.getJSONObject(i);
 //
-//                 String pos = object.getString("position");
-//                 Position position = retrievePositionFromJson(pos);
+//                 String position = object.getString("position");
+//                 Position position = retrievePositionFromJson(position);
 //
 //                double lat = position.getLatitude();
 //                double lng = position.getLongitude();

@@ -13,7 +13,6 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.firebase.auth.FirebaseAuth;
-import com.zehava.cityforest.MakeOwnTrackActivity;
 import com.zehava.cityforest.R;
 
 public class AboutUsActivity extends AppCompatActivity {
@@ -91,8 +90,7 @@ public class AboutUsActivity extends AppCompatActivity {
                 return true;
 
             case R.id.makeOwnTrackActivity:
-                i = new Intent(this, MakeOwnTrackActivity.class);
-                startActivity(i);
+
                 return true;
 
             case R.id.tracksActivity:

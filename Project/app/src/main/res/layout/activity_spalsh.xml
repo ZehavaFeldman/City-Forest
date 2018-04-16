@@ -29,7 +29,7 @@
             android:layout_marginStart="10dp"
             android:layout_marginTop="10dp"
             android:gravity="center_horizontal"
-            android:text="מחברים את ירושלים לסביבה"
+            android:text="מחברים שבילים למסלולים"
             android:textSize="30sp"
             android:textColor="#808080"/>
 

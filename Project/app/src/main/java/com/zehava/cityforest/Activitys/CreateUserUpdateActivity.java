@@ -19,6 +19,8 @@ import android.widget.Button;
 
 
 import com.google.firebase.database.DatabaseError;
+import com.mapbox.mapboxsdk.annotations.IconFactory;
+import com.zehava.cityforest.Managers.IconManager;
 import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Models.UserUpdate;
 import com.google.firebase.database.DatabaseReference;
@@ -71,6 +73,7 @@ public class CreateUserUpdateActivity extends AppCompatActivity {
         supportRequestWindowFeature(Window.FEATURE_NO_TITLE);
 
         setContentView(R.layout.activity_notifications);
+        IconManager.getInstance().generateIcons(IconFactory.getInstance(this));
         database = FirebaseDatabase.getInstance();
         user_updates = database.getReference("user_updates");
 
@@ -103,7 +106,6 @@ public class CreateUserUpdateActivity extends AppCompatActivity {
         UserUpdate user_update = new UserUpdate(
                 uid,
                 uname,
-                i1,
                 type,
                 snippet,
                 chosenCoordinateLatLng.getLongitude(),
@@ -142,10 +144,9 @@ public class CreateUserUpdateActivity extends AppCompatActivity {
     private String hashFunction() {
         double longitude = chosenCoordinateLatLng.getLongitude();
         //double latitude = chosenCoordinateLatLng.getLatitude();
-        i1 = UserUpdate.generateIdByType(type);
-        Log.d("--!!!!",uid+" "+uname);
+        i1 = IconManager.getInstance().getIdForType(type);
 
-        int hash = ((int) (10000000*longitude))+i1;
+        long hash = ((long) (100000000*longitude))+i1;
 
         return "" + hash;
     }

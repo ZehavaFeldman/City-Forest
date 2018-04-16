@@ -10,22 +10,17 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import com.zehava.cityforest.MakeOwnTrackActivity;
+import com.firebase.ui.database.FirebaseListAdapter;
+import com.firebase.ui.database.FirebaseListOptions;
+import com.google.firebase.database.Query;
 import com.zehava.cityforest.Models.Track;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.zehava.cityforest.MyFirebaseListAdapter;
+import com.zehava.cityforest.FirebaseTrackListAdapter;
 import com.zehava.cityforest.R;
 
 import static com.zehava.cityforest.Constants.Q_ENDING_POINT;
-import static com.zehava.cityforest.Constants.Q_HAS_WATER;
-import static com.zehava.cityforest.Constants.Q_IS_ROMANTIC;
-import static com.zehava.cityforest.Constants.Q_LEVEL;
-import static com.zehava.cityforest.Constants.Q_SEASON;
 import static com.zehava.cityforest.Constants.Q_STARTING_POINT;
-import static com.zehava.cityforest.Constants.Q_SUITABLE_FOR_BIKES;
-import static com.zehava.cityforest.Constants.Q_SUITABLE_FOR_DOGS;
-import static com.zehava.cityforest.Constants.Q_SUITABLE_FOR_FAMILIES;
 import static com.zehava.cityforest.Constants.SELECTED_TRACK;
 
 public class SearchTracksResultsActivity extends AppCompatActivity {
@@ -33,16 +28,11 @@ public class SearchTracksResultsActivity extends AppCompatActivity {
     private FirebaseDatabase database;
     private DatabaseReference tracks;
     private ListView tracks_list;
+    FirebaseListAdapter adapter;
 
     private String q_starting_point;
     private String q_ending_point;
-    private String q_track_level;
-    private String q_season;
-    private boolean q_has_water;
-    private boolean q_suitable_for_bikes;
-    private boolean q_suitable_for_dogs;
-    private boolean q_suitable_for_families;
-    private boolean q_is_romantic;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,19 +47,18 @@ public class SearchTracksResultsActivity extends AppCompatActivity {
         Intent i = getIntent();
         q_starting_point = i.getStringExtra(Q_STARTING_POINT);
         q_ending_point = i.getStringExtra(Q_ENDING_POINT);
-        q_track_level = i.getStringExtra(Q_LEVEL);
-        q_season = i.getStringExtra(Q_SEASON);
-        q_has_water = i.getBooleanExtra(Q_HAS_WATER, false);
-        q_suitable_for_bikes = i.getBooleanExtra(Q_SUITABLE_FOR_BIKES, false);
-        q_suitable_for_dogs = i.getBooleanExtra(Q_SUITABLE_FOR_DOGS, false);
-        q_suitable_for_families = i.getBooleanExtra(Q_SUITABLE_FOR_FAMILIES, false);
-        q_is_romantic = i.getBooleanExtra(Q_IS_ROMANTIC, false);
+
 
         //Query query = tracks.orderByChild("starting_point").equalTo("הר הרצל");
         //Query q2 = tracks.orderByChild("suitable_for_dogs").equalTo(true);
 
-        MyFirebaseListAdapter adapter = new MyFirebaseListAdapter(this,Track.class,
-                R.layout.track_list_view, tracks);
+        Query query = database.getReference("tracks");
+        FirebaseListOptions<Track> options =
+                new FirebaseListOptions.Builder<Track>()
+                        .setQuery(query, Track.class)
+                        .setLayout(R.layout.track_list_view)
+                        .build();
+        adapter = new FirebaseTrackListAdapter(options);
         tracks_list.setAdapter(adapter);
 
         tracks_list.setOnItemClickListener(new ItemClickListener());
@@ -89,12 +78,17 @@ public class SearchTracksResultsActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        adapter.startListening();
+    }
 
-
-
-
-
-
+    @Override
+    protected void onStart() {
+        super.onStart();
+        adapter.startListening();
+    }
 
 
     @Override
@@ -134,8 +128,7 @@ public class SearchTracksResultsActivity extends AppCompatActivity {
                 return true;
 
             case R.id.makeOwnTrackActivity:
-                i = new Intent(this, MakeOwnTrackActivity.class);
-                startActivity(i);
+
                 return true;
 
             case R.id.tracksActivity:

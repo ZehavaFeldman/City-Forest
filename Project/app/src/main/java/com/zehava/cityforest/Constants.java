@@ -51,6 +51,10 @@ public final class Constants {
     public static final int USER_UPDATE_CREATED = 301;
     public static final int USER_UPDATE_EDITED = 302;
     public static final int PICK_IMAGE_REQUEST = 400;
+    public static final int PICK_POINTS_REQUEST =500;
+    public static final int PICK_POINTS_CANCALED =500;
+    public static final int PICK_POINTS_DONE =501;
+
 
     public static boolean ADD_COORDINATE_MODE = false;
     public static boolean DELETE_COORDINATE_MODE = false;
@@ -58,6 +62,8 @@ public final class Constants {
     public static boolean ADD_TRACK_MODE = false;
     public static boolean FINISH_EDIT_TRACK_MODE = false;
     public static boolean SHOW_DETAILS_POPUP = false;
+    public static boolean SHOW_TRACK_POPUP = false;
+    public static boolean SHOW_UPDATE_POPUP = false;
     public static boolean MOVE_MARKER = false;
 
     public static int ROUTE_LINE_WIDTH = 4;
@@ -65,6 +71,7 @@ public final class Constants {
     public static int ZOOM_LEVEL_MARKER_CLICK = 16;
     public static int ZOOM_LEVEL_LOCATION = 18;
     public static int RC_SIGN_IN = 1;
+
 
     public static final String CURRENT_USER_UID = "current user uid";
     public static final String CURRENT_USER_NAME = "current user name";

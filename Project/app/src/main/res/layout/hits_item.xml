@@ -11,7 +11,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/product_name"
-            algolia:attribute='@{"title"}'
+
             android:layout_marginBottom="15dp"
             android:textSize="21dp"
             android:textStyle="bold"/>
@@ -19,7 +19,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/product_price"
-            algolia:attribute='@{"snippet"}'
+            android:maxLines="2"
             />
     </LinearLayout>
 </layout>

@@ -176,8 +176,27 @@
             android:paddingTop="5dp"
             android:textSize="14sp"
             tools:ignore="LabelFor" />
+        <LinearLayout
+            android:id="@+id/buttonLayout"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_marginTop="30dp"
+            android:orientation="horizontal">
 
-    <LinearLayout
+            <Button
+                android:id="@+id/addPointsButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:layout_weight="1"
+                android:text="@string/add_points_butt"
+                tools:ignore="ButtonOrder,ButtonStyle,RtlHardcoded" />
+
+
+        </LinearLayout>
+
+        <LinearLayout
         android:id="@+id/buttonsLayout"
         android:layout_width="match_parent"
         android:layout_height="30dp"

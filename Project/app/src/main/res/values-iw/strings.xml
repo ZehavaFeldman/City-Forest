@@ -178,4 +178,9 @@
     <string name="goto_btn">פרטי המסלול</string>
     <string name="dialog_edit_first_stop">החלף תחנה ראשונה במסלול?</string>
     <string name="dialog_edit_track">ערוך פרטי מסלול?</string>
+    <string name="success_message">הדרוג נשמר במערכת בהצלחה</string>
+    <string name="no_snippet">-ללא תיאור-</string>
+    <string name="choose_action">בחר פעולה</string>
+    <string name="add_points_butt">שייך נקודות עניין למסלול</string>
+    <string name="location">מיקום-</string>
 </resources>

@@ -10,7 +10,8 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import com.zehava.cityforest.MakeOwnTrackActivity;
+import com.firebase.ui.database.FirebaseListOptions;
+import com.google.firebase.database.Query;
 import com.zehava.cityforest.Models.Track;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -20,7 +21,7 @@ import com.google.android.gms.common.api.Status;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.zehava.cityforest.MyFirebaseListAdapter;
+import com.zehava.cityforest.FirebaseTrackListAdapter;
 import com.zehava.cityforest.R;
 
 import static com.zehava.cityforest.Constants.SELECTED_TRACK;
@@ -31,6 +32,7 @@ public class TracksActivity extends AppCompatActivity {
     private DatabaseReference tracks;
     private ListView track_list;
     private GoogleApiClient mGoogleApiClient;
+    private FirebaseTrackListAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,8 +47,13 @@ public class TracksActivity extends AppCompatActivity {
         track_list.setOnItemClickListener(new ItemClickListener());
 
 
-        MyFirebaseListAdapter adapter = new MyFirebaseListAdapter(this,Track.class ,
-                R.layout.track_list_view, tracks);
+        Query query = database.getReference("tracks");
+        FirebaseListOptions<Track> options =
+                new FirebaseListOptions.Builder<Track>()
+                        .setQuery(query, Track.class)
+                        .setLayout(R.layout.track_list_view)
+                        .build();
+        adapter = new FirebaseTrackListAdapter(options);
         track_list.setAdapter(adapter);
     }
 
@@ -61,6 +68,7 @@ public class TracksActivity extends AppCompatActivity {
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
         mGoogleApiClient.connect();
+        adapter.startListening();
         super.onStart();
     }
 
@@ -75,22 +83,6 @@ public class TracksActivity extends AppCompatActivity {
         }
 
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -127,8 +119,7 @@ public class TracksActivity extends AppCompatActivity {
                 return true;
 
             case R.id.makeOwnTrackActivity:
-                i = new Intent(this, MakeOwnTrackActivity.class);
-                startActivity(i);
+
                 return true;
 
             case R.id.tracksActivity:
@@ -153,5 +144,13 @@ public class TracksActivity extends AppCompatActivity {
                         Intent i = new Intent(TracksActivity.this, HomeActivity.class);
                         startActivity(i);
                     }});
+    }
+
+
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        adapter.startListening();
     }
 }

@@ -27,7 +27,14 @@ public class PointOfInterest extends Coordinate {
 
         this.type = type;
 
-        setLogo(type);
+    }
+
+    public PointOfInterest(String position,
+                           String title, String snippet, String type){
+        super(position, title, snippet);
+
+        this.type = type;
+
     }
 
 
@@ -39,7 +46,6 @@ public class PointOfInterest extends Coordinate {
         result.put("title", this.title);
         result.put("snippet", this.snippet);
         result.put("type", this.type);
-        result.put("logo", this.logo);
         if(this.image != null)
             result.put("imagePath", this.image);
         return result;
@@ -51,7 +57,6 @@ public class PointOfInterest extends Coordinate {
 
     public void setType(String type){
         this.type = type;
-        setLogo(type);
     }
 
     public String getImage(){
@@ -66,59 +71,12 @@ public class PointOfInterest extends Coordinate {
         return this.logo;
     }
 
-    public void setLogo(int logo){
+    public void setPointLogo(int logo){
         this.logo = logo;
     }
 
-    public void setLogo(String type){
-        if(type.equals("תחנת רכבת")){
-            logo = R.mipmap.ic_tram_black_24dp;
-        }
-        else if(type.equals("תחנת אוטובוס")){
-            logo = R.mipmap.ic_directions_bus_black_24dp;
-        }
-        else if(type.equals("אתר היסטורי")){
-            logo = R.mipmap.ic_change_history_black_24dp;
-        }
-        else if(type.equals("בית קפה")){
-            logo = R.mipmap.ic_local_cafe_black_24dp;
-        }
-        else if(type.equals("מזג אויר")){
-            logo =  R.drawable.ic_cloud_1;
-        }
-        else if(type.equals("אין כניסה")){
-            logo =  R.drawable.ic_key;
-        }
-        else if(type.equals("אין תצפית")){
-            logo =  R.drawable.ic_no_vision;
-        }
-        else logo = -1;
-    }
 
-    public static Long whatIsTheLogoForType(String type){
-        if(type.equals("תחנת רכבת")){
-            return (long)R.mipmap.ic_tram_black_24dp;
-        }
-        else if(type.equals("תחנת אוטובוס")){
-            return (long)R.mipmap.ic_directions_bus_black_24dp;
-        }
-        else if(type.equals("אתר היסטורי")){
-            return (long)R.mipmap.ic_change_history_black_24dp;
-        }
-        else if(type.equals("בית קפה")){
-            return (long)R.mipmap.ic_local_cafe_black_24dp;
-        }
-        else if(type.equals("מזג אויר")){
-            return (long) R.drawable.ic_cloud_1;
-        }
-        else if(type.equals("אין כניסה")){
-            return  (long)R.drawable.ic_key;
-        }
-        else if(type.equals("אין תצפית")){
-            return (long)R.drawable.ic_no_vision;
-        }
-        else return (long) -1;
-    }
+
 
 
 }

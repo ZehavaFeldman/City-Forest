@@ -64,9 +64,9 @@
     <string name="finish_editing_track_butt">Finish Editing Track</string>
     <string name="save_track_butt">Save Track</string>
     <string name="track_level">Level</string>
-    <string name="strating_point_txt">- Beginning</string>
+    <string name="strating_point_txt">Beginning -</string>
     <string name="distance_txt">Distance (km)</string>
-    <string name="ending_point_txt_heb">- End</string>
+    <string name="ending_point_txt_heb">End -</string>
     <string name="no_track_name">-No Name-</string>
     <string name="update_button">Update</string>
     <string name="welcome_back">"Welcome back,  "</string>
@@ -174,9 +174,11 @@
     <string name="sign_in_action">Log In</string>
     <string name="language">language</string>
     <string name="sign_in_message">You must sign in first</string>
+    <string name="success_message">Your rating was save in the system</string>
 
-    <string name="permitted_editor" translatable="false">1UGTxtDh7UaO9WFi70CnG3njfE02</string>
-    <string name="permitted_editor2" translatable="false">CIWYd1t3qVY1Kg63vmVPDUoTv903</string>
+
+    <string name="permitted_editor" translatable="false">CA9iawp3uZd05WFqjQyERN5hu5R2</string>
+    <string name="permitted_editor2" translatable="false">TNHu1lOD4vfz9SY8EEf4bsiQQuG2</string>
     <string name="home_button">Home</string>
     <string name="editor_panel_button">Editor Panel</string>
     <string name="app_title_txt">City Forest</string>
@@ -192,6 +194,10 @@
     <string name="query_feature_marker_snippet" translatable="false">No feature properties found</string>
     <string name="query_feature_no_properties_found" translatable="false">No feature properties found</string>
     <string name="goto_btn">Track Details</string>
+    <string name="no_snippet">-No Snippet-</string>
+    <string name="choose_action">Choose action</string>
+    <string name="add_points_butt">Add points of interest to track</string>
+    <string name="location">Location-</string>
 
 
 </resources>

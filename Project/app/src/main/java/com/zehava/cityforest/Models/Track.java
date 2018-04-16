@@ -4,7 +4,7 @@ import com.google.android.gms.ads.InterstitialAd;
 import com.mapbox.mapboxsdk.annotations.Marker;
 import com.mapbox.mapboxsdk.annotations.Polyline;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,14 +17,16 @@ public class Track {
     private String ending_point;
     private double duration;
     private double length;
-//    private String level;
+
+
+    //    private String level;
 //    private String season;
 //    private boolean has_water;
 //    private boolean suitable_for_bikes;
 //    private boolean suitable_for_dogs;
 //    private boolean suitable_for_families;
 //    private boolean is_romantic;
-    private ArrayList<Marker> points_of_interest;
+    private Map<String,String> points_of_interest;
     private String additional_info;
     private String starting_point_JsonLatLng;
     private String ending_point_JsonLatLng;
@@ -40,7 +42,27 @@ public class Track {
     public Track(String route, String db_key, String track_name, String starting_point,
                  String ending_point, double duration, double length,
                  String additional_info, String starting_point_JsonLatLng,
-                 String ending_point_JsonLatLng){
+                 String ending_point_JsonLatLng,
+                 Map<String,String> points){
+
+        this.route = route;
+        this.db_key = db_key;
+        this.track_name = track_name;
+        this.starting_point = starting_point;
+        this.ending_point = ending_point;
+        this.duration = duration;
+        this.length = length;
+        this.additional_info = additional_info;
+        this.starting_point_JsonLatLng = starting_point_JsonLatLng;
+        this.ending_point_JsonLatLng = ending_point_JsonLatLng;
+        this.points_of_interest = points;
+    }
+
+    public Track(String route, String db_key, String track_name, String starting_point,
+                 String ending_point, double duration, double length,
+                 String additional_info, String starting_point_JsonLatLng,
+                 String ending_point_JsonLatLng
+                ){
 
         this.route = route;
         this.db_key = db_key;
@@ -72,6 +94,7 @@ public class Track {
         result.put("starts", this.stars);
         result.put("like_count", this.like_count);
         result.put("likes", this.likes);
+        result.put("points", this.points_of_interest);
 
 
         return result;
@@ -142,10 +165,10 @@ public class Track {
     public Map<String, Boolean> getLikes() {
         return likes;
     }
+    public Map<String,String> getPoints_of_interest() {
+        return points_of_interest;
+    }
 
-//    public ArrayList<Polyline> getPoly_line() {
-//        return poly_line;
-//    }
 
     public void setRoute(String route){
         this.route = route;
@@ -210,9 +233,13 @@ public class Track {
     public void setLikes(Map<String, Boolean> likes) {
         this.likes = likes;
     }
-//    public void setPoly_line(ArrayList<Polyline> poly_line) {
-//        this.poly_line = poly_line;
-//    }
+
+
+
+    public void setPoints_of_interest(Map<String,String> points_of_interest) {
+        this.points_of_interest = points_of_interest;
+    }
+
     
     //========================= END =========================//
 }

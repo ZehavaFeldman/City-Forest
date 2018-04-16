@@ -19,7 +19,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.mapbox.services.android.telemetry.location.LocationEngine;
 import com.mapbox.services.android.telemetry.location.LocationEngineListener;
 import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
-import com.zehava.cityforest.MakeOwnTrackActivity;
 import com.zehava.cityforest.R;
 
 import java.util.Map;
@@ -149,8 +148,7 @@ public class SelectedTrackDetailsActivity extends AppCompatActivity {
                 return true;
 
             case R.id.makeOwnTrackActivity:
-                i = new Intent(this, MakeOwnTrackActivity.class);
-                startActivity(i);
+
                 return true;
 
             case R.id.tracksActivity:

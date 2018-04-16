@@ -23,7 +23,13 @@
 
         <activity
             android:name=".Activitys.EditorPanelActivity"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait">
+        <!--<intent-filter>-->
+            <!--<action android:name="android.intent.action.MAIN" />-->
+
+            <!--<category android:name="android.intent.category.LAUNCHER" />-->
+        <!--</intent-filter>-->
+        </activity>
         <!-- android:label="Editor Panel" -->
 
         <activity
@@ -36,9 +42,6 @@
             android:screenOrientation="portrait" />
         <!-- android:label="New Track" -->
 
-        <activity
-            android:name=".Activitys.EditTracksActivity"
-            android:screenOrientation="portrait" />
         <!-- android:label="Edit Tracks" -->
 
         <activity
@@ -75,9 +78,6 @@
         <activity
             android:name=".Activitys.SelectedTrackDetailsActivity"
             android:screenOrientation="portrait" />
-        <activity
-            android:name=".MakeOwnTrackActivity"
-            android:screenOrientation="portrait" />
         <!-- android:label="יצירת מסלול חדש" -->
 
         <activity
@@ -102,6 +102,10 @@
 
         <activity
             android:name=".Activitys.CreateUserUpdateActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Dialog" />
+        <activity
+            android:name=".Activitys.ChoosePointsOfInterestForTrack"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Dialog" />
         <activity

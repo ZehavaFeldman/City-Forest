@@ -150,8 +150,6 @@ public class EditCoordinateActivity extends AppCompatActivity {
             points_of_interest.child(coordinateKey).child("snippet").setValue(snippetField.getText().toString());
             points_of_interest.child(coordinateKey).child("type").setValue(typeOfPoint.getSelectedItem().toString());
 
-            long logo = PointOfInterest.whatIsTheLogoForType(typeOfPoint.getSelectedItem().toString());
-            points_of_interest.child(coordinateKey).child("logo").setValue(logo);
         }
         /*Else, it was a coordinate before and now we want to make it a point of interest,
         * so we need to delete from coordinates reference the coordinate and make a new

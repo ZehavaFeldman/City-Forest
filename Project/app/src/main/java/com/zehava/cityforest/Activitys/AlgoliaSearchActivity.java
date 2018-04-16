@@ -2,6 +2,7 @@ package com.zehava.cityforest.Activitys;
 
 import android.app.SearchManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -13,11 +14,13 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.support.v7.widget.SearchView;
+import android.widget.Toast;
 
 import com.algolia.search.saas.AlgoliaException;
 import com.algolia.search.saas.Client;
@@ -33,17 +36,20 @@ import com.zehava.cityforest.Models.Track;
 import com.zehava.cityforest.R;
 import com.zehava.cityforest.SeparatedListAdapter;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import java.util.Collection;
 import java.util.List;
 import java.util.ArrayList;
+
+import static com.zehava.cityforest.Constants.SELECTED_TRACK;
 
 public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnClickListener, SearchView.OnQueryTextListener, AbsListView.OnScrollListener {
 
     private Client client;
     private Index index;
     List<IndexQuery> queries;
-    private Query query;
+    private Query query, trackquery;
     private Client.MultipleQueriesStrategy strategy;
     private SearchResultsJsonParser resultsParser = new SearchResultsJsonParser();
     private int lastSearchedSeqNo;
@@ -57,6 +63,7 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
     private SearchView searchView;
     private ListView resultListView;
     private PointOfInterestAdapter pointsListAdapter;
+    private SeparatedListAdapter sla;
     private TracksListAdapter tracksListAdapter;
 
     private HighlightRenderer highlightRenderer;
@@ -84,7 +91,7 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
 
         pointsListAdapter = new PointOfInterestAdapter(this, R.layout.hits_item);
         tracksListAdapter = new TracksListAdapter(this, R.layout.hits_item);
-        SeparatedListAdapter sla = new SeparatedListAdapter(this);
+        sla = new SeparatedListAdapter(this);
         sla.addSection("Tracks",tracksListAdapter);
         sla.addSection("PointsOfInterest",pointsListAdapter);
         
@@ -102,6 +109,13 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
         query.setAttributesToRetrieve("title", "snippet", "position", "type");
         query.setAttributesToHighlight("title","snippet");
         query.setHitsPerPage(HITS_PER_PAGE);
+
+        trackquery = new Query();
+        trackquery.setAttributesToRetrieve("route", "objectID","track_name","starting_point",
+                "ending_point","duration","length","additional_info","starting_point_json_latlng",
+                "ending_point_json_latlng");
+        trackquery.setAttributesToHighlight("track_name","additional_info");
+        trackquery.setHitsPerPage(HITS_PER_PAGE);
 
 
         //init filters and attach to click listener
@@ -121,7 +135,8 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
 
         queries = new ArrayList<>();
 
-        queries.add(new IndexQuery(getString(R.string.ALGOLIA_INDEX_NAME), query));
+        queries.add(new IndexQuery(getString(R.string.ALGOLIA_INDEX_NAME), trackquery));
+        queries.add(new IndexQuery(getString(R.string.ALGOLIA_POINTS_OF_INTEREST), query));
         strategy = Client.MultipleQueriesStrategy.NONE; // Execute the sequence of queries until the end.
 
 
@@ -138,6 +153,7 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
         searchView.setIconifiedByDefault(false);
         searchView.setOnQueryTextListener(this);
         searchView.setQuery("",true);
+        searchView.requestFocus();
 
 
         return true;
@@ -150,10 +166,11 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
         final int currentSearchSeqNo = ++lastSearchedSeqNo;
         query.setQuery(searchView.getQuery().toString());
         query.setFilters(null);
+        trackquery.setQuery(searchView.getQuery().toString());
+        trackquery.setFilters(null);
         lastRequestedPage = 0;
         lastDisplayedPage = -1;
         endReached = false;
-        endTrackReached = false;
         endTrackReached = false;
         startAlgoliaSearch(currentSearchSeqNo);
     }
@@ -164,6 +181,8 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
         final int currentSearchSeqNo = ++lastSearchedSeqNo;
         query.setFilters(filter);
         query.setQuery(null);
+        trackquery.setFilters(filter);
+        trackquery.setQuery(null);
         lastRequestedPage = 0;
         lastDisplayedPage = -1;
         endReached = false;
@@ -172,6 +191,8 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
 
 
     private void startAlgoliaSearch(final int currentSearchSeqNo){
+//        tracksListAdapter.clear();
+//        pointsListAdapter.clear();
         //        index.searchAsync(query, new CompletionHandler() {
 
         client.multipleQueriesAsync(queries, strategy, new CompletionHandler() {
@@ -188,27 +209,40 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
                     if (currentSearchSeqNo <= lastDisplayedSeqNo) {
                         return;
                     }
-
-                    List<HighlightedResult<PointOfInterest>> results = resultsParser.parseResults(content);
-                    if (results.isEmpty()) {
-                        endReached = true;
-                    } else {
-                        pointsListAdapter.clear();
-                        pointsListAdapter.addAll(results);
-                        pointsListAdapter.notifyDataSetChanged();
-                        lastDisplayedSeqNo = currentSearchSeqNo;
-                        lastDisplayedPage = 0;
+                    JSONArray result = content.optJSONArray("results");
+                    if(result == null || result.length()==0)
+                        return;
+                    pointsListAdapter.clear();
+                    tracksListAdapter.clear();
+                    JSONObject pointsResult = result.optJSONObject(1);
+                    if(pointsResult != null) {
+                        List<HighlightedResult<PointOfInterest>> results = resultsParser.parseResults(pointsResult);
+                        if (results.isEmpty()) {
+//                            pointsListAdapter.clear();
+                            endReached = true;
+                        } else {
+//                            pointsListAdapter.clear();
+                            pointsListAdapter.addAll(results);
+                            pointsListAdapter.notifyDataSetChanged();
+                            sla.notifyDataSetChanged();
+                            lastDisplayedSeqNo = currentSearchSeqNo;
+                            lastDisplayedPage = 0;
+                        }
                     }
-
-                    List<HighlightedResult<Track>> tracksResults = resultsParser.parseTrackResults(content);
-                    if (tracksResults.isEmpty()) {
-                        endTrackReached = true;
-                    } else {
-                        tracksListAdapter.clear();
-                        tracksListAdapter.addAll(tracksResults);
-                        tracksListAdapter.notifyDataSetChanged();
-                        lastDisplayedSeqNo = currentSearchSeqNo;
-                        lastDisplayedPage = 0;
+                    JSONObject tracksResult = result.optJSONObject(0);
+                    if(tracksResult != null) {
+                        List<HighlightedResult<Track>> tracksResults = resultsParser.parseTrackResults(tracksResult);
+                        if (tracksResults.isEmpty()) {
+                           // tracksListAdapter.clear();
+                            endTrackReached = true;
+                        } else {
+                          //  tracksListAdapter.clear();
+                            tracksListAdapter.addAll(tracksResults);
+                            tracksListAdapter.notifyDataSetChanged();
+                            sla.notifyDataSetChanged();
+                            lastDisplayedSeqNo = currentSearchSeqNo;
+                            lastDisplayedPage = 0;
+                        }
                     }
 
                     // Scroll the list back to the top.
@@ -221,12 +255,18 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
 
     //load more only on user scroll- inhancing proformance
     private void loadMore() {
-        Query loadMoreQuery = new Query(query);
-        loadMoreQuery.setPage(++lastRequestedPage);
+        ArrayList<IndexQuery> loadMoreQuery = new ArrayList<>();
+        Query loadMorePoint = new Query(query);
+        loadMorePoint.setPage(++lastRequestedPage);
+        Query loadMoreTrack = new Query(trackquery);
+        loadMoreTrack.setPage(lastRequestedPage);
+        loadMoreQuery.add(new IndexQuery(getString(R.string.ALGOLIA_INDEX_NAME), loadMoreTrack));
+        loadMoreQuery.add(new IndexQuery(getString(R.string.ALGOLIA_POINTS_OF_INTEREST), loadMorePoint));
+
 
         final int currentSearchSeqNo = lastSearchedSeqNo;
 //        index.searchAsync(loadMoreQuery, new CompletionHandler() {
-        client.multipleQueriesAsync(queries, strategy, new CompletionHandler() {
+        client.multipleQueriesAsync(loadMoreQuery, strategy, new CompletionHandler() {
             @Override
             public void requestCompleted(JSONObject content, AlgoliaException error) {
                 if (content != null && error == null) {
@@ -234,24 +274,35 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
                     if (lastDisplayedSeqNo != currentSearchSeqNo) {
                         return;
                     }
-
-                    List<HighlightedResult<PointOfInterest>> results = resultsParser.parseResults(content);
-                    if (results.isEmpty()) {
-                        endReached = true;
-                    } else {
-                        pointsListAdapter.addAll(results);
-                        pointsListAdapter.notifyDataSetChanged();
-                        lastDisplayedPage = lastRequestedPage;
+                    JSONArray result = content.optJSONArray("results");
+                    if(result == null || result.length()==0)
+                        return;
+                    JSONObject pointsResult = result.optJSONObject(1);
+                    if(pointsResult != null) {
+                        List<HighlightedResult<PointOfInterest>> results = resultsParser.parseResults(pointsResult);
+                        if (results.isEmpty()) {
+                            endReached = true;
+                        } else {
+                            pointsListAdapter.addAll(results);
+                            pointsListAdapter.notifyDataSetChanged();
+                            sla.notifyDataSetChanged();
+                            lastDisplayedPage = lastRequestedPage;
+                        }
+                    }
+                    JSONObject tracksResult = result.optJSONObject(0);
+                    if(tracksResult != null) {
+                        List<HighlightedResult<Track>> tracksResults = resultsParser.parseTrackResults(tracksResult);
+                        if (tracksResults.isEmpty()) {
+                            endTrackReached = true;
+                        } else {
+                            tracksListAdapter.addAll(tracksResults);
+                            tracksListAdapter.notifyDataSetChanged();
+                            sla.notifyDataSetChanged();
+                            lastDisplayedPage = lastRequestedPage;
+                        }
                     }
 
-                    List<HighlightedResult<Track>> tracksResults = resultsParser.parseTrackResults(content);
-                    if (tracksResults.isEmpty()) {
-                        endTrackReached = true;
-                    } else {
-                        tracksListAdapter.addAll(tracksResults);
-                        tracksListAdapter.notifyDataSetChanged();
-                        lastDisplayedPage = lastRequestedPage;
-                    }
+
                 }
             }
         });
@@ -281,7 +332,7 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
 
             HighlightedResult<PointOfInterest> result = pointsListAdapter.getItem(position);
 
-            titleTextView.setText(highlightRenderer.renderHighlights(result.getHighlight("title").getHighlightedValue()));
+            titleTextView.setText(result.getResult().getTitle());
             yearTextView.setText( result.getResult().getSnippet());
 
             return cell;
@@ -315,10 +366,20 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
             TextView titleTextView = (TextView) cell.findViewById(R.id.product_name);
             TextView yearTextView = (TextView) cell.findViewById(R.id.product_price);
 
-            HighlightedResult<Track> result = tracksListAdapter.getItem(position);
+            final HighlightedResult<Track> result = tracksListAdapter.getItem(position);
 
-            titleTextView.setText(highlightRenderer.renderHighlights(result.getHighlight("track_name").getHighlightedValue()));
-            yearTextView.setText( result.getResult().getAdditional_info());
+            titleTextView.setText(result.getResult().getTrack_name());
+            yearTextView.setText(result.getResult().getAdditional_info());
+            if(cell != null) {
+                cell.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Intent i = new Intent(AlgoliaSearchActivity.this, SelectedTrackMapActivity.class);
+                        i.putExtra(SELECTED_TRACK, result.getResult().getDb_key());
+                        startActivity(i);
+                    }
+                });
+            }
 
             return cell;
         }

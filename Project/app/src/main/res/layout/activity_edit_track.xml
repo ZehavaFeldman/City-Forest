@@ -87,12 +87,11 @@ android:weightSum="1">
         android:text="@string/duration_hour_txt"
         android:textSize="20sp" />
 
-    <EditText
+    <TextView
         android:id="@+id/durationField"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:inputType="number"
         tools:ignore="LabelFor" />
 
     <TextView
@@ -103,178 +102,18 @@ android:weightSum="1">
         android:textSize="20sp"
         android:text="@string/distance_km_txt" />
 
-    <EditText
+    <TextView
         android:id="@+id/distanceField"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:inputType="number"
         tools:ignore="LabelFor" />
 
-    <!--<LinearLayout-->
-        <!--android:id="@+id/trackLevelLayout"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_marginTop="30dp"-->
-        <!--android:orientation="horizontal">-->
-
-        <!--<TextView-->
-            <!--android:id="@+id/trackLevelTxt"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:layout_weight="1"-->
-            <!--android:text="@string/track_level_txt"-->
-            <!--android:textSize="20sp" />-->
-
-        <!--<Spinner-->
-            <!--android:id="@+id/trackLevel"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_weight="1" />-->
-    <!--</LinearLayout>-->
-
-    <!--<LinearLayout-->
-        <!--android:id="@+id/seasonLayout"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_marginTop="30dp"-->
-        <!--android:orientation="horizontal">-->
-
-        <!--<TextView-->
-            <!--android:id="@+id/seasonTxt"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:layout_weight="1"-->
-            <!--android:text="@string/season_txt"-->
-            <!--android:textSize="20sp" />-->
-
-        <!--<Spinner-->
-            <!--android:id="@+id/season"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_weight="1" />-->
-    <!--</LinearLayout>-->
-
-    <!--<LinearLayout-->
-        <!--android:id="@+id/hasWaterLayout"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="40dp"-->
-        <!--android:layout_marginTop="30dp"-->
-        <!--android:orientation="horizontal">-->
-
-        <!--<TextView-->
-            <!--android:id="@+id/hasWaterTxt"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:layout_weight="1"-->
-            <!--android:text="@string/has_water_txt"-->
-            <!--android:textSize="20sp" />-->
-
-        <!--<CheckBox-->
-            <!--android:id="@+id/hasWaterCheckbox"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_weight="1" />-->
-
-    <!--</LinearLayout>-->
-
-    <!--<LinearLayout-->
-        <!--android:id="@+id/suitableForBikesLayout"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="50dp"-->
-        <!--android:layout_marginTop="30dp"-->
-        <!--android:orientation="horizontal">-->
-
-        <!--<TextView-->
-            <!--android:id="@+id/suitableForBikesTxt"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:layout_weight="1"-->
-            <!--android:text="@string/suitable_for_bikes_txt"-->
-            <!--android:textSize="20sp" />-->
-
-        <!--<CheckBox-->
-            <!--android:id="@+id/suitableForBikesCheckbox"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_weight="1" />-->
-
-    <!--</LinearLayout>-->
-
-    <!--<LinearLayout-->
-        <!--android:id="@+id/suitableForFamiliesLayout"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="50dp"-->
-        <!--android:layout_marginTop="30dp"-->
-        <!--android:orientation="horizontal">-->
-
-        <!--<TextView-->
-            <!--android:id="@+id/suitableForFamiliesTxt"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:layout_weight="1"-->
-            <!--android:text="@string/suitable_for_families_txt"-->
-            <!--android:textSize="20sp" />-->
-
-        <!--<CheckBox-->
-            <!--android:id="@+id/suitableForFamiliesCheckbox"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_weight="1" />-->
-
-    <!--</LinearLayout>-->
-
-    <!--<LinearLayout-->
-        <!--android:id="@+id/suitableForDogsLayout"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_marginTop="30dp"-->
-        <!--android:orientation="horizontal">-->
-
-        <!--<TextView-->
-            <!--android:id="@+id/suitableForDogsTxt"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_weight="1"-->
-            <!--android:text="@string/suitable_for_dogs_txt"-->
-            <!--android:textSize="20sp" />-->
-
-        <!--<CheckBox-->
-            <!--android:id="@+id/suitableForDogsCheckbox"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_weight="1" />-->
-
-    <!--</LinearLayout>-->
-
-    <!--<LinearLayout-->
-        <!--android:id="@+id/isRomanticLayout"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="30dp"-->
-        <!--android:layout_marginTop="30dp"-->
-        <!--android:orientation="horizontal">-->
-
-        <!--<TextView-->
-            <!--android:id="@+id/isRomanticTxt"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:layout_weight="1"-->
-            <!--android:text="@string/is_romantic_txt"-->
-            <!--android:textSize="20sp" />-->
-
-        <!--<CheckBox-->
-            <!--android:id="@+id/isRomanticCheckbox"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_weight="1" />-->
-
-    <!--</LinearLayout>-->
 
     <TextView
         android:id="@+id/additionalInfoTxt"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:text="@string/track_summary_txt"
         android:layout_marginTop="30dp"
         android:textSize="20sp"/>
@@ -294,6 +133,27 @@ android:weightSum="1">
         android:paddingTop="5dp"
         android:textSize="14sp"
         tools:ignore="LabelFor" />
+
+
+    <LinearLayout
+        android:id="@+id/buttonLayout"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:layout_marginTop="30dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/addPointsButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:layout_weight="1"
+            android:text="@string/add_points_butt"
+            tools:ignore="ButtonOrder,ButtonStyle,RtlHardcoded" />
+
+
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/buttonsLayout"

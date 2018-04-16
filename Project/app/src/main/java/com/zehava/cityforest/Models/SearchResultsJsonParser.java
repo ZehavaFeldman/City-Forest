@@ -26,7 +26,7 @@ public class SearchResultsJsonParser
     {
         if (jsonObject == null)
             return null;
-        List<HighlightedResult<PointOfInterest>> results = new ArrayList<>();
+        List<HighlightedResult<PointOfInterest>> results = new ArrayList<HighlightedResult<PointOfInterest>>();
         JSONArray hits = jsonObject.optJSONArray("hits");
         if (hits == null)
             return null;
@@ -37,9 +37,9 @@ public class SearchResultsJsonParser
             PointOfInterest point = pointOfInterestJsonParser.parse(hit);
             if (point == null)
                 continue;
-            String indexName = hit.optString("index");
-            if(indexName == null || !indexName.equalsIgnoreCase("points_of_interest"))
-                continue;
+          //  String indexName = hit.optString("index");
+          //  if(indexName == null || !indexName.equalsIgnoreCase("points_of_interest"))
+            //    continue;
             JSONObject highlightResult = hit.optJSONObject("_highlightResult");
             if (highlightResult == null)
                 continue;
@@ -60,7 +60,7 @@ public class SearchResultsJsonParser
     {
         if (jsonObject == null)
             return null;
-        List<HighlightedResult<Track>> results = new ArrayList<>();
+        List<HighlightedResult<Track>> results = new ArrayList<HighlightedResult<Track>>();
         JSONArray hits = jsonObject.optJSONArray("hits");
         if (hits == null)
             return null;
@@ -71,9 +71,9 @@ public class SearchResultsJsonParser
             Track track = trackJsonParser.parse(hit);
             if (track == null)
                 continue;
-            String indexName = hit.optString("index");
-            if(indexName == null || !indexName.equalsIgnoreCase("track"))
-                continue;
+           // String indexName = hit.optString("index");
+           // if(indexName == null || !indexName.equalsIgnoreCase("track"))
+           //     continue;
             JSONObject highlightResult = hit.optJSONObject("_highlightResult");
             if (highlightResult == null)
                 continue;

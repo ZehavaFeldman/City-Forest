@@ -4,25 +4,17 @@ import android.app.Activity;
 import android.view.View;
 import android.widget.TextView;
 
+import com.firebase.ui.database.FirebaseListOptions;
 import com.zehava.cityforest.Models.Track;
 import com.firebase.ui.database.FirebaseListAdapter;
 import com.google.firebase.database.Query;
 
 
-public class MyFirebaseListAdapter extends FirebaseListAdapter<Track> {
+public class FirebaseTrackListAdapter extends FirebaseListAdapter<Track> {
 
-    /**
-     * @param activity    The activity containing the ListView
-     * @param modelClass  Firebase will marshall the data at a location into
-     *                    an instance of a class that you provide
-     * @param modelLayout This is the layout used to represent a single list item.
-     *                    You will be responsible for populating an instance of the corresponding
-     *                    view with the data from an instance of modelClass.
-     * @param ref         The Firebase location to watch for data changes. Can also be a slice of a location,
-     *                    using some combination of {@code limit()}, {@code startAt()}, and {@code endAt()}.
-     */
-    public MyFirebaseListAdapter(Activity activity, Class<Track> modelClass, int modelLayout, Query ref) {
-        super(activity, modelClass, modelLayout, ref);
+
+    public FirebaseTrackListAdapter(FirebaseListOptions options) {
+        super(options);
     }
 
     @Override

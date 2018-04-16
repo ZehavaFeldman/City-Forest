@@ -17,7 +17,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Layout;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -45,18 +44,15 @@ import android.widget.LinearLayout;
 
 //import com.mapbox.mapboxsdk.Mapbox;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.Query;
-import com.google.gson.JsonElement;
 import com.mapbox.mapboxsdk.MapboxAccountManager;
-import com.mapbox.mapboxsdk.annotations.MarkerOptions;
-import com.mapbox.services.commons.geojson.Feature;
 import com.mapbox.services.geocoding.v5.GeocodingCriteria;
 import com.mapbox.services.geocoding.v5.MapboxGeocoding;
 import com.mapbox.services.geocoding.v5.models.CarmenFeature;
 import com.mapbox.services.geocoding.v5.models.GeocodingResponse;
+
 import com.zehava.cityforest.DragAndDrop;
 import com.zehava.cityforest.ICallback;
-import com.zehava.cityforest.MakeOwnTrackActivity;
+import com.zehava.cityforest.Managers.IconManager;
 import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Managers.LocaleManager;
 import com.zehava.cityforest.Models.Coordinate;
@@ -195,6 +191,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     String touchedmarkertype;
     boolean markerIsPointOfInterest;
 
+    private HashMap<String, String> stations = new HashMap();
+
     String uid;
 
 
@@ -214,6 +212,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         // Get the location engine object for later use.
         locationEngine = getLocationEngine(this);
         locationEngine.activate();
+
+        IconManager.getInstance().generateIcons(IconFactory.getInstance(this));
 
         mapView = (MapView) findViewById(R.id.mapview);
         mapView.onCreate(savedInstanceState);
@@ -347,9 +347,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 // Placing the marker on the mapboxMap as soon as possible causes the illusion
                 // that the hovering marker and dropped marker are the same.
                 droppedMarker = map.addMarker(new MarkerViewOptions().position(latLng));
-                IconFactory iconFactory = IconFactory.getInstance(EditorPanelActivity.this);
-                Icon icon = iconFactory.fromResource(R.drawable.blue_marker);
-                droppedMarker.setIcon(icon);
+                droppedMarker.setIcon(IconManager.getInstance().getIconForEdit());
 //                addTrackPoint(latLng, droppedMarker);
                 updateTrackPoint(markerIndex,droppedMarker);
 
@@ -441,10 +439,32 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     Passing on track_coordinates markers
                     * and change their color back to red.
                     * And clearing both arrays for the next time building a new track*/
+
                     for(int i=0; i<track_markers.size(); i++){
-                        addMarkerForCoordinate(track_markers.get(i).getPosition(), track_markers.get(i).getTitle(),
-                                track_markers.get(i).getSnippet());
-                        map.removeMarker(track_markers.get(i));
+                        final Marker marker = track_markers.get(i);
+                        if(stations.containsKey(marker.getTitle()))
+                            marker.setIcon(IconManager.getInstance().getIconForType(stations.get(marker.getTitle())));
+
+                        else{
+                            DatabaseReference chldRef = points_of_interest.child(getMarkerHashKey(marker));
+                            chldRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    Map<String, Object> point = (Map<String, Object>)dataSnapshot.getValue();
+                                    if(point == null)
+                                        marker.setIcon(IconManager.getInstance().getIconForType("default"));
+                                    else marker.setIcon(IconManager.getInstance().getIconForType((String)point.get("type")));
+                                }
+
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+
+                                }
+                            });
+
+
+                        }
+
                     }
                     track_coordinates.clear();
                     track_markers.clear();
@@ -500,7 +520,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                         }
 
                         String type = (String)point.get("type");
-                        if(! type.equals("תחנת רכבת")){
+                        if(!checkIfTransportaionSation(type)){
                             Toast.makeText(EditorPanelActivity.this, R.string.toast_ending_point, Toast.LENGTH_SHORT).show();
                             return;
                         }
@@ -677,30 +697,30 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     }
 
     //point of interest popup
-    private void initMarkerPopup(final Marker marker){
+    private void initMarkerPopup(final Marker marker, final String type){
 
 
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
         View view = inflater.inflate(R.layout.coordinate_details_popup, null);
         mPopupWindow.setContentView(view);
 
-        delete_coordinate_button = (ImageButton)mPopupWindow.getContentView().findViewById(R.id.deleteCoordinateButt);
-        edit_coordinate_button = (ImageButton)mPopupWindow.getContentView().findViewById(R.id.editCoordinateButt);
+        delete_coordinate_button = mPopupWindow.getContentView().findViewById(R.id.deleteCoordinateButt);
+        edit_coordinate_button = mPopupWindow.getContentView().findViewById(R.id.editCoordinateButt);
 
-        TextView title = (TextView)mPopupWindow.getContentView().findViewById(R.id.main_content);
+        TextView title = mPopupWindow.getContentView().findViewById(R.id.main_content);
         title.setText(marker.getTitle());
 
-        TextView discreption = (TextView)mPopupWindow.getContentView().findViewById(R.id.minor_content);
+        TextView discreption = mPopupWindow.getContentView().findViewById(R.id.minor_content);
         discreption.setText(marker.getSnippet());
 
-        Button read_more = (Button) mPopupWindow.getContentView().findViewById(R.id.read_more);
+        Button read_more = mPopupWindow.getContentView().findViewById(R.id.read_more);
         read_more.setVisibility(View.GONE);
 
         //add click listeners for editing and removing point of intereset
         delete_coordinate_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dialogDeleteCoordinate(marker);
+                dialogDeleteCoordinate(marker, type);
             }
         });
         edit_coordinate_button.setOnClickListener(new View.OnClickListener() {
@@ -744,7 +764,9 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         });
     }
 
-
+    private boolean checkIfTransportaionSation(String type){
+        return type.equals("תחנת רכבת") || type.equals("תחנת אוטובוס");
+    }
 
 
     private void showAllPointsOfInterest() {
@@ -771,8 +793,10 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     LatLng latlng = new LatLng(
                             position.getLongitude(),
                             position.getLatitude());
+                    String type = (String)point.get("type");
+                    String title = (String) point.get("title");
 
-                    addMarkerForPointOfInterest(latlng, (String)point.get("title"), (String)point.get("snippet"), (String)point.get("type"));
+                    addMarkerForPointOfInterest(latlng, title, (String)point.get("snippet"), type);
                 }
                 loading_map_progress_bar.setVisibility(View.INVISIBLE);
             }
@@ -810,8 +834,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                             position.getLongitude(),
                             position.getLatitude());
 
-                    long logo = (long)point.get("logo");
-                    addMarkerForUserUpdate(latlng, (String)point.get("title"), (String)point.get("snippet"), (int) logo);
+                    addMarkerForUserUpdate(latlng, (String)point.get("title"), (String)point.get("snippet"), (String)point.get("type"));
                 }
                 loading_map_progress_bar.setVisibility(View.INVISIBLE);
             }
@@ -867,6 +890,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 .setProfile(DirectionsCriteria.PROFILE_WALKING)
 //                .setAccessToken(Mapbox.getInstance(this, getString(R.string.access_token)).getAccessToken())
                 .setAccessToken(MapboxAccountManager.getInstance().getAccessToken())
+                .setSteps(true)
                 .build();
 
         client.enqueueCall(new Callback<DirectionsResponse>() {
@@ -956,11 +980,6 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         @Override
         public void onMapClick(@NonNull final LatLng point) {
 
-
-
-
-
-
             if(SHOW_DETAILS_POPUP){
                 mPopupWindow.dismiss();
 
@@ -981,9 +1000,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 else{
                     writeGenericCoordinateToDB(point);
                     MarkerView marker = addMarkerForCoordinate(point, "", "");
-                    IconFactory iconFactory = IconFactory.getInstance(EditorPanelActivity.this);
-                    Icon icon = iconFactory.fromResource(R.drawable.blue_marker);
-                    marker.setIcon(icon);
+                    marker.setIcon(IconManager.getInstance().getIconForEdit());
 
                     addTrackPoint(point, marker);
 
@@ -1047,7 +1064,6 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         Position temp = Position.fromCoordinates(marker.getPosition().getLongitude(), marker.getPosition().getLatitude());
         track_positions.remove(temp);
 
-
     }
 
     private void updateTrackPoint(int index, Marker marker){
@@ -1066,8 +1082,6 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 track_positions.set(i,newP);
 
         }
-
-
     }
 
     private void addTrackPoint(LatLng point, Marker marker){
@@ -1088,34 +1102,29 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     }
 
     private MarkerView addMarkerForPointOfInterest(LatLng point, String title, String snippet, String type){
+
+        if(checkIfTransportaionSation(type))
+            stations.put(title,type);
         MarkerViewOptions markerViewOptions = new MarkerViewOptions()
                 .position(point)
                 .title(title)
                 .snippet(snippet);
         map.addMarker(markerViewOptions);
 
-        int logo = (int) (long) PointOfInterest.whatIsTheLogoForType(type);
+        markerViewOptions.getMarker().setIcon(IconManager.getInstance().getIconForType(type));
 
-        if(logo != -1) {
-            IconFactory iconFactory = IconFactory.getInstance(EditorPanelActivity.this);
-            Icon icon = iconFactory.fromResource(logo);
-            markerViewOptions.getMarker().setIcon(icon);
-        }
         return markerViewOptions.getMarker();
     }
 
-    private MarkerView addMarkerForUserUpdate(LatLng point, String title, String snippet, int logo){
+    private MarkerView addMarkerForUserUpdate(LatLng point, String title, String snippet, String type){
         MarkerViewOptions markerViewOptions = new MarkerViewOptions()
                 .position(point)
                 .title(title)
                 .snippet(snippet);
         map.addMarker(markerViewOptions);
 
-        if(logo != -1) {
-            IconFactory iconFactory = IconFactory.getInstance(EditorPanelActivity.this);
-            Icon icon = iconFactory.fromResource(logo);
-            markerViewOptions.getMarker().setIcon(icon);
-        }
+        markerViewOptions.getMarker().setIcon(IconManager.getInstance().getIconForType(type));
+
         return markerViewOptions.getMarker();
     }
 
@@ -1157,10 +1166,10 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                         Map<String, Object> point = ((Map<String, Object>)pointsMap.get(key));
                         if(point != null) {
                             String type = (String) point.get("type");
-                            if (!type.equals("תחנת רכבת")) {
+                            //if (!type.equals("תחנת רכבת")) {
                                 SHOW_DETAILS_POPUP = true;
-                                initMarkerPopup(marker);
-                            }
+                                initMarkerPopup(marker, type);
+                           // }
                         }
                     }
 
@@ -1242,19 +1251,16 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                             }
 
                             String type = (String)point.get("type");
-                            if(! type.equals("תחנת רכבת")){
+                            if(!checkIfTransportaionSation(type)){
                                 Toast.makeText(EditorPanelActivity.this, R.string.toast_starting_point, Toast.LENGTH_SHORT).show();
                                 return;
                             }
-
-                            IconFactory iconFactory = IconFactory.getInstance(EditorPanelActivity.this);
-                            Icon icon = iconFactory.fromResource(R.drawable.blue_marker);
 
                             addTrackPoint(marker.getPosition(), marker);
                             count_coordinates_selected++;
                             updateScreenCounter();
 
-                            marker.setIcon(icon);
+                            marker.setIcon(IconManager.getInstance().getIconForEdit());
 
 
                         }
@@ -1267,14 +1273,12 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     return true;
                 }
                 else{
-                    IconFactory iconFactory = IconFactory.getInstance(EditorPanelActivity.this);
-                    Icon icon = iconFactory.fromResource(R.drawable.blue_marker);
 
                     addTrackPoint(marker.getPosition(),marker);
                     count_coordinates_selected++;
                     updateScreenCounter();
 
-                    marker.setIcon(icon);
+                    marker.setIcon(IconManager.getInstance().getIconForEdit());
                     return true;
                 }
 
@@ -1331,19 +1335,15 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(EditorPanelActivity.this);
 
-
-                ArrayList<String> temp = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.train_stations)));
-
-                builder.setTitle(temp.get(0).toString());
-                temp.remove(0);
-                String stops[] = temp.toArray(new String[temp.size()]);
+                builder.setTitle(getString(R.string.choose_a_station));
+                final String stops[] = stations.keySet().toArray(new String[stations.size()]);
                 builder.setSingleChoiceItems(stops, -1,
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
 
                                 // dialog.dismiss();
-                                switchbusstation(which);
+                                switchbusstation(stops, which);
                                 dialog.dismiss();
                             }
                         });
@@ -1469,13 +1469,13 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         return "" + hash;
     }
 
-    private void dialogDeleteCoordinate(final Marker marker){
+    private void dialogDeleteCoordinate(final Marker marker, final String type){
         AlertDialog.Builder builder = new AlertDialog.Builder(EditorPanelActivity.this);
         builder.setMessage(getResources().getString(R.string.dialog_delete_coordinate));
 
         builder.setPositiveButton(R.string.dialog_ok, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                deleteCoordinateFromDb(marker, true);
+                deleteCoordinateFromDb(marker, true, type);
             }
         });
         builder.setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
@@ -1490,10 +1490,15 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
     /*Method gets the marker to delete from the database, gets it's key in
     * the db and erase it.*/
-    private void deleteCoordinateFromDb(final Marker marker, boolean point_of_interest) {
+    private void deleteCoordinateFromDb(final Marker marker, boolean point_of_interest, String type) {
         String key = getMarkerHashKey(marker);
         coordinates.child(key).removeValue();
         if(point_of_interest)
+            if(checkIfTransportaionSation(type)){
+                if(stations.containsKey(marker.getTitle()))
+                    stations.remove(marker.getTitle());
+            }
+
             points_of_interest.child(key).removeValue();
         map.removeMarker(marker);
     }
@@ -1687,8 +1692,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 return true;
 
             case R.id.makeOwnTrackActivity:
-                i = new Intent(this, MakeOwnTrackActivity.class);
-                startActivity(i);
+
                 return true;
 
             case R.id.tracksActivity:
@@ -1841,7 +1845,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     Toast.makeText(EditorPanelActivity.this, "point is null", Toast.LENGTH_SHORT).show();
                 }
 
-                long logo = (long)point.get("logo");
+
                 if(mode == NEW_COORDINATE){
                     addMarkerForPointOfInterest(createdCoordinate,
                             (String)point.get("title"), (String)point.get("snippet"),
@@ -1888,11 +1892,11 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     Toast.makeText(EditorPanelActivity.this, "point is null", Toast.LENGTH_SHORT).show();
                 }
 
-                long logo = (long)point.get("logo");
+                String type = (String)point.get("type");
                 if(mode == NEW_USER_UPDATE){
                     addMarkerForUserUpdate(createdCoordinate,
                             (String)point.get("title"), (String)point.get("snippet"),
-                            (int)logo);
+                            type);
                 }
 
                 map.setInfoWindowAdapter(new MapboxMap.InfoWindowAdapter() {
@@ -1992,13 +1996,9 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         count_coordinates_selected--;
         updateScreenCounter();
         if(isPointOfInterest){
-            int logo = (int) (long) PointOfInterest.whatIsTheLogoForType(type);
 
-            if(logo != -1) {
-                IconFactory iconFactory = IconFactory.getInstance(EditorPanelActivity.this);
-                Icon icon = iconFactory.fromResource(logo);
-                marker.setIcon(icon);
-            }
+            marker.setIcon(IconManager.getInstance().getIconForType(type));
+
         }
 
         else {
@@ -2008,28 +2008,18 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
     }
 
-    private void switchbusstation(int pos) {
-        ArrayList<String> temp = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.train_stations)));
-        temp.remove(0);
-        String stops[] = temp.toArray(new String[temp.size()]);
+    private void switchbusstation(String stops[], int pos) {
+
         String name = stops[pos];
+        String type = stations.get(name);
 
         List<Marker> markers = map.getMarkers();
         for(int i=0; i<markers.size(); i++){
-            if(markers.get(i).getTitle().equalsIgnoreCase(name)){
+            if(markers.get(i).getTitle().equals(name)){
                 Marker tempMarker = markers.get(i);
-                IconFactory iconFactory = IconFactory.getInstance(EditorPanelActivity.this);
-                Icon icon = iconFactory.fromResource(R.drawable.blue_marker);
-                tempMarker.setIcon(icon);
+                tempMarker.setIcon(IconManager.getInstance().getIconForEdit());
                 Marker curMarker = track_markers.get(0);
-                int logo = (int) (long) PointOfInterest.whatIsTheLogoForType("תחנת רכבת");
-
-                if(logo != -1) {
-
-                    icon = iconFactory.fromResource(logo);
-                    curMarker.setIcon(icon);
-                }
-
+                curMarker.setIcon(IconManager.getInstance().getIconForType(type));
                 track_markers.set(0,tempMarker);
                 break;
             }

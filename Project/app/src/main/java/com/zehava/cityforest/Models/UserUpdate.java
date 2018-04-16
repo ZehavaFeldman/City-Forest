@@ -1,5 +1,8 @@
 package com.zehava.cityforest.Models;
 
+import com.mapbox.mapboxsdk.annotations.Icon;
+import com.mapbox.mapboxsdk.annotations.IconFactory;
+import com.zehava.cityforest.Managers.IconManager;
 import com.zehava.cityforest.R;
 import com.mapbox.services.commons.models.Position;
 
@@ -18,20 +21,18 @@ public class UserUpdate extends PointOfInterest{
     private long update_time_space;
     private String uid;
     private String uname;
-    private int id;
 
 
     public UserUpdate(){
 
     }
 
-    public UserUpdate(String uid, String uname,int id, String type, String snippet, double coX, double coY){
+    public UserUpdate(String uid, String uname, String type, String snippet, double coX, double coY){
 
         super(coX, coY, type, snippet, type);
 
         this.uid = uid;
         this.uname = uname;
-        this.id=id;
         this.updated_time = System.currentTimeMillis()/1000;
 
         setTimeSpace(type);
@@ -43,7 +44,6 @@ public class UserUpdate extends PointOfInterest{
         result.put("title", this.title);
         result.put("snippet", this.snippet);
         result.put("type", this.type);
-        result.put("logo", this.logo);
         result.put("uid", this.uid);
         result.put("uname", this.uname);
         result.put("updated", this.updated_time);
@@ -58,42 +58,10 @@ public class UserUpdate extends PointOfInterest{
 
     public void setType(String type){
         this.type = type;
-        setLogo(type);
-    }
-
-
-    public static int whatIsTheLogoForId(int id){
-
-        if(id==0){
-            return R.drawable.ic_cloud_1;
-        }
-        else if(id==1){
-            return  R.drawable.ic_key;
-        }
-        else if(id==2){
-            return R.drawable.ic_no_vision;
-        }
-
-
-        else  return  -1;
 
     }
 
-    public static int generateIdByType(String type){
 
-        if(type.equals("מזג אויר")){
-            return 0;
-        }
-        else if(type.equals("אין כניסה")){
-            return 1;
-        }
-        else if(type.equals("אין תצפית")){
-            return 2;
-        }
-
-        else  return  -1;
-
-    }
 
     public void setTimeSpace(String type){
         if(type.equalsIgnoreCase("מזג אויר")){
@@ -115,11 +83,4 @@ public class UserUpdate extends PointOfInterest{
     }
 
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
 }

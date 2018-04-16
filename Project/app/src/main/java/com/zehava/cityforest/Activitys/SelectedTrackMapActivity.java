@@ -13,8 +13,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.CheckBox;
-import android.widget.TextView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
@@ -24,6 +23,10 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 //import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.MapboxAccountManager;
+import com.mapbox.mapboxsdk.annotations.Icon;
+import com.mapbox.mapboxsdk.annotations.IconFactory;
+import com.mapbox.mapboxsdk.annotations.MarkerView;
+import com.mapbox.mapboxsdk.annotations.MarkerViewOptions;
 import com.mapbox.mapboxsdk.annotations.PolylineOptions;
 import com.mapbox.mapboxsdk.camera.CameraUpdateFactory;
 import com.mapbox.mapboxsdk.constants.Style;
@@ -39,12 +42,16 @@ import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
 import com.mapbox.services.commons.geojson.LineString;
 import com.mapbox.services.commons.models.Position;
 import com.mapbox.services.directions.v5.models.DirectionsRoute;
-import com.zehava.cityforest.MakeOwnTrackActivity;
+import com.zehava.cityforest.Managers.IconManager;
 import com.zehava.cityforest.Managers.JsonParserManager;
+import com.zehava.cityforest.Models.PointOfInterest;
 import com.zehava.cityforest.R;
 
 import java.util.Map;
+import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 import static com.mapbox.services.android.telemetry.location.AndroidLocationEngine.getLocationEngine;
 import static com.zehava.cityforest.Constants.DEFAULT_JERUSALEM_COORDINATE;
@@ -76,6 +83,7 @@ public class SelectedTrackMapActivity extends AppCompatActivity implements Permi
 
         MapboxAccountManager.start(this,getString(R.string.access_token));
         setContentView(R.layout.activity_selected_track_map);
+        IconManager.getInstance().generateIcons(IconFactory.getInstance(this));
 
         //Get the location engine object for later use.
         locationEngine = getLocationEngine(this);
@@ -87,13 +95,15 @@ public class SelectedTrackMapActivity extends AppCompatActivity implements Permi
 
         database = FirebaseDatabase.getInstance();
         tracks = database.getReference("tracks");
+        points_of_interest = database.getReference("points_of_interest");
 
         Intent i = getIntent();
         track_db_key = i.getStringExtra(SELECTED_TRACK);
 
 //        track_name_field = (TextView) findViewById(R.id.trackNameField);
 
-
+        ProgressBar loading_map_progress_bar = (ProgressBar)findViewById(R.id.loadingMapProgress);
+        loading_map_progress_bar.setVisibility(View.INVISIBLE);
         initiateScreenValues();
 
         floatingActionButton = (FloatingActionButton) findViewById(R.id.location_toggle_fab);
@@ -120,6 +130,9 @@ public class SelectedTrackMapActivity extends AppCompatActivity implements Permi
 
                 DirectionsRoute route = JsonParserManager.getInstance().retrieveRouteFromJson((String) track.get("route"));
                 drawRoute(route);
+                Map<String,String> points;
+                if((points = (HashMap<String,String>)track.get("points"))!=null)
+                    showAllPointsOfInterest(points);
 //
 //                track_name_field.setText((String) track.get("track_name"));
 
@@ -169,7 +182,7 @@ public class SelectedTrackMapActivity extends AppCompatActivity implements Permi
             map = mapboxMap;
             map.setStyleUrl(Style.OUTDOORS);
             showDefaultLocation();
-//            showAllPointsOfInterest();
+           // showAllPointsOfInterest();
         }
     }
 
@@ -180,54 +193,55 @@ public class SelectedTrackMapActivity extends AppCompatActivity implements Permi
                         DEFAULT_JERUSALEM_COORDINATE.getLongitude()), 10));
     }
 
-//    private void showAllPointsOfInterest() {
-//        /*Reading one time from the database, we get the points of interest map list*/
-//        points_of_interest.addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
-//                if(pointsMap == null)
-//                    return;
-//                /*Iterating all the coordinates in the list*/
-//                for (Map.Entry<String, Object> entry : pointsMap.entrySet())
-//                {
-//                    /*For each coordinate in the database, we want to create a new marker
-//                    * for it and to show the marker on the map*/
-//                    Map<String, Object> point = ((Map<String, Object>) entry.getValue());
-//                    /*Now the object 'cor' holds a *map* for a specific coordinate*/
-//                    String positionJSON = (String) point.get("position");
-//                    Position position = retrievePositionFromJson(positionJSON);
-//
-//                    /*Creating the marker on the map*/
-//                    LatLng latlng = new LatLng(
-//                            position.getLongitude(),
-//                            position.getLatitude());
-//
-//                    long logo = (long)point.get("logo");
-//                    addMarkerForPointOfInterest(latlng, (String)point.get("title"), (String)point.get("snippet"), (int) logo);
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {}
-//
-//        });
-//    }
+    private void showAllPointsOfInterest(final Map<String,String> points) {
+        /*Reading one time from the database, we get the points of interest map list*/
+        points_of_interest.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
+                if(pointsMap == null)
+                    return;
+                /*Iterating all the coordinates in the list*/
+                Iterator it = points.entrySet().iterator();
+                while (it.hasNext()) {
+                    Map.Entry pair = (Map.Entry)it.next();
+                    Map<String, Object> point = (Map<String, Object>) pointsMap.get(pair.getKey());
 
-//    private MarkerView addMarkerForPointOfInterest(LatLng point, String title, String snippet, int logo){
-//        MarkerViewOptions markerViewOptions = new MarkerViewOptions()
-//                .position(point)
-//                .title(title)
-//                .snippet(snippet);
-//        map.addMarker(markerViewOptions);
-//
-//        if(logo != -1) {
-//            IconFactory iconFactory = IconFactory.getInstance(SelectedTrackMapActivity.this);
-//            Icon icon = iconFactory.fromResource(logo);
-//            markerViewOptions.getMarker().setIcon(icon);
-//        }
-//        return markerViewOptions.getMarker();
-//    }
+                    /*For each coordinate in the database, we want to create a new marker
+                    * for it and to show the marker on the map*/
+
+                    /*Now the object 'cor' holds a *map* for a specific coordinate*/
+                    String positionJSON = (String) point.get("position");
+                    Position position = JsonParserManager.getInstance().retrievePositionFromJson(positionJSON);
+
+                    /*Creating the marker on the map*/
+                    LatLng latlng = new LatLng(
+                            position.getLongitude(),
+                            position.getLatitude());
+
+
+                    addMarkerForPointOfInterest(latlng, (String)point.get("title"), (String)point.get("snippet"), (String)point.get("type"));
+                    it.remove();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+
+        });
+    }
+
+    private MarkerView addMarkerForPointOfInterest(LatLng point, String title, String snippet, String type){
+        MarkerViewOptions markerViewOptions = new MarkerViewOptions()
+                .position(point)
+                .title(title)
+                .snippet(snippet);
+        map.addMarker(markerViewOptions);
+
+        markerViewOptions.getMarker().setIcon(IconManager.getInstance().getIconForType(type));
+
+        return markerViewOptions.getMarker();
+    }
 
 
     private void toggleGps(boolean enableGps) {
@@ -386,8 +400,7 @@ public class SelectedTrackMapActivity extends AppCompatActivity implements Permi
                 return true;
 
             case R.id.makeOwnTrackActivity:
-                i = new Intent(this, MakeOwnTrackActivity.class);
-                startActivity(i);
+
                 return true;
 
             case R.id.tracksActivity:

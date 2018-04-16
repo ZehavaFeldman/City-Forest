@@ -17,7 +17,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.zehava.cityforest.MakeOwnTrackActivity;
 import com.zehava.cityforest.R;
 
 import static com.zehava.cityforest.Constants.Q_ENDING_POINT;
@@ -166,8 +165,7 @@ public class AdvancedSearchTracksActivity extends AppCompatActivity {
                 return true;
 
             case R.id.makeOwnTrackActivity:
-                i = new Intent(this, MakeOwnTrackActivity.class);
-                startActivity(i);
+
                 return true;
 
             case R.id.tracksActivity:

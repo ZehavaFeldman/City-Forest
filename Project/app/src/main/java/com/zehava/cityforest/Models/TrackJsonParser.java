@@ -1,6 +1,11 @@
 package com.zehava.cityforest.Models;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by avigail on 17/03/18.
@@ -13,12 +18,12 @@ public class TrackJsonParser {
         if (jsonObject == null)
             return null;
         String route = jsonObject.optString("route");
-        String db_key = jsonObject.optString("db_key");
+        String db_key = jsonObject.optString("objectID");
         String track_name = jsonObject.optString("track_name");
         String starting_point = jsonObject.optString("starting_point");
         String ending_point = jsonObject.optString("ending_point");
-        double duration = Double.parseDouble(jsonObject.optString("duration"));
-        double length = Double.parseDouble(jsonObject.optString("length"));
+        double duration = jsonObject.optDouble("duration");
+        double length = jsonObject.optDouble("length");
         String additional_info = jsonObject.optString("additional_info");
         String starting_point_JsonLatLng = jsonObject.optString("starting_point_json_latlng");
         String ending_point_JsonLatLng = jsonObject.optString("ending_point_json latlng");

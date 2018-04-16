@@ -67,6 +67,7 @@ public class PointOfInterestGallary extends AppCompatActivity {
         storageReference = storage.getReference();
 
         loading_progress_bar = findViewById(R.id.loadingProgress);
+        loading_progress_bar.setVisibility(View.INVISIBLE);
 
         images.child(directoryName).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override

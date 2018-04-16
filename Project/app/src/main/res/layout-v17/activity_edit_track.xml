@@ -85,12 +85,11 @@ android:weightSum="1">
         android:text="@string/duration_hour_txt"
         android:textSize="20sp" />
 
-    <EditText
+    <TextView
         android:id="@+id/durationField"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:inputType="number"
         tools:ignore="LabelFor" />
 
     <TextView
@@ -101,12 +100,11 @@ android:weightSum="1">
         android:textSize="20sp"
         android:text="@string/distance_km_txt" />
 
-    <EditText
+    <TextView
         android:id="@+id/distanceField"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:inputType="number"
         tools:ignore="LabelFor" />
 
 
@@ -133,8 +131,28 @@ android:weightSum="1">
         android:paddingEnd="5dp"
         android:paddingTop="5dp"
         android:textSize="14sp"
-
         tools:ignore="LabelFor" />
+
+
+    <LinearLayout
+        android:id="@+id/buttonLayout"
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:layout_marginTop="30dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/addPointsButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:layout_weight="1"
+            android:text="@string/add_points_butt"
+            tools:ignore="ButtonOrder,ButtonStyle,RtlHardcoded" />
+
+
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/buttonsLayout"
