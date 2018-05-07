@@ -24,17 +24,10 @@
 
     <group>
 
-
         <item
             android:id="@+id/tracksActivity"
             android:title="@string/tracks_menu" />
 
-        <item
-            android:id="@+id/makeOwnTrackActivity"
-            android:title="@string/Make_own_track_menu" />
-        </group>
-
-    <group>
         <item
             android:title="@string/menu_user_guide"
             android:id="@+id/userGuideActivity"/>
@@ -51,7 +44,9 @@
             android:title="@string/language"
             android:id="@+id/languageActivity" />
 
-
+        <item
+            android:title="@string/sign_out_action"
+            android:id="@+id/signOut"/>
 
     </group>
 

@@ -127,10 +127,6 @@ public class SearchTracksResultsActivity extends AppCompatActivity {
                 startActivity(i);
                 return true;
 
-            case R.id.makeOwnTrackActivity:
-
-                return true;
-
             case R.id.tracksActivity:
                 i = new Intent(this, TracksActivity.class);
                 startActivity(i);

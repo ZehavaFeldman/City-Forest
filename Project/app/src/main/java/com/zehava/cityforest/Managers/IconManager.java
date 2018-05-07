@@ -30,32 +30,39 @@ public class IconManager {
         return  instance;
     }
 
-    public void generateIcons(IconFactory iconFactory){
-        if(icons != null)
+    public void generateIcons(IconFactory iconFactory) {
+        if (icons != null)
             return;
         icons = new HashMap<>();
-        icons.put("תחנת רכבת",iconFactory.fromResource(R.mipmap.ic_tram_black_24dp));
-        icons.put("תחנת אוטובוס",iconFactory.fromResource(R.mipmap.ic_directions_bus_black_24dp));
-        icons.put("אתר היסטורי",iconFactory.fromResource(R.mipmap.ic_change_history_black_24dp));
-        icons.put("בית קפה",iconFactory.fromResource(R.mipmap.ic_local_cafe_black_24dp));
-        icons.put("תחנת רכבת ג",iconFactory.fromResource(R.drawable.train_large));
-        icons.put("תחנת אוטובוס ג",iconFactory.fromResource(R.drawable.ic_bus_large));
-        icons.put("אתר היסטורי ג",iconFactory.fromResource(R.drawable.history_large));
-        icons.put("בית קפה ג",iconFactory.fromResource(R.drawable.coffe_large));
-        icons.put("מזג אויר",iconFactory.fromResource(R.drawable.ic_cloud_1));
-        icons.put("אין כניסה",iconFactory.fromResource(R.drawable.ic_key));
-        icons.put("אין תצפית",iconFactory.fromResource(R.drawable.ic_no_vision));
+        icons.put("תחנת רכבת", iconFactory.fromResource(R.mipmap.ic_tram_black_24dp));
+        icons.put("תחנת אוטובוס", iconFactory.fromResource(R.mipmap.ic_directions_bus_black_24dp));
+        icons.put("אתר היסטורי", iconFactory.fromResource(R.mipmap.ic_change_history_black_24dp));
+        icons.put("בית קפה", iconFactory.fromResource(R.mipmap.ic_local_cafe_black_24dp));
+        icons.put("תחנת רכבת ג", iconFactory.fromResource(R.drawable.train_large));
+        icons.put("תחנת אוטובוס ג", iconFactory.fromResource(R.drawable.ic_bus_large));
+        icons.put("אתר היסטורי ג", iconFactory.fromResource(R.drawable.history_large));
+        icons.put("בית קפה ג", iconFactory.fromResource(R.drawable.coffe_large));
+        icons.put("מזג אויר", iconFactory.fromResource(R.drawable.ic_cloud_1));
+        icons.put("אין כניסה", iconFactory.fromResource(R.drawable.ic_key));
+        icons.put("אין תצפית", iconFactory.fromResource(R.drawable.ic_no_vision));
         icons.put("יצירת מסלול", iconFactory.fromResource(R.drawable.blue_marker));
-        icons.put("default",iconFactory.defaultMarker());
+        icons.put("default", iconFactory.defaultMarker());
+        icons.put("Train Station", icons.get("תחנת רכבת"));
+        icons.put("Bus Station", icons.get("תחנת אוטובוס"));
+        icons.put("Train Station ג", icons.get("תחנת רכבת ג"));
+        icons.put("Bus Station ג", icons.get("תחנת אוטובוס ג"));
+        icons.put("Historic Site", icons.get("אתר היסטורי"));
+        icons.put("Historic Site ג", icons.get("אתר היסטורי ג"));
+        icons.put("Coffee Shop", icons.get("בית קפה"));
+        icons.put("Coffee Shop ג", icons.get("בית קפה ג"));
 
     }
-
     public Icon getIconForEdit(){
         return  icons.get("יצירת מסלול");
     }
 
     public int getResourceFrType(String type){
-        if(type.equals("מזג אויר")){
+        if(type.equals("מזג אויר") ){
             return R.drawable.ic_cloud_1;
         }
         else if(type.equals("אין כניסה")){
@@ -63,6 +70,32 @@ public class IconManager {
         }
         else if(type.equals("אין תצפית")){
             return R.drawable.ic_no_vision;
+        }
+
+        else if(type.equals("Train Station") ){
+            return R.mipmap.ic_tram_black_24dp;
+        }
+        else if(type.equals("Bus Station")){
+            return R.mipmap.ic_directions_bus_black_24dp;
+        }
+        else if(type.equals("Historic Site")){
+            return R.mipmap.ic_change_history_black_24dp;
+        }
+        else if(type.equals("Coffee Shop") ){
+            return R.mipmap.ic_local_cafe_black_24dp;
+        }
+
+        else if(type.equals("תחנת אוטובוס") ){
+            return R.mipmap.ic_directions_bus_black_24dp;
+        }
+        else if(type.equals("תחנת רכבת")){
+            return R.mipmap.ic_tram_black_24dp;
+        }
+        else if(type.equals("בית קפה")){
+            return R.mipmap.ic_local_cafe_black_24dp;
+        }
+        else if(type.equals("אתר היסטורי") ){
+            return R.mipmap.ic_change_history_black_24dp;
         }
 
         else  return  -1;

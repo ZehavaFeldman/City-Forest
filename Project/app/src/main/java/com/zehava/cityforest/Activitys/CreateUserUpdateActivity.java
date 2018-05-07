@@ -22,6 +22,7 @@ import com.google.firebase.database.DatabaseError;
 import com.mapbox.mapboxsdk.annotations.IconFactory;
 import com.zehava.cityforest.Managers.IconManager;
 import com.zehava.cityforest.Managers.JsonParserManager;
+import com.zehava.cityforest.Managers.PMethods;
 import com.zehava.cityforest.Models.UserUpdate;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -49,8 +50,7 @@ public class CreateUserUpdateActivity extends AppCompatActivity {
 
     private Intent i;
 
-    private String uid;
-    private String uname;
+    private String userhash;
     private String type;
     private String snippet;
     private ViewFlipper vf;
@@ -104,8 +104,7 @@ public class CreateUserUpdateActivity extends AppCompatActivity {
     private void writeNewUserUpdate() {
 
         UserUpdate user_update = new UserUpdate(
-                uid,
-                uname,
+                userhash,
                 type,
                 snippet,
                 chosenCoordinateLatLng.getLongitude(),
@@ -142,13 +141,10 @@ public class CreateUserUpdateActivity extends AppCompatActivity {
 
 
     private String hashFunction() {
+
         double longitude = chosenCoordinateLatLng.getLongitude();
-        //double latitude = chosenCoordinateLatLng.getLatitude();
-        i1 = IconManager.getInstance().getIdForType(type);
+        return PMethods.getInstance().getUserUpdateHashKey(longitude, type);
 
-        long hash = ((long) (100000000*longitude))+i1;
-
-        return "" + hash;
     }
 
     private class myClickListener implements View.OnClickListener{
@@ -164,8 +160,7 @@ public class CreateUserUpdateActivity extends AppCompatActivity {
             }
             else if(v instanceof TextView) {
                 type = ((TextView) v).getText().toString();
-                uid = i.getStringExtra(CURRENT_USER_UID);
-                uname= i.getStringExtra(CURRENT_USER_NAME);
+                userhash = i.getStringExtra(CURRENT_USER_NAME);
                 chosenCoordinateLatLng = JsonParserManager.getInstance().retreiveLatLngFromJson(i.getStringExtra(UPDATE_POSITION));
 
                 vf.setDisplayedChild(1);

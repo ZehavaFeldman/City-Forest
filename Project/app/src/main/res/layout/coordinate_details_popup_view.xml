@@ -43,6 +43,7 @@
             tools:ignore="HardcodedText"
             android:maxLines="2"/>
 
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -57,6 +58,23 @@
             android:layout_alignParentRight="true"
             android:textAlignment="viewEnd"
             android:layout_gravity="end"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/read_more"
+            android:id="@+id/user_id"
+            android:layout_centerHorizontal="true"
+            android:paddingRight="15dp"
+            android:paddingLeft="15dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:textSize="12sp"
+            android:layout_toEndOf="@+id/firebase_storage_image"
+            android:layout_toRightOf="@+id/firebase_storage_image"
+            tools:ignore="HardcodedText,RtlHardcoded"/>
+
+
 
 
         <android.support.design.widget.FloatingActionButton

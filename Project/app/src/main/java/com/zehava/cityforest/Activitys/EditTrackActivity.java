@@ -11,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.mapbox.api.directions.v5.models.DirectionsWaypoint;
 import com.zehava.cityforest.Models.Track;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -40,8 +41,8 @@ public class EditTrackActivity extends AppCompatActivity {
     private Track edited_track;
 
     private EditText track_name_field;
-    private Spinner starting_point;
-    private Spinner ending_point;
+    private EditText starting_point;
+    private EditText ending_point;
     private TextView duration_field;
     private TextView distance_field;
     private EditText additional_info;
@@ -95,14 +96,18 @@ public class EditTrackActivity extends AppCompatActivity {
                 duration_field.setText(track.get("duration").toString());
                 distance_field.setText(track.get("length").toString());
                 additional_info.setText((String)track.get("additional_info"));
+                starting_point.setText((String)track.get("starting_point"));
+                ending_point.setText((String)track.get("endinging_point"));
                 additional_info.clearFocus();
 
                 Map jArray = (HashMap<String,String>)track.get("points");
                 if (jArray != null)
                     tracksPointsOfInterest.putAll(jArray);
 
-
+                String userhash = (String) track.get("user_hashkey");
+                userhash = userhash == null? "":userhash;
                 edited_track = new Track((String)track.get("route"),
+                        (List<String>) track.get("waypoints"),
                         track_db_key,
                         (String)track.get("track_name"),
                         (String)track.get("starting_point"),
@@ -112,7 +117,9 @@ public class EditTrackActivity extends AppCompatActivity {
                         (String)track.get("additional_info"),
                         (String)track.get("starting_point_json_latlng"),
                         (String)track.get("ending_point_json_latlng"),
-                        tracksPointsOfInterest);
+                        tracksPointsOfInterest,
+                        userhash
+                        );
 
             }
 
@@ -149,6 +156,9 @@ public class EditTrackActivity extends AppCompatActivity {
 
         edited_track.setTrack_name(track_name_field.getText().toString());
         edited_track.setAdditional_info(additional_info.getText().toString());
+        edited_track.setPoints_of_interest(tracksPointsOfInterest);
+        edited_track.setStarting_point(starting_point.getText().toString());
+        edited_track.setEnding_point(starting_point.getText().toString());
         edited_track.setPoints_of_interest(tracksPointsOfInterest);
 
         /*Converting our track object to a map, that makes

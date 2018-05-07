@@ -5,11 +5,7 @@
 
 
 
-    <item
-        android:id="@+id/signIn"
-        android:title="@string/sign_in_action"
-        android:visible="true"
-        app:showAsAction="ifRoom" />
+
 
     <item
         android:title="@string/menu_adv_search"
@@ -18,22 +14,11 @@
         app:showAsAction="always"
         />
 
+
     <group>
-
-        <!--<item-->
-            <!--android:title="@string/menu_adv_search"-->
-            <!--android:id="@+id/searchTracksActivity" />-->
-
         <item
             android:id="@+id/tracksActivity"
             android:title="@string/tracks_menu" />
-
-        <item
-            android:id="@+id/makeOwnTrackActivity"
-            android:title="@string/Make_own_track_menu" />
-    </group>
-
-    <group>
         <item
             android:title="@string/menu_user_guide"
             android:id="@+id/userGuideActivity"/>
@@ -50,7 +35,9 @@
             android:title="@string/language"
             android:id="@+id/languageActivity" />
 
-
+        <item
+            android:id="@+id/signIn"
+            android:title="@string/sign_in_action" />
 
     </group>
 

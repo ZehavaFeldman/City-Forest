@@ -118,9 +118,7 @@ public class TracksActivity extends AppCompatActivity {
                 startActivity(i);
                 return true;
 
-            case R.id.makeOwnTrackActivity:
 
-                return true;
 
             case R.id.tracksActivity:
                 return true;

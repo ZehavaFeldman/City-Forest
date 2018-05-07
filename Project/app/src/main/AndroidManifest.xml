@@ -7,15 +7,38 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.GET_CREDENTIALS" />
 
     <application
+        android:name="android.support.multidex.MultiDexApplication"
         android:allowBackup="true"
         android:icon="@drawable/cf_small_logo"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <service android:name="com.mapbox.mapboxsdk.telemetry.TelemetryService" />
 
+        <meta-data android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/facebook_app_id"/>
+
+        <activity android:name="com.facebook.FacebookActivity"
+            android:configChanges=
+                "keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+            android:label="@string/app_name" />
+        <activity
+            android:name="com.facebook.CustomTabActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="@string/fb_login_protocol_scheme" />
+            </intent-filter>
+        </activity>
+
+        <provider android:authorities="com.facebook.app.FacebookContentProvider452071661893714"
+            android:name="com.facebook.FacebookContentProvider"
+            android:exported="true" />
         <activity
             android:name=".Activitys.CreateNewCoordinateActivity"
             android:screenOrientation="portrait" />
@@ -24,11 +47,13 @@
         <activity
             android:name=".Activitys.EditorPanelActivity"
             android:screenOrientation="portrait">
-        <!--<intent-filter>-->
-            <!--<action android:name="android.intent.action.MAIN" />-->
 
-            <!--<category android:name="android.intent.category.LAUNCHER" />-->
-        <!--</intent-filter>-->
+            <!-- <intent-filter> -->
+            <!-- <action android:name="android.intent.action.MAIN" /> -->
+
+
+            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
+            <!-- </intent-filter> -->
         </activity>
         <!-- android:label="Editor Panel" -->
 
@@ -42,6 +67,7 @@
             android:screenOrientation="portrait" />
         <!-- android:label="New Track" -->
 
+
         <!-- android:label="Edit Tracks" -->
 
         <activity
@@ -51,7 +77,7 @@
 
         <activity
             android:name=".Activitys.HomeActivity"
-            android:screenOrientation="portrait"></activity>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".Activitys.SplashActivity"
             android:screenOrientation="portrait"
@@ -137,14 +163,20 @@
             <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
             <!-- </intent-filter> -->
         </activity>
-        <!--<activity-->
-            <!--android:name=".Activitys.NavigationActivity"-->
-           <!--&gt;-->
-
-
-        <!--</activity>-->
-        <activity android:name=".Activitys.PointOfInterestGallary"
+        <activity
+            android:name=".Activitys.MyNavigationActivity"
             android:screenOrientation="portrait"></activity>
+        <activity
+            android:name=".Activitys.PointOfInterestGallary"
+            android:screenOrientation="portrait" />
+        <activity android:name=".Activitys.MainActivity">
+             <!--<intent-filter>-->
+             <!--<action android:name="android.intent.action.MAIN" />-->
+
+
+             <!--<category android:name="android.intent.category.LAUNCHER" />-->
+             <!--</intent-filter>-->
+        </activity>
     </application>
 
 </manifest>

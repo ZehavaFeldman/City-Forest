@@ -1,55 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/editor_layout"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:mapbox="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:weightSum="1"
-    tools:context="com.zehava.cityforest.MoveablePointActivity">
+    android:layout_height="match_parent">
 
-
-    <RelativeLayout
-        android:id="@+id/mapLayout"
+    <com.mapbox.mapboxsdk.maps.MapView
+        android:id="@+id/mapView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:ignore="UselessParent">
+        mapbox:mapbox_cameraTargetLat="38.9098"
+        mapbox:mapbox_cameraTargetLng="-77.0295"
+        mapbox:mapbox_styleUrl="mapbox://styles/mapbox/streets-v10"
+        mapbox:mapbox_cameraZoom="12" />
 
-        <com.mapbox.mapboxsdk.maps.MapView
-            android:id="@+id/mapview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true">
+    <Button
+        android:id="@+id/startButton"
+        android:layout_height="wrap_content"
+        android:layout_width="fill_parent"
+        android:padding="5px"
+        android:layout_margin="20px"
+        android:text="Start navigation"
+        android:background="@color/mapboxGrayLight"
+        android:textColor="@color/mapboxWhite"
+        android:enabled="false"/>
 
-            <android.support.design.widget.FloatingActionButton
-                android:id="@+id/location_toggle_fab"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end|bottom"
-                android:layout_margin="16dp"
-                app:backgroundTint="@color/colorPrimary"
-                app:srcCompat="@drawable/ic_my_location_24dp"
-                tools:ignore="VectorDrawableCompat" />
+</RelativeLayout>
 
-            <ImageView
-                android:id="@+id/smallLogo"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:contentDescription="@string/cityforest_logo"
-                app:srcCompat="@drawable/cf_small_logo" />
-
-
-            <!--<ProgressBar-->
-                <!--android:id="@+id/loadingMapProgress"-->
-                <!--style="?android:attr/progressBarStyle"-->
-                <!--android:layout_width="100dp"-->
-                <!--android:layout_height="100dp"-->
-                <!--android:layout_gravity="center_vertical|center_horizontal" />-->
-
-
-        </com.mapbox.mapboxsdk.maps.MapView>
-
-    </RelativeLayout>
-</LinearLayout>

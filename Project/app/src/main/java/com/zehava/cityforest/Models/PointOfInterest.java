@@ -14,26 +14,37 @@ import java.util.Map;
 public class PointOfInterest extends Coordinate {
 
     protected String type;
-    protected long logo;
     private String image;
+
+    public String getuuid() {
+        return uuid;
+    }
+
+    public void setuuid(String uuid) {
+        this.uuid = uuid;
+    }
+
+    protected String uuid;
 
     public PointOfInterest(){
 
     }
 
     public PointOfInterest(double coX, double coY,
-                           String title, String snippet, String type){
+                           String title, String snippet, String type, String uuid){
         super(coX, coY, title, snippet);
 
         this.type = type;
+        this.uuid = uuid;
 
     }
 
     public PointOfInterest(String position,
-                           String title, String snippet, String type){
+                           String title, String snippet, String type, String uuid){
         super(position, title, snippet);
 
         this.type = type;
+        this.uuid = uuid;
 
     }
 
@@ -46,8 +57,10 @@ public class PointOfInterest extends Coordinate {
         result.put("title", this.title);
         result.put("snippet", this.snippet);
         result.put("type", this.type);
+        result.put("uuid", this.uuid);
         if(this.image != null)
             result.put("imagePath", this.image);
+
         return result;
     }
 
@@ -67,13 +80,6 @@ public class PointOfInterest extends Coordinate {
         this.image = imagePath;
     }
 
-    public long getLogo(){
-        return this.logo;
-    }
-
-    public void setPointLogo(int logo){
-        this.logo = logo;
-    }
 
 
 

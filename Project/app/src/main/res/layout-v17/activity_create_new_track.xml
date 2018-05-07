@@ -52,7 +52,14 @@
                 android:gravity="start"
                 android:textSize="20sp" />
 
-            <TextView
+            <!--<TextView-->
+                <!--android:id="@+id/startingPoint"-->
+                <!--android:layout_width="0dp"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_weight="1"-->
+                <!--android:gravity="start"/>-->
+
+            <EditText
                 android:id="@+id/startingPoint"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -78,7 +85,13 @@
                 android:gravity="start"
                 android:textSize="20sp" />
 
-            <TextView
+            <!--<TextView-->
+                <!--android:id="@+id/endingPoint"-->
+                <!--android:layout_width="0dp"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_weight="1"-->
+                <!--android:gravity="start" />-->
+            <EditText
                 android:id="@+id/endingPoint"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

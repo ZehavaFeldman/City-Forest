@@ -22,8 +22,12 @@ import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
 import com.zehava.cityforest.R;
 
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
+import static com.zehava.cityforest.Constants.CHOSEN_TRACK;
 import static com.zehava.cityforest.Constants.SELECTED_TRACK;
+import static com.zehava.cityforest.Constants.TRACK_WAYPOINTS;
 
 public class SelectedTrackDetailsActivity extends AppCompatActivity {
 
@@ -37,6 +41,8 @@ public class SelectedTrackDetailsActivity extends AppCompatActivity {
     private LocationEngineListener locationEngineListener;
     private PermissionsManager permissionsManager;
 
+   private ArrayList<String> waypointsString;
+    String routeString;
 
     private TextView track_name_field;
     private TextView starting_point_field;
@@ -55,7 +61,7 @@ public class SelectedTrackDetailsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_selected_track);
 
 
-        Intent i = getIntent();
+        final Intent i = getIntent();
         track_db_key = i.getStringExtra(SELECTED_TRACK);
 
         track_name_field = (TextView) findViewById(R.id.trackNameField);
@@ -67,12 +73,17 @@ public class SelectedTrackDetailsActivity extends AppCompatActivity {
         summary_field = (TextView) findViewById(R.id.summaryField);
 
         floatingActionButton = (FloatingActionButton) findViewById(R.id.location_toggle_fab);
+        floatingActionButton.setEnabled(false);
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(SelectedTrackDetailsActivity.this, SelectedTrackMapActivity.class);
-                intent.putExtra(SELECTED_TRACK, track_db_key);
-                startActivity(intent);
+
+            Intent intent = new Intent(SelectedTrackDetailsActivity.this, MyNavigationActivity.class);
+            intent.putExtra(TRACK_WAYPOINTS, waypointsString);
+            intent.putExtra(SELECTED_TRACK, track_db_key);
+            startActivity(intent);
+
+
             }
         });
 
@@ -103,6 +114,10 @@ public class SelectedTrackDetailsActivity extends AppCompatActivity {
                 distance_field.setText(track.get("length").toString());
                 duration_field.setText(track.get("duration").toString());
                 summary_field.setText((String) track.get("additional_info"));
+                routeString = (String) track.get("route");
+                waypointsString = new ArrayList<>((List<String>) track.get("waypoints"));
+
+                floatingActionButton.setEnabled(true);
 
             }
 
@@ -147,9 +162,7 @@ public class SelectedTrackDetailsActivity extends AppCompatActivity {
                 startActivity(i);
                 return true;
 
-            case R.id.makeOwnTrackActivity:
 
-                return true;
 
             case R.id.tracksActivity:
                 i = new Intent(this, TracksActivity.class);

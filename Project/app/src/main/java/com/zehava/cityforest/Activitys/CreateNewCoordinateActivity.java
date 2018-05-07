@@ -20,14 +20,18 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.zehava.cityforest.PointsChooseAdapter;
 import com.zehava.cityforest.R;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.zehava.cityforest.Constants.CHOSEN_COORDINATE;
 import static com.zehava.cityforest.Constants.COORDINATE_CREATED;
 import static com.zehava.cityforest.Constants.CREATED_COORDINATE_FOR_ZOOM;
+import static com.zehava.cityforest.Constants.CURRENT_USER_NAME;
 
 public class CreateNewCoordinateActivity extends AppCompatActivity {
 
@@ -42,6 +46,7 @@ public class CreateNewCoordinateActivity extends AppCompatActivity {
     private Button cancelButt;
     private CheckBox isPointOfInterest;
     private Spinner typeOfPoint;
+    private String userhash;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +59,7 @@ public class CreateNewCoordinateActivity extends AppCompatActivity {
 
         Intent i = getIntent();
         chosenCoordinateLatLng = JsonParserManager.getInstance().retreiveLatLngFromJson(i.getStringExtra(CHOSEN_COORDINATE));
+        userhash = i.getStringExtra(CURRENT_USER_NAME);
         titleField = (EditText)findViewById(R.id.titleField);
         snippetField = (EditText)findViewById(R.id.SummaryField);
         isPointOfInterest = (CheckBox)findViewById(R.id.isPointOfInterestCheckbox);
@@ -68,13 +74,18 @@ public class CreateNewCoordinateActivity extends AppCompatActivity {
     }
 
     private void initiateSpinner(Spinner spinner,  int spinner_type){
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                spinner_type, R.layout.spinner_item);
-        // Specify the layout to use when the list of choices appears
+        ArrayList<String> temp = new ArrayList<>(Arrays.asList(getResources().getStringArray(spinner_type)));
+        PointsChooseAdapter adapter = new PointsChooseAdapter(this,temp);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        // Apply the adapter to the spinner
         spinner.setAdapter(adapter);
+
+        // Create an ArrayAdapter using the string array and a default spinner layout
+//        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+//                spinner_type, R.layout.spinner_item);
+//        // Specify the layout to use when the list of choices appears
+//        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//        // Apply the adapter to the spinner
+//        spinner.setAdapter(adapter);
     }
 
     private class CheckboxListener implements CompoundButton.OnCheckedChangeListener{
@@ -164,7 +175,8 @@ public class CreateNewCoordinateActivity extends AppCompatActivity {
                 chosenCoordinateLatLng.getLatitude(),
                 titleField.getText().toString(),
                 snippetField.getText().toString(),
-                typeOfPoint.getSelectedItem().toString());
+                typeOfPoint.getSelectedItem().toString(),
+                userhash);
 
         /*Converting our coordinate object to a map, that makes
         * the coordinate ready to be entered to the JSON tree*/

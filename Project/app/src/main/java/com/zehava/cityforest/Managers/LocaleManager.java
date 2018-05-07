@@ -14,10 +14,10 @@ import static android.content.Context.MODE_PRIVATE;
  */
 
 /**
- * adding multiple languages to app requires using locale to set the resource accurding to user choice
+ * adding multiple languages to app requires using locale to set the resource to user choice
  * on app creation we call setLocale to set the apps language
  * setting it to user last choice
- * when user changes the app languge we update Sharepprefrnces - holding user choice
+ * when user changes the app language we update SharedPreferences - holding user choice
  * default languge is english
  */
 

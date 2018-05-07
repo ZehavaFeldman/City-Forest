@@ -5,6 +5,7 @@ import com.mapbox.mapboxsdk.annotations.Marker;
 import com.mapbox.mapboxsdk.annotations.Polyline;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,14 +19,6 @@ public class Track {
     private double duration;
     private double length;
 
-
-    //    private String level;
-//    private String season;
-//    private boolean has_water;
-//    private boolean suitable_for_bikes;
-//    private boolean suitable_for_dogs;
-//    private boolean suitable_for_families;
-//    private boolean is_romantic;
     private Map<String,String> points_of_interest;
     private String additional_info;
     private String starting_point_JsonLatLng;
@@ -34,34 +27,19 @@ public class Track {
     private Map<String, Float> stars = new HashMap<>();
     private float  like_count = 0;
     private Map<String, Boolean> likes = new HashMap<>();
+    private List<String> waypoints;
+    private String userHashkey;
 
     public Track(){
 
     }
 
-    public Track(String route, String db_key, String track_name, String starting_point,
+    public Track(String route, List<String> waypointList, String db_key, String track_name, String starting_point,
                  String ending_point, double duration, double length,
                  String additional_info, String starting_point_JsonLatLng,
                  String ending_point_JsonLatLng,
-                 Map<String,String> points){
-
-        this.route = route;
-        this.db_key = db_key;
-        this.track_name = track_name;
-        this.starting_point = starting_point;
-        this.ending_point = ending_point;
-        this.duration = duration;
-        this.length = length;
-        this.additional_info = additional_info;
-        this.starting_point_JsonLatLng = starting_point_JsonLatLng;
-        this.ending_point_JsonLatLng = ending_point_JsonLatLng;
-        this.points_of_interest = points;
-    }
-
-    public Track(String route, String db_key, String track_name, String starting_point,
-                 String ending_point, double duration, double length,
-                 String additional_info, String starting_point_JsonLatLng,
-                 String ending_point_JsonLatLng
+                 Map<String,String> points,
+                 String userHashkey
                 ){
 
         this.route = route;
@@ -74,7 +52,64 @@ public class Track {
         this.additional_info = additional_info;
         this.starting_point_JsonLatLng = starting_point_JsonLatLng;
         this.ending_point_JsonLatLng = ending_point_JsonLatLng;
+        this.points_of_interest = points;
+        this.waypoints = waypointList;
+        this.userHashkey = userHashkey;
     }
+
+    public String getUserHashkey() {
+        return userHashkey;
+    }
+
+    public void setUserHashkey(String userHashkey) {
+        this.userHashkey = userHashkey;
+    }
+
+    public Track(String route, List<String> waypointList, String db_key, String track_name, String starting_point,
+                 String ending_point, double duration, double length,
+                 String additional_info, String starting_point_JsonLatLng,
+                 String ending_point_JsonLatLng,
+                 String userHashkey
+                ){
+
+        this.route = route;
+        this.db_key = db_key;
+        this.track_name = track_name;
+        this.starting_point = starting_point;
+        this.ending_point = ending_point;
+        this.duration = duration;
+        this.length = length;
+        this.additional_info = additional_info;
+        this.starting_point_JsonLatLng = starting_point_JsonLatLng;
+        this.ending_point_JsonLatLng = ending_point_JsonLatLng;
+        this.points_of_interest = new HashMap<>();
+        this.waypoints = waypointList;
+        this.userHashkey = userHashkey;
+    }
+
+    public Track(String db_key, String track_name, String starting_point,
+                 String ending_point, double duration, double length,
+                 String additional_info, String starting_point_JsonLatLng,
+                 String ending_point_JsonLatLng,
+                 String userHashkey
+    ){
+        this.db_key = db_key;
+        this.track_name = track_name;
+        this.starting_point = starting_point;
+        this.ending_point = ending_point;
+        this.duration = duration;
+        this.length = length;
+        this.additional_info = additional_info;
+        this.starting_point_JsonLatLng = starting_point_JsonLatLng;
+        this.ending_point_JsonLatLng = ending_point_JsonLatLng;
+        this.points_of_interest = new HashMap<>();
+        this.route = "";
+        this.waypoints = new ArrayList<>();
+        this.userHashkey = userHashkey;
+    }
+
+
+
 
     /*building the JSON branch in the database that will include the track*/
     public Map<String, Object> toMap(){
@@ -95,7 +130,8 @@ public class Track {
         result.put("like_count", this.like_count);
         result.put("likes", this.likes);
         result.put("points", this.points_of_interest);
-
+        result.put("waypoints", this.waypoints);
+        result.put("user_hashkey", this.userHashkey);
 
         return result;
     }
@@ -168,8 +204,16 @@ public class Track {
     public Map<String,String> getPoints_of_interest() {
         return points_of_interest;
     }
+    public List<String> getWaypoints() {
+        return waypoints;
+    }
 
-
+    public void setWaypoints(List<String> waypoints) {
+        this.waypoints = waypoints;
+    }
+    public void setWaypoints(ArrayList<String> waypoints) {
+        this.waypoints = waypoints;
+    }
     public void setRoute(String route){
         this.route = route;
     }

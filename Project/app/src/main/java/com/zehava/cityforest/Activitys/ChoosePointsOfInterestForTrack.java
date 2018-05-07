@@ -79,19 +79,22 @@ public class ChoosePointsOfInterestForTrack extends AppCompatActivity {
                         .build();
 
         adapter = new FirebasePointsListAdapter(options);
-        ListView points_list = (ListView) findViewById(R.id.pointsList);
+        final ListView points_list = (ListView) findViewById(R.id.pointsList);
+
 
         points_list.setOnItemClickListener(new android.widget.AdapterView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 PointOfInterest pointOfInterest = (PointOfInterest) parent.getItemAtPosition(position);
-                String pointkey = getMarkerHashKey(pointOfInterest.getPosition().getLatitude());
+                String pointkey = getMarkerHashKey(pointOfInterest.getPosition().getLongitude());
 
                 if (tracksPointsOfInterest.containsKey(pointkey))
                     tracksPointsOfInterest.remove(pointkey);
+
                 else
                     tracksPointsOfInterest.put(pointkey,pointOfInterest.getType());
 
+                adapter.setSelectedIndex(pointkey,pointkey);
 
 
 
@@ -109,6 +112,8 @@ public class ChoosePointsOfInterestForTrack extends AppCompatActivity {
 
                 Map jArray = (HashMap<String, String>) track.get("points");
                 if (jArray != null) {
+                    adapter.setSelectedIndex(jArray);
+
                     tracksPointsOfInterest.putAll(jArray);
 
                 }

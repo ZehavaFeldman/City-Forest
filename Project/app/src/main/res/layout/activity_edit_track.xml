@@ -47,7 +47,13 @@ android:weightSum="1">
             android:text="@string/starting_point_txt"
             android:textSize="20sp" />
 
-        <TextView
+        <!--<TextView-->
+            <!--android:id="@+id/startingPoint"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_weight="1"-->
+            <!--android:textSize="20sp"/>-->
+        <EditText
             android:id="@+id/startingPoint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -70,7 +76,15 @@ android:weightSum="1">
             android:text="@string/ending_point_txt"
             android:textSize="20sp" />
 
-        <TextView
+        <!--<TextView-->
+            <!--android:id="@+id/endingPoint"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:textSize="20sp"-->
+            <!--android:layout_weight="1" />-->
+
+
+        <EditText
             android:id="@+id/endingPoint"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

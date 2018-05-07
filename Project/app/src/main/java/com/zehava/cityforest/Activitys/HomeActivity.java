@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -15,6 +16,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -54,6 +56,15 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
+import com.facebook.AccessToken;
+import com.facebook.AccessTokenTracker;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
+import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
 import com.firebase.ui.storage.images.FirebaseImageLoader;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
@@ -63,6 +74,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -71,15 +83,20 @@ import com.google.firebase.storage.StorageReference;
 //import com.mapbox.mapboxsdk.plugins.cluster.clustering.ClusterManagerPlugin;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.UploadTask;
-import com.mapbox.mapboxsdk.MapboxAccountManager;
+import com.mapbox.api.directions.v5.models.DirectionsRoute;
+//import com.mapbox.mapboxsdk.MapboxAccountManager;
 
+import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.camera.CameraPosition;
 import com.zehava.cityforest.ICallback;
 import com.zehava.cityforest.Managers.IconManager;
 import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Managers.LocaleManager;
+import com.zehava.cityforest.Managers.PMethods;
 import com.zehava.cityforest.Models.Image;
 import com.zehava.cityforest.Models.PointOfInterest;
 import com.zehava.cityforest.Models.Track;
+import com.zehava.cityforest.Models.User;
 import com.zehava.cityforest.Models.UserUpdate;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -117,13 +134,10 @@ import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
 import com.mapbox.services.commons.geojson.LineString;
 import com.mapbox.services.commons.models.Position;
 
-import com.mapbox.services.directions.v5.models.DirectionsRoute;
 import com.zehava.cityforest.MoveablePointActivity;
 import com.zehava.cityforest.R;
 import com.zehava.cityforest.UpdatesManagerService;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 
 import java.sql.Date;
 import java.text.SimpleDateFormat;
@@ -139,12 +153,14 @@ import static com.zehava.cityforest.Constants.CURRENT_USER_NAME;
 import static com.zehava.cityforest.Constants.CURRENT_USER_UID;
 import static com.zehava.cityforest.Constants.DEFAULT_JERUSALEM_COORDINATE;
 import static com.zehava.cityforest.Constants.IMAGE_NAME;
+import static com.zehava.cityforest.Constants.LAST_LOCATION_SAVED;
 import static com.zehava.cityforest.Constants.MOVE_MARKER;
 import static com.zehava.cityforest.Constants.NEW_USER_UPDATE;
 import static com.zehava.cityforest.Constants.PICK_IMAGE_REQUEST;
 import static com.zehava.cityforest.Constants.RC_SIGN_IN;
 import static com.zehava.cityforest.Constants.ROUTE_LINE_WIDTH;
 import static com.zehava.cityforest.Constants.SELECTED_TRACK;
+import static com.zehava.cityforest.Constants.SET_FROM_PREFS;
 import static com.zehava.cityforest.Constants.SHOW_DETAILS_POPUP;
 import static com.zehava.cityforest.Constants.SHOW_TRACK_POPUP;
 import static com.zehava.cityforest.Constants.SHOW_UPDATE_POPUP;
@@ -171,6 +187,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     private DatabaseReference tracks;
     private DatabaseReference points_of_interest;
     private DatabaseReference user_updates;
+    private DatabaseReference usersRef;
     private DatabaseReference images;
 
     private FirebaseStorage storage;
@@ -187,7 +204,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     private PopupWindow mPopupWindow, mTrackPopupWindow;
     private RelativeLayout mRelativeLayout;
 
-    String uid,uname;
+    String uid,uname,userhash, owner;
     private FirebaseAuth mAuth;
     private StorageReference reallImgref;
 
@@ -201,7 +218,9 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     UpdatesManagerService myService;
 
     TextView title;
+    TextView update_owner;
     TextView discreption;
+    TextView username;
     Button track_details;
     Button read_more;
     ImageView pointOfInterestImageView;
@@ -210,19 +229,25 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     Map<String,Object> u_update;
     DirectionsRoute currRoute;
 
+    private CallbackManager callbackManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        FacebookSdk.sdkInitialize(getApplicationContext());
+        AppEventsLogger.activateApp(this);
+
 
         LocaleManager.setLocale(this);
         IconManager.getInstance().generateIcons(IconFactory.getInstance(this));
 
         /*Mapbox and firebase initializations*/
-//        Mapbox.getInstance(this, getString(R.string.access_token));
+        Mapbox.getInstance(this, getString(R.string.access_token));
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
-        MapboxAccountManager.start(this,getString(R.string.access_token));
+        //MapboxAccountManager.start(this,getString(R.string.access_token));
         setContentView(R.layout.activity_home);
 
         // Get the location engine object for later use.
@@ -237,6 +262,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         points_of_interest = database.getReference("points_of_interest");
         tracks = database.getReference("tracks");
         user_updates = database.getReference("user_updates");
+        usersRef = database.getReference("users");
         images = database.getReference("storage_images");
 
         iconFactory = IconFactory.getInstance(HomeActivity.this);
@@ -257,7 +283,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             @Override
             public void onClick(View view) {
                 if (map != null) {
-                    toggleGps(!map.isMyLocationEnabled());
+                    showCurrentLocation(false);
+
                 }
             }
         });
@@ -288,6 +315,29 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                 .build();
 
+        callbackManager = CallbackManager.Factory.create();
+
+        LoginManager.getInstance().registerCallback(callbackManager,
+            new FacebookCallback<LoginResult>() {
+                @Override
+                public void onSuccess(LoginResult loginResult) {
+
+                    handleFacebookAccessToken(loginResult.getAccessToken());
+                    // App code
+                }
+
+                @Override
+                public void onCancel() {
+                    // App code
+                }
+
+                @Override
+                public void onError(FacebookException exception) {
+                    // App code
+                }
+            });
+
+
         mAuth = FirebaseAuth.getInstance();
 
         loading_map_progress_bar.setVisibility(View.VISIBLE);
@@ -305,8 +355,13 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
 
     private void signIn() {
-        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-        startActivityForResult(signInIntent, RC_SIGN_IN);
+//
+//        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
+//        signInIntent.putExtra(SET_FROM_PREFS,true);
+//        startActivityForResult(signInIntent, RC_SIGN_IN);
+
+        LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("public_profile", "email"));
+
     }
 
 
@@ -320,6 +375,36 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             Toast.makeText(HomeActivity.this, "Authentication failed",
                     Toast.LENGTH_SHORT).show();
         }
+    }
+
+
+    private void handleFacebookAccessToken(AccessToken token) {
+
+        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            // Sign in success, update UI with the signed-in user's information
+                            Toast.makeText(HomeActivity.this, "Signed in successfully",
+                                    Toast.LENGTH_SHORT).show();
+
+                            userhash = PMethods.getInstance().createNewUser(usersRef,
+                                    FirebaseAuth.getInstance().getCurrentUser(),
+                                    AccessToken.getCurrentAccessToken().getToken());
+
+                            invalidateOptionsMenu();
+                        } else {
+                            // If sign in fails, display a message to the user.
+                            Toast.makeText(HomeActivity.this, "Authentication failed.",
+                                    Toast.LENGTH_SHORT).show();
+
+                        }
+
+
+                    }
+                });
     }
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
@@ -359,15 +444,12 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
             ArrayList<String> temp = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.spinner_list_item_array)));
 
-            //check if user has editor permissions, if not remove editor option
-            String userUid = currentUser.getUid();
-            if(!userUid.equals(getResources().getString(R.string.permitted_editor)) &&
-                    !userUid.equals(getResources().getString(R.string.permitted_editor2))) {
-                temp.remove(1);
-            }
-
             uname = currentUser.getDisplayName();
             uid = currentUser.getUid();
+            if (userhash == null){
+                userhash = uid;
+            }
+
             temp.add(0, uname);
 
             String carArr[] = temp.toArray(new String[temp.size()]);
@@ -388,14 +470,16 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
                     }
 
-                    if (position == 1) {
-                        signOut();
-                    }
-
                     //switch to editor mode
-                    if (position == 2) {
-                        Intent intent = new Intent(HomeActivity.this, EditorPanelActivity.class);
-                        startActivity(intent);
+                    if (position == 1) {
+                        if(uid == null){
+                            Toast.makeText(HomeActivity.this,getString(R.string.sign_in_message),Toast.LENGTH_LONG).show();
+                        }
+                        else {
+                            Intent intent = new Intent(HomeActivity.this, EditorPanelActivity.class);
+                            saveCameraPositionToPrefs();
+                            startActivity(intent);
+                        }
 
                     }
                 }
@@ -416,7 +500,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         Intent i;
         switch(item.getItemId()){
             case R.id.aboutActivity:
-                i = new Intent(this, MoveablePointActivity.class);
+                i = new Intent(this, MyNavigationActivity.class);
                 startActivity(i);
                 return true;
 
@@ -436,15 +520,15 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                 startActivity(i);
                 return true;
 
-            case R.id.makeOwnTrackActivity:
-
-                return true;
 
             case R.id.tracksActivity:
                 i = new Intent(this, TracksActivity.class);
                 startActivity(i);
                 return true;
 
+            case R.id.signOut:
+                signOut();
+                return true;
             case R.id.signIn:
                 signIn();
                 return true;
@@ -537,12 +621,17 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         public void onMapReady(MapboxMap mapboxMap) {
             map = mapboxMap;
 
-
-
             map.setOnMapClickListener(new MyOnMapClickListener());
-            map.setOnMarkerClickListener(new MyOnMarkerClickListener());
+            map.getMarkerViewManager().setOnMarkerViewClickListener (new MyOnMarkerClickListener());
             map.setStyleUrl(Style.OUTDOORS);
-            showDefaultLocation();
+            Intent intent = getIntent();
+            if(intent!= null && intent.getBooleanExtra(SET_FROM_PREFS,false)) {
+                setCameraPositionFromPrefs();
+            }
+//            showDefaultLocation();
+            else {
+                showCurrentLocation(true);
+            }
 
             showAllPointsOfInterest();
             showAllTracks();
@@ -649,13 +738,13 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
     private void drawRoute(DirectionsRoute route,int color) {
         // Convert LineString coordinates into LatLng[]
-        LineString lineString = LineString.fromPolyline(route.getGeometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
+        LineString lineString = LineString.fromPolyline(route.geometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
         List<Position> coordinates = lineString.getCoordinates();
         LatLng[] points = new LatLng[coordinates.size()];
         for (int i = 0; i < coordinates.size(); i++) {
             points[i] = new LatLng(
-                    coordinates.get(i).getLatitude(),
-                    coordinates.get(i).getLongitude());
+                    coordinates.get(i).getLatitude()/10,
+                    coordinates.get(i).getLongitude()/10);
         }
 
         // Draw Points on MapView
@@ -671,13 +760,13 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     }
 
     private Polyline getPolyLineFromRoute(DirectionsRoute route){
-        LineString lineString = LineString.fromPolyline(route.getGeometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
+        LineString lineString = LineString.fromPolyline(route.geometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
         List<Position> coordinates = lineString.getCoordinates();
         LatLng[] points = new LatLng[coordinates.size()];
         for (int i = 0; i < coordinates.size(); i++) {
             points[i] = new LatLng(
-                    coordinates.get(i).getLatitude(),
-                    coordinates.get(i).getLongitude());
+                    coordinates.get(i).getLatitude()/10,
+                    coordinates.get(i).getLongitude()/10);
         }
 
         // Draw Points on MapView
@@ -721,7 +810,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                         drawRoute(currRoute,Color.RED);
 
                         SHOW_TRACK_POPUP = false;
-                        showDefaultLocation();
+                        //showDefaultLocation();
+                        showCurrentLocation(true);
                     }
 
 
@@ -748,7 +838,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                     //SHOW_TRACK_POPUP = true;
                     mTrackPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
                 }
-                showDefaultLocation();
+                //showDefaultLocation();
+                showCurrentLocation(true);
 
             }
         });
@@ -857,7 +948,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         mTrackPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
     }
 
-    private void initMarkerPopup(final Marker marker, final String type, final String imageUUID){
+    private void initMarkerPopup(final Marker marker, final String type, final String imageUUID, final String userHashkey){
         expand=false;
         expandable=true;
 
@@ -867,6 +958,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
         title = mPopupWindow.getContentView().findViewById(R.id.main_content);
         discreption = mPopupWindow.getContentView().findViewById(R.id.minor_content);
+        username = mPopupWindow.getContentView().findViewById(R.id.user_id);
         read_more = mPopupWindow.getContentView().findViewById(R.id.read_more);
         camera = mPopupWindow.getContentView().findViewById(R.id.camera);
         cancle = mPopupWindow.getContentView().findViewById(R.id.cancle);
@@ -874,7 +966,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         uploadImage = mPopupWindow.getContentView().findViewById(R.id.upload_imge);
         pointOfInterestImageView = mPopupWindow.getContentView().findViewById(R.id.firebase_storage_image);
 
-        final String imageName = getMarkerHashKey(marker);
+        final String imageName = PMethods.getInstance().getMarkerHashKey(marker);
         if(imageUUID != null) {
             reallImgref = storageReference.child(imageUUID);
         }
@@ -928,7 +1020,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                 @Override
                 public void onClick(View view) {
                     Intent intent = new Intent(HomeActivity.this, PointOfInterestGallary.class);
-                    intent.putExtra(IMAGE_NAME, getMarkerHashKey(marker));
+                    intent.putExtra(IMAGE_NAME, PMethods.getInstance().getMarkerHashKey(marker));
                     startActivity(intent);
                 }
             });
@@ -943,13 +1035,35 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                             marker.getPosition().getLatitude(),
                             marker.getTitle(),
                             marker.getSnippet(),
-                            type);
-                    uploadImage(getMarkerHashKey(marker), pointOfInterest);
+                            type,
+                            userHashkey);
+                    uploadImage(PMethods.getInstance().getMarkerHashKey(marker), pointOfInterest);
                 }
             });
         }
         title.setText(marker.getTitle());
         discreption.setText(marker.getSnippet());
+
+        DatabaseReference childref = usersRef.child(userHashkey);
+
+        childref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Map<String, Object> userMap = (Map<String, Object>)dataSnapshot.getValue();
+                if(userMap == null) {
+                    return;
+                }
+
+
+                username.setText((String) userMap.get("email"));
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
 
         read_more.setVisibility(View.INVISIBLE);
         read_more.setOnClickListener(new View.OnClickListener() {
@@ -1038,7 +1152,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         title.setText(update.getTitle());
 
         
-        final String key = getUserUpdateHashKey(update);
+        final String key = PMethods.getInstance().getUserUpdateHashKey(update);
         user_updates.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -1047,18 +1161,40 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
                 u_update = (Map<String,Object>)updates.get(key);
                 if(u_update!=null){
-                    String created, owner;
+                    String created;
                     Date time;
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yy | HH:mm");
 
                     TextView update_created = mPopupWindow.getContentView().findViewById(R.id.created);
-                    TextView update_owner= mPopupWindow.getContentView().findViewById(R.id.owner);
-                    if(u_update.get("uname")!=null && u_update.get("updated")!=null) {
-                        owner = getResources().getString(R.string.created_by) + ": " + u_update.get("uname").toString();
-                        time = new Date(((Number) u_update.get("updated")).longValue()*1000);
-                        created =  getResources().getString(R.string.at)+": "+dateFormat.format(time);
+                    update_owner= mPopupWindow.getContentView().findViewById(R.id.owner);
+                    if(u_update.get("uuid")!=null && u_update.get("updated")!=null) {
+
+                        DatabaseReference childref = usersRef.child((String) u_update.get("uuid"));
+
+                        childref.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                Map<String, Object> userMap = (Map<String, Object>)dataSnapshot.getValue();
+                                if(userMap == null) {
+                                    return;
+                                }
+
+
+                                owner = getResources().getString(R.string.created_by) + ": " + userMap.get("name");
+                                update_owner.setText(owner);
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
+                            }
+                        });
+
+                        time = new Date(((Number) u_update.get("updated")).longValue() * 1000);
+                        created = getResources().getString(R.string.at) + ": " + dateFormat.format(time);
                         update_created.setText(created);
-                        update_owner.setText(owner);
+
+
                     }
 
                     ImageView img = mPopupWindow.getContentView().findViewById(R.id.img);
@@ -1101,7 +1237,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                                 while(allMarkersIterator.hasNext()) {
                                     Marker markerItemAll = allMarkersIterator.next();
 
-                                    if (getUserUpdateHashKey(markerItemAll).equals(key)) {
+                                    if (PMethods.getInstance().getUserUpdateHashKey(markerItemAll).equals(key)) {
                                         allMarkersIterator.remove();
                                         map.removeMarker(markerItemAll);
                                     }
@@ -1139,7 +1275,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                                 }
 
                             }
-                            Toast.makeText(HomeActivity.this, "Notification reoved.",
+                            Toast.makeText(HomeActivity.this, "Notification removed.",
                                     Toast.LENGTH_LONG).show();
                             mPopupWindow.dismiss();
                         }
@@ -1360,7 +1496,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                                                 Marker markerItemAll = allMarkersIterator.next();
 
 //                                                for (String point : pointsL) {
-                                                String markerKey = getMarkerHashKey(markerItemAll);
+                                                String markerKey = PMethods.getInstance().getMarkerHashKey(markerItemAll);
                                                 if (pointsL.containsKey(markerKey)) {
                                                     String large = pointsL.get(markerKey)+ " ג";
                                                     markerItemAll.setIcon(IconManager.getInstance().getIconForType(large));
@@ -1394,15 +1530,17 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
 
     /*Marker clicked listener.*/
-    private class MyOnMarkerClickListener implements MapboxMap.OnMarkerClickListener{
+    private class MyOnMarkerClickListener implements MapboxMap.OnMarkerViewClickListener{
+
         @Override
-        public boolean onMarkerClick(@NonNull final Marker marker) {
+        public boolean onMarkerClick(@NonNull final Marker marker, @NonNull View view, @NonNull MapboxMap.MarkerViewAdapter adapter) {
+
             if(points_for_track.isEmpty())
                 mTrackPopupWindow.dismiss();
             map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(marker.getPosition().getLatitude(),
                     marker.getPosition().getLongitude()), ZOOM_LEVEL_MARKER_CLICK));
 
-            final String key = getMarkerHashKey(marker);
+            final String key = PMethods.getInstance().getMarkerHashKey(marker);
             points_of_interest.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
@@ -1411,12 +1549,14 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                     if(point != null) {
                         String type = (String) point.get("type");
                         String imageUUId = (String) point.get("imagePath");
-                        if (!type.equals("תחנת רכבת")) {
-                            SHOW_DETAILS_POPUP = true;
-                            mTrackPopupWindow.dismiss();
-                            initMarkerPopup(marker, type,imageUUId);
+                        String uuid = (String) point.get("uuid");
+                        uuid = uuid== null ? "" : uuid;
+//                        if (!type.equals("תחנת רכבת")) {
+                        SHOW_DETAILS_POPUP = true;
+                        mTrackPopupWindow.dismiss();
+                        initMarkerPopup(marker, type,imageUUId, uuid);
 
-                        }
+//                        }
                     }
                     else{
                         SHOW_DETAILS_POPUP = true;
@@ -1451,27 +1591,11 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
 
     }
-    
 
-
-    private String getMarkerHashKey(final Marker marker) {
-        double longitude = marker.getPosition().getLongitude();
-        //double latitude = chosenCoordinateLatLng.getLatitude();
-
-        int hash = (int) (10000000*longitude);
-        return "" + hash;
+    private boolean checkIfTransportaionSation(String type){
+        return type.equals("תחנת רכבת") || type.equals("תחנת אוטובוס")
+                || type.equalsIgnoreCase("Train Station") || type.equalsIgnoreCase("Bus Station");
     }
-
-    private String getUserUpdateHashKey(final Marker marker) {
-        int id =IconManager.getInstance().getIdForType(marker.getTitle());
-        double longitude = marker.getPosition().getLongitude();
-        //double latitude = chosenCoordinateLatLng.getLatitude();
-
-        long hash = ((long) (100000000*longitude))+id;
-        return "" + hash;
-    }
-
-
 
 
 
@@ -1488,6 +1612,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         } else {
             Toast.makeText(this, "You didn't grant location permissions.",
                     Toast.LENGTH_LONG).show();
+            enableLocation(false);
             finish();
         }
     }
@@ -1497,25 +1622,42 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     private void toggleLanguage() {
 
         LocaleManager.toggaleLang(this);
-
+        saveCameraPositionToPrefs();
 
         Intent intent = getIntent();
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        intent.putExtra(SET_FROM_PREFS,true);
         finish();
         startActivity(intent);
 
     }
 
 
-    private void showDefaultLocation(){
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                new LatLng(DEFAULT_JERUSALEM_COORDINATE.getLatitude(),
-                        DEFAULT_JERUSALEM_COORDINATE.getLongitude()), 12));
+    private void showLastLocation(){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String lastLocationString  = prefs.getString(LAST_LOCATION_SAVED,"");
+        if(lastLocationString.equalsIgnoreCase("")){
+            showDefaultLocation();
+        }
+        else{
+            LatLng lastSavedLocation = JsonParserManager.getInstance().retreiveLatLngFromJson(lastLocationString);
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                    lastSavedLocation,ZOOM_LEVEL_CURRENT_LOCATION));
+
+        }
     }
 
 
-    private void toggleGps(boolean enableGps) {
-        if (enableGps) {
+    private void showCurrentLocation(boolean enableGps) {
+        Location location = getLastLocation();
+        if(location == null){
+            if(enableGps)
+                showLastLocation();
+            floatingActionButton.setImageResource(R.drawable.ic_location_disabled_24dp);
+            map.setMyLocationEnabled(true);
+
+        }else {
+//        if (enableGps) {
             // Check if user has granted location permission
             permissionsManager = new PermissionsManager(this);
             if (!PermissionsManager.areLocationPermissionsGranted(this)) {
@@ -1523,11 +1665,51 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             } else {
                 enableLocation(true);
             }
-        } else {
-            enableLocation(false);
-            showDefaultLocation();
         }
+
     }
+
+
+    private void showDefaultLocation(){
+        map.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                new LatLng(DEFAULT_JERUSALEM_COORDINATE.getLatitude(),
+                        DEFAULT_JERUSALEM_COORDINATE.getLongitude()), ZOOM_LEVEL_CURRENT_LOCATION));
+    }
+
+
+    public void setCameraPositionFromPrefs() {
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        LatLng target = JsonParserManager.getInstance().retreiveLatLngFromJson(preferences.getString("targetJSON",""));
+        Float zoom = preferences.getFloat("zoom",ZOOM_LEVEL_CURRENT_LOCATION);
+        Float tilt = preferences.getFloat("tilt", 0);
+        Float bearing = preferences.getFloat("bearing",0);
+
+        map.animateCamera(CameraUpdateFactory.newCameraPosition(
+                new CameraPosition.Builder()
+                        .target(target)
+                        .bearing(bearing)
+                        .tilt(tilt)
+                        .zoom(zoom)
+                        .build()));
+    }
+
+    public void saveCameraPositionToPrefs() {
+
+        CameraPosition cameraP = map.getCameraPosition();
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = preferences.edit();
+
+        editor.putString("targetJSON",JsonParserManager.getInstance().castLatLngToJson(cameraP.target));
+        editor.putFloat("zoom",(float)cameraP.zoom);
+        editor.putFloat("tilt",(float)cameraP.tilt);
+        editor.putFloat("bearing",(float)cameraP.bearing);
+
+        editor.apply();
+
+    }
+
 
     private void enableLocation(boolean enabled) {
         if (enabled) {
@@ -1538,6 +1720,11 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             Location lastLocation = locationEngine.getLastLocation();
             if (lastLocation != null) {
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLocation), ZOOM_LEVEL_CURRENT_LOCATION));
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(HomeActivity.this);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString(LAST_LOCATION_SAVED,JsonParserManager.getInstance().castLatLngToJson(new LatLng(lastLocation)));
+                editor.apply();
+                floatingActionButton.setImageResource(R.drawable.ic_my_location_24dp);
             }
 
             locationEngineListener = new LocationEngineListener() {
@@ -1555,19 +1742,25 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                         // listener is registered again and will adjust the camera once again.
                         map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location), ZOOM_LEVEL_CURRENT_LOCATION));
                         locationEngine.removeLocationEngineListener(this);
+
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(HomeActivity.this);
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putString(LAST_LOCATION_SAVED,JsonParserManager.getInstance().castLatLngToJson(new LatLng(location)));
+                        editor.apply();
                     }
                 }
             };
             locationEngine.addLocationEngineListener(locationEngineListener);
 
-            floatingActionButton.setImageResource(R.drawable.ic_location_disabled_24dp);
-        } else {
-            floatingActionButton.setImageResource(R.drawable.ic_my_location_24dp);
 
+        } else {
+            floatingActionButton.setImageResource(R.drawable.ic_location_disabled_24dp);
+           // floatingActionButton.setImageResource(R.drawable.ic_my_location_24dp);
         }
         // Enable or disable the location layer on the map
-        map.setMyLocationEnabled(enabled);
+       map.setMyLocationEnabled(enabled);
     }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -1586,8 +1779,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                 Location lastLocation = getLastLocation();
                 if(lastLocation!= null) {
                     Intent i = new Intent(HomeActivity.this, CreateUserUpdateActivity.class);
-                    i.putExtra(CURRENT_USER_UID, uid);
-                    i.putExtra(CURRENT_USER_NAME, uname);
+                    i.putExtra(CURRENT_USER_NAME, userhash);
                     i.putExtra(UPDATE_POSITION, JsonParserManager.getInstance().castLatLngToJson(new LatLng(lastLocation)));
                     startActivityForResult(i, NEW_USER_UPDATE);
                 }
@@ -1600,8 +1792,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             Location lastLocation = getLastLocation();
             if(lastLocation!= null) {
                 Intent i = new Intent(HomeActivity.this, CreateUserUpdateActivity.class);
-                i.putExtra(CURRENT_USER_UID, uid);
-                i.putExtra(CURRENT_USER_NAME, uname);
+                i.putExtra(CURRENT_USER_NAME, userhash);
                 i.putExtra(UPDATE_POSITION, JsonParserManager.getInstance().castLatLngToJson(new LatLng(lastLocation)));
                 startActivityForResult(i, NEW_USER_UPDATE);
             }
@@ -1633,6 +1824,21 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     /*Method signs out user's google account*/
     private void signOut() {
         FirebaseAuth.getInstance().signOut();
+
+        AccessTokenTracker accessTokenTracker = new AccessTokenTracker() {
+            @Override
+            protected void onCurrentAccessTokenChanged(
+                    AccessToken oldAccessToken,
+                    AccessToken currentAccessToken) {
+
+                if (currentAccessToken == null){
+                    //User logged out
+
+                    LoginManager.getInstance().logOut();
+                    invalidateOptionsMenu();
+                }
+            }
+        };
         Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
                 new ResultCallback<Status>() {
                     @Override
@@ -1703,7 +1909,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         try {
-            super.onActivityResult(requestCode, resultCode, data);
+//            super.onActivityResult(requestCode, resultCode, data);
 
             // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
             if (requestCode == RC_SIGN_IN) {
@@ -1725,6 +1931,10 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
 
             }
+            else{
+                callbackManager.onActivityResult(requestCode, resultCode, data);
+            }
+            super.onActivityResult(requestCode, resultCode, data);
 
 
         } catch (Exception ex) {Toast.makeText(HomeActivity.this, ex.toString(),

@@ -19,20 +19,16 @@ public class UserUpdate extends PointOfInterest{
 
     private long updated_time;
     private long update_time_space;
-    private String uid;
-    private String uname;
 
 
     public UserUpdate(){
 
     }
 
-    public UserUpdate(String uid, String uname, String type, String snippet, double coX, double coY){
+    public UserUpdate(String uuid, String type, String snippet, double coX, double coY){
 
-        super(coX, coY, type, snippet, type);
+        super(coX, coY, type, snippet, type, uuid);
 
-        this.uid = uid;
-        this.uname = uname;
         this.updated_time = System.currentTimeMillis()/1000;
 
         setTimeSpace(type);
@@ -44,8 +40,7 @@ public class UserUpdate extends PointOfInterest{
         result.put("title", this.title);
         result.put("snippet", this.snippet);
         result.put("type", this.type);
-        result.put("uid", this.uid);
-        result.put("uname", this.uname);
+        result.put("uuid", this.uuid);
         result.put("updated", this.updated_time);
         result.put("update_time_space", this.update_time_space);
 

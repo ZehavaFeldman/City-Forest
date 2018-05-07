@@ -4,11 +4,13 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.location.Location;
 import android.os.Build;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
@@ -43,18 +45,31 @@ import android.widget.RatingBar;
 import android.widget.LinearLayout;
 
 //import com.mapbox.mapboxsdk.Mapbox;
+import com.facebook.AccessToken;
 import com.google.firebase.auth.FirebaseUser;
-import com.mapbox.mapboxsdk.MapboxAccountManager;
-import com.mapbox.services.geocoding.v5.GeocodingCriteria;
-import com.mapbox.services.geocoding.v5.MapboxGeocoding;
-import com.mapbox.services.geocoding.v5.models.CarmenFeature;
-import com.mapbox.services.geocoding.v5.models.GeocodingResponse;
+import com.mapbox.api.directions.v5.DirectionsCriteria;
+import com.mapbox.api.directions.v5.MapboxDirections;
+import com.mapbox.api.directions.v5.models.DirectionsResponse;
+import com.mapbox.api.directions.v5.models.DirectionsRoute;
+import com.mapbox.api.directions.v5.models.DirectionsWaypoint;
+import com.mapbox.geojson.Point;
+//import com.mapbox.mapboxsdk.MapboxAccountManager;
+import com.mapbox.mapboxsdk.Mapbox;
+import com.mapbox.mapboxsdk.camera.CameraPosition;
 
+
+import com.mapbox.services.android.navigation.v5.navigation.NavigationRoute;
+import com.mapbox.services.api.ServicesException;
+import com.mapbox.services.api.geocoding.v5.GeocodingCriteria;
+import com.mapbox.services.api.geocoding.v5.MapboxGeocoding;
+import com.mapbox.services.api.geocoding.v5.models.CarmenFeature;
+import com.mapbox.services.api.geocoding.v5.models.GeocodingResponse;
 import com.zehava.cityforest.DragAndDrop;
 import com.zehava.cityforest.ICallback;
 import com.zehava.cityforest.Managers.IconManager;
 import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Managers.LocaleManager;
+import com.zehava.cityforest.Managers.PMethods;
 import com.zehava.cityforest.Models.Coordinate;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -86,14 +101,11 @@ import com.mapbox.services.android.telemetry.location.LocationEngine;
 import com.mapbox.services.android.telemetry.location.LocationEngineListener;
 import com.mapbox.services.android.telemetry.permissions.PermissionsListener;
 import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
-import com.mapbox.services.commons.ServicesException;
 import com.mapbox.services.commons.geojson.LineString;
 import com.mapbox.services.commons.models.Position;
-import com.mapbox.services.directions.v5.DirectionsCriteria;
-import com.mapbox.services.directions.v5.MapboxDirections;
-import com.mapbox.services.directions.v5.models.DirectionsResponse;
-import com.mapbox.services.directions.v5.models.DirectionsRoute;
+
 import com.zehava.cityforest.Models.PointOfInterest;
+import com.zehava.cityforest.Models.User;
 import com.zehava.cityforest.MoveablePointActivity;
 import com.zehava.cityforest.R;
 
@@ -117,6 +129,7 @@ import static com.zehava.cityforest.Constants.COORDINATE_EDITED;
 import static com.zehava.cityforest.Constants.COORDINATE_KEY;
 import static com.zehava.cityforest.Constants.CREATED_COORDINATE_FOR_ZOOM;
 import static com.zehava.cityforest.Constants.CREATED_UPDATE_FOR_ZOOM;
+import static com.zehava.cityforest.Constants.CURRENT_USER_NAME;
 import static com.zehava.cityforest.Constants.CURRENT_USER_UID;
 import static com.zehava.cityforest.Constants.DEFAULT_JERUSALEM_COORDINATE;
 import static com.zehava.cityforest.Constants.DELETE_COORDINATE_MODE;
@@ -124,18 +137,22 @@ import static com.zehava.cityforest.Constants.EDITED_COORDINATE_FOR_ZOOM;
 import static com.zehava.cityforest.Constants.EDIT_COORDINATE;
 import static com.zehava.cityforest.Constants.EDIT_COORDINATE_MODE;
 import static com.zehava.cityforest.Constants.FINISH_EDIT_TRACK_MODE;
+import static com.zehava.cityforest.Constants.LAST_LOCATION_SAVED;
 import static com.zehava.cityforest.Constants.MAX_NUM_OF_TRACK_COORDINATES;
 import static com.zehava.cityforest.Constants.MOVE_MARKER;
 import static com.zehava.cityforest.Constants.NEW_COORDINATE;
 import static com.zehava.cityforest.Constants.NEW_TRACK;
 import static com.zehava.cityforest.Constants.NEW_USER_UPDATE;
 import static com.zehava.cityforest.Constants.ROUTE_LINE_WIDTH;
+import static com.zehava.cityforest.Constants.SET_FROM_PREFS;
 import static com.zehava.cityforest.Constants.SHOW_DETAILS_POPUP;
+import static com.zehava.cityforest.Constants.SHOW_TRACK_POPUP;
 import static com.zehava.cityforest.Constants.TRACK_EDIT;
 import static com.zehava.cityforest.Constants.TRACK_ENDING_POINT;
 import static com.zehava.cityforest.Constants.TRACK_ENDING_POINT_NAME;
 import static com.zehava.cityforest.Constants.TRACK_STARTING_POINT;
 import static com.zehava.cityforest.Constants.TRACK_STARTING_POINT_NAME;
+import static com.zehava.cityforest.Constants.TRACK_WAYPOINTS;
 import static com.zehava.cityforest.Constants.UPDATE_POSITION;
 import static com.zehava.cityforest.Constants.USER_UPDATE_CREATED;
 import static com.zehava.cityforest.Constants.ZOOM_LEVEL_CURRENT_LOCATION;
@@ -147,6 +164,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     private MapView mapView;
     private MapboxMap map;
     private DirectionsRoute currentRoute;
+    private List<DirectionsWaypoint> currentRouteWaypoints;
     private PolylineOptions routeLine;
     private FirebaseDatabase database;
     private DatabaseReference coordinates;
@@ -158,6 +176,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     private ImageButton edit_coordinate_button;
     private ImageButton add_track_button;
     private Button finish_edit_track_butt;
+    private Button cancale_track_butt;
     private Button save_track;
     private Button continue_editing;
     private ImageButton edit_tracks_button;
@@ -169,7 +188,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     private int markerIndex;
     private ArrayList<Double> track_coordinates = new ArrayList<>();
     private ArrayList<Marker> track_markers = new ArrayList<>();
-    private ArrayList<Position> track_positions = new ArrayList<>();
+    private ArrayList<LatLng> track_positions = new ArrayList<>();
 
     private FloatingActionButton floatingActionButton;
     private FloatingActionButton createUserUpdate;
@@ -193,7 +212,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
     private HashMap<String, String> stations = new HashMap();
 
-    String uid;
+    String uid, userhash;
 
 
     @Override
@@ -206,7 +225,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         /*Mapbox initializations*/
-        MapboxAccountManager.start(this,getString(R.string.access_token));
+        //MapboxAccountManager.start(this,getString(R.string.access_token));
+        Mapbox.getInstance(this, getString(R.string.access_token));
         setContentView(R.layout.activity_editor_panel);
 
         // Get the location engine object for later use.
@@ -214,6 +234,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         locationEngine.activate();
 
         IconManager.getInstance().generateIcons(IconFactory.getInstance(this));
+
 
         mapView = (MapView) findViewById(R.id.mapview);
         mapView.onCreate(savedInstanceState);
@@ -236,11 +257,13 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         tracks = database.getReference("tracks");
         user_updates = database.getReference("user_updates");
 
+
         /*Buttons for different edit map modes*/
         add_coordinate_button = findViewById(R.id.addCoordinateButt);
         add_track_button = findViewById(R.id.addTrackButt);
         loading_map_progress_bar = findViewById(R.id.loadingMapProgress);
         finish_edit_track_butt = findViewById(R.id.finishEditTrack);
+        cancale_track_butt = findViewById(R.id.cancleTrack);
         save_track = findViewById(R.id.saveTrack);
         continue_editing = findViewById(R.id.continueEditTrack);
         counter_coordinates = findViewById(R.id.counterCoordinates);
@@ -250,6 +273,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         add_coordinate_button.setOnClickListener(clickListener);
         add_track_button.setOnClickListener(clickListener);
         finish_edit_track_butt.setOnClickListener(clickListener);
+        cancale_track_butt.setOnClickListener(clickListener);
         save_track.setOnClickListener(clickListener);
         continue_editing.setOnClickListener(clickListener);
 
@@ -265,6 +289,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         counter_coordinates.setVisibility(View.INVISIBLE);
         finish_edit_track_butt.setVisibility(View.INVISIBLE);
         save_track.setVisibility(View.INVISIBLE);
+        cancale_track_butt.setVisibility(View.INVISIBLE);
         continue_editing.setVisibility(View.INVISIBLE);
 
         floatingActionButton = (FloatingActionButton) findViewById(R.id.location_toggle_fab);
@@ -272,7 +297,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             @Override
             public void onClick(View view) {
                 if (map != null) {
-                    toggleGps(!map.isMyLocationEnabled());
+                    showCurrentLocation(false);
                 }
             }
         });
@@ -282,7 +307,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(EditorPanelActivity.this, CreateUserUpdateActivity.class);
-                i.putExtra(CURRENT_USER_UID, uid);
+                i.putExtra(CURRENT_USER_NAME, userhash);
 
                 if (ActivityCompat.checkSelfPermission(EditorPanelActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(EditorPanelActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     // TODO: Consider calling
@@ -320,8 +345,11 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 .build();
         mGoogleApiClient.connect();
         final FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if(currentUser != null)
-           uid = currentUser.getUid();
+        if(currentUser != null) {
+            uid = currentUser.getUid();
+            userhash = uid;
+        }
+
         super.onStart();
     }
 
@@ -432,56 +460,12 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
             if(v.getId() == add_track_button.getId()){
                 if(ADD_TRACK_MODE){
-                    ADD_TRACK_MODE = false;
-                    add_track_button.setBackgroundResource(R.drawable.not_selected_btn);
-
-                    /*
-                    Passing on track_coordinates markers
-                    * and change their color back to red.
-                    * And clearing both arrays for the next time building a new track*/
-
-                    for(int i=0; i<track_markers.size(); i++){
-                        final Marker marker = track_markers.get(i);
-                        if(stations.containsKey(marker.getTitle()))
-                            marker.setIcon(IconManager.getInstance().getIconForType(stations.get(marker.getTitle())));
-
-                        else{
-                            DatabaseReference chldRef = points_of_interest.child(getMarkerHashKey(marker));
-                            chldRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                    Map<String, Object> point = (Map<String, Object>)dataSnapshot.getValue();
-                                    if(point == null)
-                                        marker.setIcon(IconManager.getInstance().getIconForType("default"));
-                                    else marker.setIcon(IconManager.getInstance().getIconForType((String)point.get("type")));
-                                }
-
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
-
-                                }
-                            });
-
-
-                        }
-
-                    }
-                    track_coordinates.clear();
-                    track_markers.clear();
-                    track_positions.clear();
-                    count_coordinates_selected = 0;
-
-                    counter_coordinates.setVisibility(View.INVISIBLE);
-                    finish_edit_track_butt.setVisibility(View.INVISIBLE);
-                    save_track.setVisibility(View.INVISIBLE);
-                    continue_editing.setVisibility(View.INVISIBLE);
-
-                    add_coordinate_button.setClickable(true);
-
+                    cancaleTrack();
                 }
                 else{
                     ADD_COORDINATE_MODE = false;
                     SHOW_DETAILS_POPUP = false;
+                    SHOW_TRACK_POPUP = false;
                     ADD_TRACK_MODE = true;
 
                     add_coordinate_button.setBackgroundResource(R.drawable.not_selected_btn);
@@ -491,6 +475,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     updateScreenCounter();
                     counter_coordinates.setVisibility(View.VISIBLE);
                     finish_edit_track_butt.setVisibility(View.VISIBLE);
+                    cancale_track_butt.setVisibility(View.VISIBLE);
                     add_coordinate_button.setClickable(false);
 
                 }
@@ -503,31 +488,32 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     return;
                 }
 
-                final String last_marker_key = getMarkerHashKey(track_markers.get(track_markers.size()-1));
-                points_of_interest.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
-                        if(pointsMap == null) {
-                            Toast.makeText(EditorPanelActivity.this, R.string.toast_ending_point, Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        Map<String, Object> point = ((Map<String, Object>)pointsMap.get(last_marker_key));
-
-                        if(point == null){
-                            Toast.makeText(EditorPanelActivity.this, R.string.toast_ending_point, Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-
-                        String type = (String)point.get("type");
-                        if(!checkIfTransportaionSation(type)){
-                            Toast.makeText(EditorPanelActivity.this, R.string.toast_ending_point, Toast.LENGTH_SHORT).show();
-                            return;
-                        }
+//                final String last_marker_key = getMarkerHashKey(track_markers.get(track_markers.size()-1));
+//                points_of_interest.addListenerForSingleValueEvent(new ValueEventListener() {
+//                    @Override
+//                    public void onDataChange(DataSnapshot dataSnapshot) {
+//                        Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
+//                        if(pointsMap == null) {
+//                            Toast.makeText(EditorPanelActivity.this, R.string.toast_ending_point, Toast.LENGTH_SHORT).show();
+//                            return;
+//                        }
+//                        Map<String, Object> point = ((Map<String, Object>)pointsMap.get(last_marker_key));
+//
+//                        if(point == null){
+//                            Toast.makeText(EditorPanelActivity.this, R.string.toast_ending_point, Toast.LENGTH_SHORT).show();
+//                            return;
+//                        }
+//
+//                        String type = (String)point.get("type");
+//                        if(!checkIfTransportaionSation(type)){
+//                            Toast.makeText(EditorPanelActivity.this, R.string.toast_ending_point, Toast.LENGTH_SHORT).show();
+//                            return;
+//                        }
 
                         //here we turn off ADD_TRACK_MODE
                         ADD_TRACK_MODE = false;
                         SHOW_DETAILS_POPUP = false;
+                        SHOW_TRACK_POPUP = false;
                         add_track_button.setClickable(false);
                         FINISH_EDIT_TRACK_MODE = true;
                         finish_edit_track_butt.setVisibility(View.INVISIBLE);
@@ -548,12 +534,12 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                         map.animateCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds, 200), 100);
 
 
-                    }
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
-                });
+//                    }
+//                    @Override
+//                    public void onCancelled(DatabaseError databaseError) {
+//
+//                    }
+              //  });
             }
             if(v.getId() == continue_editing.getId()){
                 //here we turn on ADD_TRACK_MODE
@@ -562,21 +548,85 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 save_track.setVisibility(View.INVISIBLE);
                 continue_editing.setVisibility(View.INVISIBLE);
                 finish_edit_track_butt.setVisibility(View.VISIBLE);
+                cancale_track_butt.setVisibility(View.VISIBLE);
 
 
                 map.removePolyline(routeLine.getPolyline());
             }
+            if(v.getId() == cancale_track_butt.getId()){
+
+                cancaleTrack();
+            }
             if(v.getId() == save_track.getId()){
+
+
                 Intent i = new Intent(EditorPanelActivity.this, CreateNewTrackActivity.class);
                 i.putExtra(CHOSEN_TRACK, JsonParserManager.getInstance().castRouteToJson(currentRoute));
                 i.putExtra(TRACK_STARTING_POINT, JsonParserManager.getInstance().castLatLngToJson(track_markers.get(0).getPosition()));
                 i.putExtra(TRACK_ENDING_POINT, JsonParserManager.getInstance().castLatLngToJson(track_markers.get(track_markers.size()-1).getPosition()));
                 i.putExtra(TRACK_STARTING_POINT_NAME, track_markers.get(0).getTitle());
                 i.putExtra(TRACK_ENDING_POINT_NAME, track_markers.get(track_markers.size()-1).getTitle());
+                i.putExtra(CURRENT_USER_NAME, userhash);
+                i.putStringArrayListExtra(TRACK_WAYPOINTS,JsonParserManager.getInstance().castListToJson(currentRouteWaypoints));
                 startActivityForResult(i, NEW_TRACK);
             }
 
         }
+    }
+
+    private void cancaleTrack(){
+        ADD_TRACK_MODE = false;
+        add_track_button.setBackgroundResource(R.drawable.not_selected_btn);
+
+                    /*
+                    Passing on track_coordinates markers
+                    * and change their color back to red.
+                    * And clearing both arrays for the next time building a new track*/
+
+        for(int i=0; i<track_markers.size(); i++){
+            final Marker marker = track_markers.get(i);
+            if(stations.containsKey(marker.getTitle()))
+                marker.setIcon(IconManager.getInstance().getIconForType(stations.get(marker.getTitle())));
+
+            else{
+                DatabaseReference chldRef = points_of_interest.child(getMarkerHashKey(marker));
+                chldRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        Map<String, Object> point = (Map<String, Object>)dataSnapshot.getValue();
+                        if(point == null)
+                            marker.setIcon(IconManager.getInstance().getIconForType("default"));
+                        else marker.setIcon(IconManager.getInstance().getIconForType((String)point.get("type")));
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
+
+            }
+
+        }
+        track_coordinates.clear();
+        track_markers.clear();
+        track_positions.clear();
+        count_coordinates_selected = 0;
+
+        if(continue_editing.getVisibility() == View.VISIBLE)
+            map.removePolyline(routeLine.getPolyline());
+
+        counter_coordinates.setVisibility(View.INVISIBLE);
+        finish_edit_track_butt.setVisibility(View.INVISIBLE);
+        save_track.setVisibility(View.INVISIBLE);
+        cancale_track_butt.setVisibility(View.INVISIBLE);
+        continue_editing.setVisibility(View.INVISIBLE);
+
+        add_coordinate_button.setClickable(true);
+        add_track_button.setClickable(true);
+
+
     }
 
     private class myOnMapReadyCallback implements OnMapReadyCallback {
@@ -584,10 +634,11 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         public void onMapReady(MapboxMap mapboxMap) {
             map = mapboxMap;
             map.setOnMapClickListener(new MyOnMapClickListener());
-            map.setOnMarkerClickListener(new MyOnMarkerClickListener());
+            map.getMarkerViewManager().setOnMarkerViewClickListener(new MyOnMarkerClickListener());
             map.setStyleUrl(Style.OUTDOORS);
-            showDefaultLocation();
-          //  showAllCoordinates();
+//            showDefaultLocation();
+            //showCurrentLocation(!map.isMyLocationEnabled());
+            setCameraPositionFromPrefs();
             showAllUserUpdates();
             showAllPointsOfInterest();
             showAllTracks();
@@ -765,7 +816,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     }
 
     private boolean checkIfTransportaionSation(String type){
-        return type.equals("תחנת רכבת") || type.equals("תחנת אוטובוס");
+        return type.equalsIgnoreCase("תחנת רכבת") || type.equalsIgnoreCase("תחנת אוטובוס")
+                || type.equalsIgnoreCase("Train Station") || type.equalsIgnoreCase("Bus Station");
     }
 
 
@@ -885,30 +937,42 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     }
 
     private void getRoute() throws ServicesException {
-        MapboxDirections client = new MapboxDirections.Builder()
-                .setCoordinates(track_positions)
-                .setProfile(DirectionsCriteria.PROFILE_WALKING)
-//                .setAccessToken(Mapbox.getInstance(this, getString(R.string.access_token)).getAccessToken())
-                .setAccessToken(MapboxAccountManager.getInstance().getAccessToken())
-                .setSteps(true)
-                .build();
 
-        client.enqueueCall(new Callback<DirectionsResponse>() {
+        LatLng ori =track_positions.get(0);
+        LatLng desti = track_positions.get(track_positions.size()-1);
+        Point origin = Point.fromLngLat(ori.getLongitude(),ori.getLatitude());
+        Point destination = Point.fromLngLat(desti.getLongitude(),desti.getLatitude());
+        MapboxDirections.Builder builder = MapboxDirections.builder()
+                .origin(origin)
+                .destination(destination)
+                .profile(DirectionsCriteria.PROFILE_WALKING)
+                .accessToken(getString(R.string.access_token))
+                .steps(true)
+                .bannerInstructions(true);
+
+        for (int i=1; i<track_positions.size()-1;i++) {
+            LatLng point = track_positions.get(i);
+            Point waypoint = Point.fromLngLat(point.getLongitude(),point.getLatitude());
+            builder.addWaypoint(waypoint);
+        }
+
+        builder.build().enqueueCall(new Callback<DirectionsResponse>() {
             @Override
             public void onResponse(Call<DirectionsResponse> call, Response<DirectionsResponse> response) {
                 // You can get the generic HTTP info about the response
 
                 if (response.body() == null) {
                     return;
-                } else if (response.body().getRoutes().size() < 1) {
+                } else if (response.body().routes().size() < 1) {
                     return;
                 }
 
                 // Print some info about the route
-                currentRoute = response.body().getRoutes().get(0);
+                currentRoute = response.body().routes().get(0);
+                currentRouteWaypoints = response.body().waypoints();
                 Toast.makeText(
                         EditorPanelActivity.this,
-                        "Route is " + currentRoute.getDistance() + " meters long.",
+                        "Route is " + currentRoute.distance() + " meters long.",
                         Toast.LENGTH_LONG).show();
 
                 // Draw the route on the map
@@ -925,13 +989,13 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
     private void drawRoute(DirectionsRoute route, boolean newPolyline) {
         // Convert LineString coordinates into LatLng[]
-        LineString lineString = LineString.fromPolyline(route.getGeometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
+        LineString lineString = LineString.fromPolyline(route.geometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
         List<Position> coordinates = lineString.getCoordinates();
         LatLng[] points = new LatLng[coordinates.size()];
         for (int i = 0; i < coordinates.size(); i++) {
             points[i] = new LatLng(
-                    coordinates.get(i).getLatitude(),
-                    coordinates.get(i).getLongitude());
+                    (coordinates.get(i).getLatitude()/10),
+                    (coordinates.get(i).getLongitude()/10));
         }
 
         // Draw Points on MapView
@@ -941,7 +1005,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     .color(Color.DKGRAY)
                     .width(ROUTE_LINE_WIDTH);
         }
-        else if(!newPolyline) {
+        else  {
             routeLine = new PolylineOptions()
                     .add(points)
                     .color(Color.RED)
@@ -952,13 +1016,13 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     }
 
     private Polyline getPolyLineFromRoute(DirectionsRoute route){
-        LineString lineString = LineString.fromPolyline(route.getGeometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
+        LineString lineString = LineString.fromPolyline(route.geometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
         List<Position> coordinates = lineString.getCoordinates();
         LatLng[] points = new LatLng[coordinates.size()];
         for (int i = 0; i < coordinates.size(); i++) {
             points[i] = new LatLng(
-                    coordinates.get(i).getLatitude(),
-                    coordinates.get(i).getLongitude());
+                    coordinates.get(i).getLatitude()/10,
+                    coordinates.get(i).getLongitude()/10);
         }
 
         // Draw Points on MapView
@@ -969,11 +1033,96 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         return routeLine.getPolyline();
     }
 
+    private void showLastLocation(){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String lastLocationString  = prefs.getString(LAST_LOCATION_SAVED,"");
+        if(lastLocationString.equalsIgnoreCase("")){
+            showDefaultLocation();
+        }
+        else{
+            LatLng lastSavedLocation = JsonParserManager.getInstance().retreiveLatLngFromJson(lastLocationString);
+            map.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                    lastSavedLocation,ZOOM_LEVEL_CURRENT_LOCATION));
+
+        }
+    }
+
+
+    private void showCurrentLocation(boolean enableGps) {
+        Location location = getLastLocation();
+        if(location == null){
+            if(enableGps)
+                showLastLocation();
+            floatingActionButton.setImageResource(R.drawable.ic_location_disabled_24dp);
+            map.setMyLocationEnabled(true);
+
+        }else {
+//        if (enableGps) {
+            // Check if user has granted location permission
+            permissionsManager = new PermissionsManager(this);
+            if (!PermissionsManager.areLocationPermissionsGranted(this)) {
+                permissionsManager.requestLocationPermissions(this);
+            } else {
+                enableLocation(true);
+            }
+        }
+
+    }
+
+    private Location getLastLocation(){
+        if (ActivityCompat.checkSelfPermission(EditorPanelActivity.this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(EditorPanelActivity.this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return null;
+        }
+
+        return locationEngine.getLastLocation();
+    }
+
 
     private void showDefaultLocation(){
         map.animateCamera(CameraUpdateFactory.newLatLngZoom(
                 new LatLng(DEFAULT_JERUSALEM_COORDINATE.getLatitude(),
                         DEFAULT_JERUSALEM_COORDINATE.getLongitude()), 12));
+    }
+
+
+    public void setCameraPositionFromPrefs() {
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        LatLng target = JsonParserManager.getInstance().retreiveLatLngFromJson(preferences.getString("targetJSON",""));
+        Float zoom = preferences.getFloat("zoom",12);
+        Float tilt = preferences.getFloat("tilt", 0);
+        Float bearing = preferences.getFloat("bearing",0);
+
+        map.animateCamera(CameraUpdateFactory.newCameraPosition(
+                new CameraPosition.Builder()
+                        .target(target)
+                        .bearing(bearing)
+                        .tilt(tilt)
+                        .zoom(zoom)
+                        .build()));
+    }
+
+    public void saveCameraPositionToPrefs() {
+
+        CameraPosition cameraP = map.getCameraPosition();
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = preferences.edit();
+
+        editor.putString("targetJSON",JsonParserManager.getInstance().castLatLngToJson(cameraP.target));
+        editor.putFloat("zoom",(float)cameraP.zoom);
+        editor.putFloat("tilt",(float)cameraP.tilt);
+        editor.putFloat("bearing",(float)cameraP.bearing);
+
+        editor.apply();
+
     }
 
     private class MyOnMapClickListener implements MapboxMap.OnMapClickListener{
@@ -993,11 +1142,11 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             * in the database for this specific location*/
 
             if(ADD_TRACK_MODE && count_coordinates_selected < MAX_NUM_OF_TRACK_COORDINATES) {
-                if(count_coordinates_selected == 0){
-                    Toast.makeText(EditorPanelActivity.this, R.string.toast_starting_point, Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                else{
+//                if(count_coordinates_selected == 0){
+//                    Toast.makeText(EditorPanelActivity.this, R.string.toast_starting_point, Toast.LENGTH_SHORT).show();
+//                    return;
+//                }
+//                else{
                     writeGenericCoordinateToDB(point);
                     MarkerView marker = addMarkerForCoordinate(point, "", "");
                     marker.setIcon(IconManager.getInstance().getIconForEdit());
@@ -1006,7 +1155,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
                     count_coordinates_selected++;
                     updateScreenCounter();
-                }
+//                }
 
             }
             else if(ADD_TRACK_MODE && count_coordinates_selected >= MAX_NUM_OF_TRACK_COORDINATES){
@@ -1061,7 +1210,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         track_coordinates.remove(marker.getPosition().getLongitude());
         track_coordinates.remove(marker.getPosition().getLatitude());
         track_markers.remove(marker);
-        Position temp = Position.fromCoordinates(marker.getPosition().getLongitude(), marker.getPosition().getLatitude());
+        LatLng temp = new LatLng(marker.getPosition().getLongitude(), marker.getPosition().getLatitude());
         track_positions.remove(temp);
 
     }
@@ -1075,8 +1224,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             else if(track_coordinates.get(i)==temp.getPosition().getLongitude())
                 track_coordinates.set(i,marker.getPosition().getLongitude());
         }
-        Position tempP = Position.fromCoordinates(temp.getPosition().getLongitude(), temp.getPosition().getLatitude());
-        Position newP = Position.fromCoordinates(marker.getPosition().getLongitude(), marker.getPosition().getLatitude());
+        LatLng tempP = new LatLng(temp.getPosition().getLongitude(), temp.getPosition().getLatitude());
+        LatLng newP = new LatLng(marker.getPosition().getLongitude(), marker.getPosition().getLatitude());
         for(int i=0; i<track_positions.size();i++){
             if(track_positions.get(i).toString().equals(tempP.toString()))
                 track_positions.set(i,newP);
@@ -1088,8 +1237,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         track_coordinates.add(point.getLongitude());
         track_coordinates.add(point.getLatitude());
         track_markers.add(marker);
-        Position temp = Position.fromCoordinates(point.getLongitude(), point.getLatitude());
-        track_positions.add(temp);
+        track_positions.add(point);
     }
 
     private MarkerView addMarkerForCoordinate(LatLng point, String title, String snippet) {
@@ -1148,11 +1296,11 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     }
 
 
-
     /*Marker clicked listener. We can delete/edit a coordinate*/
-    private class MyOnMarkerClickListener implements MapboxMap.OnMarkerClickListener{
+    private class MyOnMarkerClickListener implements MapboxMap.OnMarkerViewClickListener{
+
         @Override
-        public boolean onMarkerClick(@NonNull final Marker marker) {
+        public boolean onMarkerClick(@NonNull final Marker marker, @NonNull View view, @NonNull MapboxMap.MarkerViewAdapter adapter) {
 
             if(!ADD_TRACK_MODE) {
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(marker.getPosition().getLatitude(),
@@ -1191,10 +1339,10 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     /*If the editor clicked a marker that is already part of the track
                     * we want to remove it from the track coordinates array*/
                     if(track_markers.get(i).toString().equals(marker.toString())){
-                        if(i==0){
-                            dialogChangeFirstStop();
-                            return true;
-                        }
+//                        if(i==0){
+//                            dialogChangeFirstStop();
+//                            return true;
+//                        }
                         touchedmarkertype = "";
                         markerIsPointOfInterest = false;
                         final String key = getMarkerHashKey(marker);
@@ -1231,48 +1379,48 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     return true;
                 }
 
-                /*We want to make sure that the first chosen coordinate is train station*/
-                if(count_coordinates_selected == 0){
-                    final String key1 = getMarkerHashKey(marker);
-                    points_of_interest.addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
-                            if(pointsMap == null) {
-                                Toast.makeText(EditorPanelActivity.this, R.string.toast_starting_point, Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-                            Map<String, Object> point = ((Map<String, Object>)pointsMap.get(key1));
-
-
-                            if(point == null){
-                                Toast.makeText(EditorPanelActivity.this, R.string.toast_starting_point, Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-
-                            String type = (String)point.get("type");
-                            if(!checkIfTransportaionSation(type)){
-                                Toast.makeText(EditorPanelActivity.this, R.string.toast_starting_point, Toast.LENGTH_SHORT).show();
-                                return;
-                            }
-
-                            addTrackPoint(marker.getPosition(), marker);
-                            count_coordinates_selected++;
-                            updateScreenCounter();
-
-                            marker.setIcon(IconManager.getInstance().getIconForEdit());
-
-
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-
-                        }
-                    });
-                    return true;
-                }
-                else{
+//                /*We want to make sure that the first chosen coordinate is train station*/
+//                if(count_coordinates_selected == 0){
+//                    final String key1 = getMarkerHashKey(marker);
+//                    points_of_interest.addListenerForSingleValueEvent(new ValueEventListener() {
+//                        @Override
+//                        public void onDataChange(DataSnapshot dataSnapshot) {
+//                            Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
+//                            if(pointsMap == null) {
+//                                Toast.makeText(EditorPanelActivity.this, R.string.toast_starting_point, Toast.LENGTH_SHORT).show();
+//                                return;
+//                            }
+//                            Map<String, Object> point = ((Map<String, Object>)pointsMap.get(key1));
+//
+//
+//                            if(point == null){
+//                                Toast.makeText(EditorPanelActivity.this, R.string.toast_starting_point, Toast.LENGTH_SHORT).show();
+//                                return;
+//                            }
+//
+//                            String type = (String)point.get("type");
+//                            if(!checkIfTransportaionSation(type)){
+//                                Toast.makeText(EditorPanelActivity.this, R.string.toast_starting_point, Toast.LENGTH_SHORT).show();
+//                                return;
+//                            }
+//
+//                            addTrackPoint(marker.getPosition(), marker);
+//                            count_coordinates_selected++;
+//                            updateScreenCounter();
+//
+//                            marker.setIcon(IconManager.getInstance().getIconForEdit());
+//
+//
+//                        }
+//
+//                        @Override
+//                        public void onCancelled(DatabaseError databaseError) {
+//
+//                        }
+//                    });
+//                    return true;
+//                }
+//                else{
 
                     addTrackPoint(marker.getPosition(),marker);
                     count_coordinates_selected++;
@@ -1280,7 +1428,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
                     marker.setIcon(IconManager.getInstance().getIconForEdit());
                     return true;
-                }
+               // }
 
             }
 
@@ -1514,6 +1662,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             public void onClick(DialogInterface dialog, int id) {
                 Intent i = new Intent(EditorPanelActivity.this, CreateNewCoordinateActivity.class);
                 i.putExtra(CHOSEN_COORDINATE, JsonParserManager.getInstance().castLatLngToJson(point));
+                i.putExtra(CURRENT_USER_NAME,userhash);
                 startActivityForResult(i, NEW_COORDINATE);
             }
         });
@@ -1546,20 +1695,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         }
     }
 
-    private void toggleGps(boolean enableGps) {
-        if (enableGps) {
-            // Check if user has granted location permission
-            permissionsManager = new PermissionsManager(this);
-            if (!PermissionsManager.areLocationPermissionsGranted(this)) {
-                permissionsManager.requestLocationPermissions(this);
-            } else {
-                enableLocation(true);
-            }
-        } else {
-            enableLocation(false);
-            showDefaultLocation();
-        }
-    }
+
 
     private void enableLocation(boolean enabled) {
         if (enabled) {
@@ -1570,6 +1706,11 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             Location lastLocation = locationEngine.getLastLocation();
             if (lastLocation != null) {
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(lastLocation), ZOOM_LEVEL_CURRENT_LOCATION));
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(EditorPanelActivity.this);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString(LAST_LOCATION_SAVED,JsonParserManager.getInstance().castLatLngToJson(new LatLng(lastLocation)));
+                editor.apply();
+                floatingActionButton.setImageResource(R.drawable.ic_my_location_24dp);
             }
 
             locationEngineListener = new LocationEngineListener() {
@@ -1587,13 +1728,20 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                         // listener is registered again and will adjust the camera once again.
                         map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(location), ZOOM_LEVEL_CURRENT_LOCATION));
                         locationEngine.removeLocationEngineListener(this);
+
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(EditorPanelActivity.this);
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putString(LAST_LOCATION_SAVED,JsonParserManager.getInstance().castLatLngToJson(new LatLng(location)));
+                        editor.apply();
                     }
                 }
             };
             locationEngine.addLocationEngineListener(locationEngineListener);
-            floatingActionButton.setImageResource(R.drawable.ic_location_disabled_24dp);
+
+
         } else {
-            floatingActionButton.setImageResource(R.drawable.ic_my_location_24dp);
+            floatingActionButton.setImageResource(R.drawable.ic_location_disabled_24dp);
+            // floatingActionButton.setImageResource(R.drawable.ic_my_location_24dp);
         }
         // Enable or disable the location layer on the map
         map.setMyLocationEnabled(enabled);
@@ -1623,6 +1771,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
             String uname = currentUser.getDisplayName();
             uid = currentUser.getUid();
+            userhash = uid;
             temp.add(0, uname);
 
             String carArr[] = temp.toArray(new String[temp.size()]);
@@ -1644,12 +1793,10 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     }
 
                     if (position == 1) {
+                        saveCameraPositionToPrefs();
                         Intent i = new Intent(EditorPanelActivity.this, HomeActivity.class);
+                        i.putExtra(SET_FROM_PREFS,true);
                         startActivity(i);
-                    }
-
-                    if (position == 2) {
-                        signOut();
                     }
 
 
@@ -1691,9 +1838,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 startActivity(i);
                 return true;
 
-            case R.id.makeOwnTrackActivity:
 
-                return true;
 
             case R.id.tracksActivity:
                 i = new Intent(this, TracksActivity.class);
@@ -1703,6 +1848,10 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             case R.id.languageActivity:
 
                 toggleLanguage();
+                return true;
+
+            case R.id.signOut:
+                signOut();
                 return true;
 
             default:
@@ -1726,12 +1875,15 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
     /*Method signs out user's google account*/
     private void signOut() {
+        saveCameraPositionToPrefs();
+
         FirebaseAuth.getInstance().signOut();
         Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
                 new ResultCallback<Status>() {
                     @Override
                     public void onResult(Status status) {
                         Intent i = new Intent(EditorPanelActivity.this, HomeActivity.class);
+                        i.putExtra(SET_FROM_PREFS,true);
                         startActivity(i);
                     }});
     }
@@ -1945,6 +2097,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     .setGeocodingType(GeocodingCriteria.TYPE_ADDRESS)
                     .build();
 
+
             client.enqueueCall(new Callback<GeocodingResponse>() {
                 @Override
                 public void onResponse(Call<GeocodingResponse> call, Response<GeocodingResponse> response) {
@@ -2047,7 +2200,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
             mPopupWindow.dismiss();
 //            mPopupWindow = null;
-            showDefaultLocation();
+            showCurrentLocation(true);
         }
         else {
 

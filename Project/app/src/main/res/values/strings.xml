@@ -74,58 +74,15 @@
     <string name="created_by">Created by</string>
     <string name="at">At</string>
 
-    <string-array name="train_stations">
-        <item>Choose a station</item>
-        <item>הר הרצל</item>
-        <item>יפה נוף</item>
-        <item>כיכר דניה</item>
-        <item>החלוץ</item>
-        <item>קרית משה</item>
-        <item>התחנה המרכזית</item>
-        <item>הטורים</item>
-        <item>מחנה יהודה</item>
-        <item>הדוידקה</item>
-        <item>יפו מרכז</item>
-        <item>העירייה</item>
-        <item>שער שכם</item>
-        <item>שבטי ישראל</item>
-        <item>שמעון הצדיק</item>
-        <item>גבעת התחמושת</item>
-        <item>גבעת המיבתר</item>
-        <item>א-סהל</item>
-        <item>שועפאט</item>
-        <item>בית חנינא</item>
-        <item>יקותיאל אדם</item>
-        <item>פסגת זאב מרכז</item>
-        <item>סיירת דוכיפת</item>
-        <item>חיל האוויר</item>
-    </string-array>
 
     <string-array name="spinner_list_item_array">
-        <item>Sign Out</item>
         <item>Editor</item>
     </string-array>
 
     <string-array name="spinner_editor_list_item_array">
-
         <item>Home</item>
-        <item>Sign Out</item>
     </string-array>
 
-    <string-array name="track_level">
-        <item>Choose track level</item>
-        <item>Easy</item>
-        <item>Medium</item>
-        <item>Hard</item>
-    </string-array>
-
-    <string-array name="season">
-        <item>All Year</item>
-        <item>Summer</item>
-        <item>Winter</item>
-        <item>Autumn</item>
-        <item>Spring</item>
-    </string-array>
 
     <string-array name="points_of_interest">
         <item>Choose type</item>
@@ -198,6 +155,8 @@
     <string name="choose_action">Choose action</string>
     <string name="add_points_butt">Add points of interest to track</string>
     <string name="location">Location-</string>
+    <string name="start_navigation">Start navigation</string>
 
-
+    <string name="facebook_app_id" translatable="false">452071661893714</string>
+    <string name="fb_login_protocol_scheme" translatable="false">fb452071661893714</string>
 </resources>

@@ -21,6 +21,7 @@ public final class Constants {
     public static final String TRACK_ENDING_POINT = "Track Ending point";
     public static final String TRACK_STARTING_POINT_NAME = "Track Starting name";
     public static final String TRACK_ENDING_POINT_NAME = "Track Ending name";
+    public static final String TRACK_WAYPOINTS = "Trak waypoints";
 
     public static final String SEARCH_RESULT_QUERY = "Search Result query";
     public static final String Q_STARTING_POINT = "Starting point";
@@ -37,6 +38,7 @@ public final class Constants {
     public static final String LANGUAGE = "language";
     public static final String HEBREW = "he";
     public static final String ENGLISH = "en";
+    public static final String SET_FROM_PREFS = "set from prefs";
 
 
     public static final int NEW_COORDINATE = 100;
@@ -78,5 +80,7 @@ public final class Constants {
     public static final String UPDATE_POSITION = "update position";
     public static final String IMAGE_NAME = "image name";
     public static final String IMAGE_EXTRA = "image extra";
+
+    public static final String LAST_LOCATION_SAVED = "last location saved";
 
 }

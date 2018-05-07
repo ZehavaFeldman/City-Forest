@@ -67,10 +67,6 @@ public class AdvancedSearchTracksActivity extends AppCompatActivity {
         is_romantic = (CheckBox)findViewById(R.id.isRomanticCheckbox);
         search_button = (Button)findViewById(R.id.searchButton);
 
-        initiateSpinner(starting_point, R.array.train_stations);
-        initiateSpinner(ending_point, R.array.train_stations);
-        initiateSpinner(track_level, R.array.track_level);
-        initiateSpinner(season, R.array.season);
 
         search_button.setOnClickListener(new ClickListener());
     }
@@ -164,9 +160,6 @@ public class AdvancedSearchTracksActivity extends AppCompatActivity {
             case R.id.searchTracksActivity:
                 return true;
 
-            case R.id.makeOwnTrackActivity:
-
-                return true;
 
             case R.id.tracksActivity:
                 i = new Intent(this, TracksActivity.class);

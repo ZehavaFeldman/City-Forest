@@ -22,7 +22,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 //import com.mapbox.mapboxsdk.Mapbox;
-import com.mapbox.mapboxsdk.MapboxAccountManager;
+import com.mapbox.api.directions.v5.models.DirectionsRoute;
+//import com.mapbox.mapboxsdk.MapboxAccountManager;
+import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.annotations.Icon;
 import com.mapbox.mapboxsdk.annotations.IconFactory;
 import com.mapbox.mapboxsdk.annotations.MarkerView;
@@ -41,7 +43,6 @@ import com.mapbox.services.android.telemetry.permissions.PermissionsListener;
 import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
 import com.mapbox.services.commons.geojson.LineString;
 import com.mapbox.services.commons.models.Position;
-import com.mapbox.services.directions.v5.models.DirectionsRoute;
 import com.zehava.cityforest.Managers.IconManager;
 import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Models.PointOfInterest;
@@ -81,7 +82,8 @@ public class SelectedTrackMapActivity extends AppCompatActivity implements Permi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        MapboxAccountManager.start(this,getString(R.string.access_token));
+        //MapboxAccountManager.start(this,getString(R.string.access_token));
+        Mapbox.getInstance(this, getString(R.string.access_token));
         setContentView(R.layout.activity_selected_track_map);
         IconManager.getInstance().generateIcons(IconFactory.getInstance(this));
 
@@ -138,8 +140,8 @@ public class SelectedTrackMapActivity extends AppCompatActivity implements Permi
 
 
                 LatLngBounds latLngBounds = new LatLngBounds.Builder()
-                        .include(JsonParserManager.getInstance().retrieveLatLngFromJson((String)track.get("starting_point_json_latlng")))
-                        .include(JsonParserManager.getInstance().retrieveLatLngFromJson((String)track.get("ending_point_json_latlng")))
+                        .include(JsonParserManager.getInstance().retreiveLatLngFromJson((String)track.get("starting_point_json_latlng")))
+                        .include(JsonParserManager.getInstance().retreiveLatLngFromJson((String)track.get("ending_point_json_latlng")))
                         .build();
 
                 map.animateCamera(CameraUpdateFactory.newLatLngBounds(latLngBounds, 200), 100);
@@ -154,13 +156,13 @@ public class SelectedTrackMapActivity extends AppCompatActivity implements Permi
 
     private void drawRoute(DirectionsRoute route) {
         // Convert LineString coordinates into LatLng[]
-        LineString lineString = LineString.fromPolyline(route.getGeometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
+        LineString lineString = LineString.fromPolyline(route.geometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
         List<Position> coordinates = lineString.getCoordinates();
         LatLng[] points = new LatLng[coordinates.size()];
         for (int i = 0; i < coordinates.size(); i++) {
             points[i] = new LatLng(
-                    coordinates.get(i).getLatitude(),
-                    coordinates.get(i).getLongitude());
+                    coordinates.get(i).getLatitude()/10,
+                    coordinates.get(i).getLongitude()/10);
         }
 
         // Draw Points on MapView
@@ -399,9 +401,6 @@ public class SelectedTrackMapActivity extends AppCompatActivity implements Permi
                 startActivity(i);
                 return true;
 
-            case R.id.makeOwnTrackActivity:
-
-                return true;
 
             case R.id.tracksActivity:
                 i = new Intent(this, TracksActivity.class);

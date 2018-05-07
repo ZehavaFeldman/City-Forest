@@ -13,13 +13,15 @@ import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseListOptions;
 import com.google.firebase.database.Query;
+import com.mapbox.api.directions.v5.models.DirectionsRoute;
+import com.mapbox.api.directions.v5.models.DirectionsWaypoint;
 import com.zehava.cityforest.FirebasePointsListAdapter;
 import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Models.PointOfInterest;
 import com.zehava.cityforest.Models.Track;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.mapbox.services.directions.v5.models.DirectionsRoute;
+
 import com.zehava.cityforest.R;
 
 import java.util.List;
@@ -28,6 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.zehava.cityforest.Constants.CHOSEN_TRACK;
+import static com.zehava.cityforest.Constants.CURRENT_USER_NAME;
 import static com.zehava.cityforest.Constants.PICK_POINTS_DONE;
 import static com.zehava.cityforest.Constants.PICK_POINTS_REQUEST;
 import static com.zehava.cityforest.Constants.TRACK_CREATED;
@@ -36,7 +39,7 @@ import static com.zehava.cityforest.Constants.TRACK_ENDING_POINT;
 import static com.zehava.cityforest.Constants.TRACK_ENDING_POINT_NAME;
 import static com.zehava.cityforest.Constants.TRACK_STARTING_POINT;
 import static com.zehava.cityforest.Constants.TRACK_STARTING_POINT_NAME;
-
+import static com.zehava.cityforest.Constants.TRACK_WAYPOINTS;
 
 
 public class CreateNewTrackActivity extends AppCompatActivity {
@@ -46,8 +49,8 @@ public class CreateNewTrackActivity extends AppCompatActivity {
     private DirectionsRoute current_route;
 
     private EditText track_name_field;
-    private TextView starting_point;
-    private TextView ending_point;
+    private EditText starting_point;
+    private EditText ending_point;
     private TextView duration_field;
     private TextView distance_field;
   
@@ -62,7 +65,9 @@ public class CreateNewTrackActivity extends AppCompatActivity {
     private Button addPoints;
 
     private Map<String,String> trackPointsOfInterest;
-
+    private List<String> waypoints;
+    private String userHashkey;
+    Intent i;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,12 +78,14 @@ public class CreateNewTrackActivity extends AppCompatActivity {
         tracks = database.getReference("tracks");
         points_of_interest = database.getReference("points_of_interest");
 
-        Intent i = getIntent();
-        current_route = JsonParserManager.getInstance().retreiveRouteFromJson(i.getStringExtra(CHOSEN_TRACK));
+        i = getIntent();
+        current_route = JsonParserManager.getInstance().retrieveRouteFromJson(i.getStringExtra(CHOSEN_TRACK));
+        waypoints = i.getStringArrayListExtra(TRACK_WAYPOINTS);
         starting_point_JsonLatLng = i.getStringExtra(TRACK_STARTING_POINT);
         ending_point_JsonLatLng = i.getStringExtra(TRACK_ENDING_POINT);
         starting_point_name = i.getStringExtra(TRACK_STARTING_POINT_NAME);
         ending_point_name = i.getStringExtra(TRACK_ENDING_POINT_NAME);
+        userHashkey = i.getStringExtra(CURRENT_USER_NAME);
 
         track_name_field = findViewById(R.id.trackNameField);
 
@@ -94,8 +101,8 @@ public class CreateNewTrackActivity extends AppCompatActivity {
         addPoints = findViewById(R.id.addPointsButton);
 
 
-        double temp_duration = current_route.getDuration()/3600;
-        double temp_distance = current_route.getDistance()/1000;
+        double temp_duration = current_route.duration()/3600;
+        double temp_distance = current_route.distance()/1000;
         duration_field.setText(""+Math.floor(temp_duration * 100) / 100);
         distance_field.setText(""+Math.floor(temp_distance * 100) / 100);
 
@@ -142,6 +149,7 @@ public class CreateNewTrackActivity extends AppCompatActivity {
 
         Track track = new Track(
                 JsonParserManager.getInstance().castRouteToJson(this.current_route),
+                waypoints,
                 key,
                 track_name_field.getText().toString(),
                 starting_point.getText().toString(),
@@ -151,7 +159,8 @@ public class CreateNewTrackActivity extends AppCompatActivity {
                 additional_info.getText().toString(),
                 starting_point_JsonLatLng,
                 ending_point_JsonLatLng,
-                trackPointsOfInterest);
+                trackPointsOfInterest,
+                userHashkey);
 
 
         /*Converting our track object to a map, that makes

@@ -22,7 +22,13 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
-import com.mapbox.mapboxsdk.MapboxAccountManager;
+//import com.mapbox.android.core.location.LocationEngineProvider;
+import com.mapbox.api.directions.v5.models.DirectionsResponse;
+import com.mapbox.api.directions.v5.models.DirectionsRoute;
+import com.mapbox.api.directions.v5.models.DirectionsWaypoint;
+import com.mapbox.geojson.Point;
+import com.mapbox.mapboxsdk.Mapbox;
+//import com.mapbox.mapboxsdk.MapboxAccountManager;
 import com.mapbox.mapboxsdk.annotations.Icon;
 import com.mapbox.mapboxsdk.annotations.IconFactory;
 import com.mapbox.mapboxsdk.annotations.Marker;
@@ -35,19 +41,28 @@ import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
-import com.mapbox.mapboxsdk.maps.Projection;
+;
+import com.mapbox.services.android.navigation.v5.milestone.Milestone;
+import com.mapbox.services.android.navigation.v5.milestone.MilestoneEventListener;
+import com.mapbox.services.android.navigation.v5.navigation.MapboxNavigation;
+import com.mapbox.services.android.navigation.v5.navigation.NavigationEventListener;
+import com.mapbox.services.android.navigation.v5.navigation.NavigationRoute;
+import com.mapbox.services.android.navigation.v5.offroute.OffRouteListener;
+import com.mapbox.services.android.navigation.v5.routeprogress.RouteProgress;
 import com.mapbox.services.android.telemetry.location.LocationEngine;
 import com.mapbox.services.android.telemetry.location.LocationEngineListener;
+import com.mapbox.services.android.telemetry.location.LocationEngineProvider;
 import com.mapbox.services.android.telemetry.permissions.PermissionsListener;
 import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
-import com.mapbox.services.commons.ServicesException;
+//import com.mapbox.android.core.location.LocationEngine;
+//import com.mapbox.android.core.location.LocationEngineListener;
+//import com.mapbox.android.core.location.LocationEnginePriority;
+//import com.mapbox.android.core.location.LocationEngineProvider;
+//import com.mapbox.android.core.permissions.PermissionsListener;
+//import com.mapbox.android.core.permissions.PermissionsManager;
+
 import com.mapbox.services.commons.geojson.Feature;
 import com.mapbox.services.commons.models.Position;
-import com.mapbox.services.directions.v5.models.DirectionsRoute;
-import com.mapbox.services.geocoding.v5.GeocodingCriteria;
-import com.mapbox.services.geocoding.v5.MapboxGeocoding;
-import com.mapbox.services.geocoding.v5.models.CarmenFeature;
-import com.mapbox.services.geocoding.v5.models.GeocodingResponse;
 
 import android.support.v7.util.SortedList;
 import android.util.Log;
@@ -59,6 +74,8 @@ import android.widget.FrameLayout;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import org.abego.treelayout.Configuration;
+
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
@@ -69,14 +86,16 @@ import retrofit2.Response;
 
 import static com.zehava.cityforest.Constants.DEFAULT_JERUSALEM_COORDINATE;
 import static com.zehava.cityforest.Constants.ZOOM_LEVEL_CURRENT_LOCATION;
-import static com.mapbox.services.android.telemetry.location.AndroidLocationEngine.getLocationEngine;
+//import static com.mapbox.services.android.telemetry.location.AndroidLocationEngine.getLocationEngine;
+import com.zehava.cityforest.R;
+
 
 /**
  * Created by avigail on 10/12/17.
  */
 
 
-public class MoveablePointActivity extends AppCompatActivity implements PermissionsListener, ICallback {
+public class MoveablePointActivity extends AppCompatActivity implements PermissionsListener{
 
     private LocationEngine locationEngine;
     private MapView mapView;
@@ -84,107 +103,59 @@ public class MoveablePointActivity extends AppCompatActivity implements Permissi
     private LocationEngineListener locationEngineListener;
     private PermissionsManager permissionsManager;
     private FloatingActionButton floatingActionButton;
-    private Marker droppedMarker;
-    private Marker featureMarker;
-    private DragAndDrop hoveringMarker;
-    private Projection projection;
+
     private FirebaseDatabase database;
     private DatabaseReference points_of_interest;
+
+    DirectionsRoute directionsRoute;
+    List<Point> waypoints;
+    MapboxNavigation navigation;
 
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        MapboxAccountManager.start(this, getString(R.string.access_token));
-//        Mapbox.getInstance(this, getString(R.string.access_token));
+      //  MapboxAccountManager.start(this, getString(R.string.access_token));
+        navigation = new MapboxNavigation(this, getString(R.string.access_token));
+        Mapbox.getInstance(this, getString(R.string.access_token));
         setContentView(R.layout.moveable_point_activity);
-
-        floatingActionButton = (FloatingActionButton) findViewById(R.id.location_toggle_fab);
-        floatingActionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (mapboxMap != null) {
-                    toggleGps(!mapboxMap.isMyLocationEnabled());
-                }
-            }
-        });
 
 
 
         database = FirebaseDatabase.getInstance();
         points_of_interest = database.getReference("points_of_interest");
-        // Get the location engine object for later use.
-        locationEngine = getLocationEngine(this);
-        locationEngine.activate();
+
+
 
         // Initialize the mapboxMap view
-        mapView = (MapView) findViewById(R.id.mapview);
+        mapView = (MapView) findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
+
         mapView.getMapAsync(new myOnMapReadyCallback());
 
+        // Get the location engine object for later use.
+        locationEngine = new LocationEngineProvider(this).obtainBestLocationEngineAvailable();
+        navigation.setLocationEngine(locationEngine);
+        navigation.addNavigationEventListener(new NavigationEventListener() {
+            @Override
+            public void onRunning(boolean running) {
 
-        hoveringMarker = new DragAndDrop(this,this);
-        hoveringMarker.setImageResource(R.drawable.blue_marker);
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER);
-        hoveringMarker.setLayoutParams(params);
-      //  hoveringMarker.setVisibility(View.GONE);
-        mapView.addView(hoveringMarker);
-
-
-    }
-
-    @Override
-    public void onDraggableNotify(DRAGGABLE_CALSS draggableIcall) {
-
-
-        if(draggableIcall == DRAGGABLE_CALSS.VIEW_MOVED){
-            if (mapboxMap != null) {
-
-                float coordinateX = hoveringMarker.getX() + (hoveringMarker.getWidth() / 2);
-                float coordinateY = hoveringMarker.getY()+(hoveringMarker.getHeight());
-                float[] coords = new float[]{coordinateX, coordinateY};
-                final LatLng latLng = mapboxMap.getProjection().fromScreenLocation(new PointF(coords[0], coords[1]));
-                hoveringMarker.setVisibility(View.INVISIBLE);
-
-
-                // Create the marker icon the dropped marker will be using.
-              //  Icon icon = IconFactory.getInstance(MoveablePointActivity.this).fromResource(R.drawable.blue_marker);
-
-                // Placing the marker on the mapboxMap as soon as possible causes the illusion
-                // that the hovering marker and dropped marker are the same.
-                droppedMarker = mapboxMap.addMarker(new MarkerViewOptions().position(latLng));
-                IconFactory iconFactory = IconFactory.getInstance(MoveablePointActivity.this);
-                Icon icon = iconFactory.fromResource(R.drawable.blue_marker);
-                droppedMarker.setIcon(icon);
-
-                // Finally we get the geocoding information
-                reverseGeocode(latLng);
             }
+        });
 
-        }
-        if(draggableIcall == DRAGGABLE_CALSS.VIEW_TOUCHED){
-            if (mapboxMap != null && droppedMarker!=null) {
+        navigation.addOffRouteListener(new OffRouteListener() {
+            @Override
+            public void userOffRoute(Location location) {
 
-
-
-                // Lastly, set the hovering marker back to visible.
-                PointF point = mapboxMap.getProjection().toScreenLocation(droppedMarker.getPosition());
-                mapboxMap.removeMarker(droppedMarker);
-                hoveringMarker.setX(point.x-(hoveringMarker.getWidth()/2));
-                hoveringMarker.setY(point.y-hoveringMarker.getHeight());
-                hoveringMarker.setVisibility(View.VISIBLE);
-                droppedMarker = null;
             }
+        });
+        navigation.addMilestoneEventListener(new MilestoneEventListener() {
+            @Override
+            public void onMilestoneEvent(RouteProgress routeProgress, String instruction, Milestone milestone) {
 
-        }
-
-    }
-
-    @Override
-    public void onUserUpdateNotify(USER_UPDATES_CLASS userUpdatesClass, ArrayList<Marker> id) {
+            }
+        });
 
     }
 
@@ -194,184 +165,43 @@ public class MoveablePointActivity extends AppCompatActivity implements Permissi
         public void onMapReady(MapboxMap mapbox) {
             mapboxMap = mapbox;
             mapboxMap.setStyleUrl(Style.OUTDOORS);
-            mapboxMap.setOnMarkerClickListener(new MapboxMap.OnMarkerClickListener() {
+
+            Point origin = Point.fromLngLat(-77.03613, 38.90992);
+            Point destination = Point.fromLngLat(-77.0365, 38.8977);
+
+            NavigationRoute.Builder builder = NavigationRoute.builder()
+                    .accessToken(getString(R.string.access_token))
+                    .origin(origin)
+                    .destination(destination);
+
+//            for (Point waypoint : waypoints) {
+//                builder.addWaypoint(waypoint);
+//            }
+
+            builder.build().getRoute(new Callback<DirectionsResponse>() {
                 @Override
-                public boolean onMarkerClick(@NonNull Marker marker) {
-                    PointF point = mapboxMap.getProjection().toScreenLocation(marker.getPosition());
-
-                    hoveringMarker.setX(point.x-(hoveringMarker.getWidth()/2));
-                    hoveringMarker.setY(point.y-hoveringMarker.getHeight());
-
-                    hoveringMarker.setVisibility(View.VISIBLE);
-                    droppedMarker = marker;
-                    return true;
+                public void onResponse(Call<DirectionsResponse> call, Response<DirectionsResponse> response) {
+                    directionsRoute = response.body().routes().get(0);
+                    navigation.startNavigation(directionsRoute);
                 }
-            });
 
-            mapbox.setOnMapClickListener(new MapboxMap.OnMapClickListener() {
                 @Override
-                public void onMapClick(@NonNull LatLng point) {
-
-                    if (featureMarker != null) {
-                        mapboxMap.removeMarker(featureMarker);
-                    }
-
-                    final PointF pixel = mapboxMap.getProjection().toScreenLocation(point);
-                    List<Feature> features = mapboxMap.queryRenderedFeatures(pixel);
-
-                    if (features.size() > 0) {
-                        Feature feature = features.get(0);
-
-                        String property;
-
-                        StringBuilder stringBuilder = new StringBuilder();
-                        if (feature.getProperties() != null) {
-                            for (Map.Entry<String, JsonElement> entry : feature.getProperties().entrySet()) {
-                                stringBuilder.append(String.format("%s - %s", entry.getKey(), entry.getValue()));
-                                stringBuilder.append(System.getProperty("line.separator"));
-                            }
-
-                            featureMarker = mapboxMap.addMarker(new MarkerOptions()
-                                    .position(point)
-                                    .title(getString(R.string.query_feature_marker_title))
-                                    .snippet(stringBuilder.toString())
-                            );
-
-                        } else {
-                            property = getString(R.string.query_feature_marker_snippet);
-                            featureMarker = mapboxMap.addMarker(new MarkerOptions()
-                                    .position(point)
-                                    .snippet(property)
-                            );
-                        }
-                    } else {
-                        featureMarker = mapboxMap.addMarker(new MarkerOptions()
-                                .position(point)
-                                .snippet(getString(R.string.query_feature_marker_snippet))
-                        );
-
-
-                    }
-                    //            map.selectMarker(featureMarker);
-                    featureMarker.showInfoWindow(mapboxMap, mapView);
+                public void onFailure(Call<DirectionsResponse> call, Throwable t) {
 
                 }
             });
 
-            showAllPointsOfInterest();
 
-            showDefaultLocation();
+
+
+
+
+           // showDefaultLocation();
         }
 
     }
 
 
-    private MarkerView addMarkerForPointOfInterest(LatLng point, String title, String snippet){
-        MarkerViewOptions markerViewOptions = new MarkerViewOptions()
-                .position(point)
-                .title(title)
-                .snippet(snippet);
-        mapboxMap.addMarker(markerViewOptions);
-
-        IconFactory iconFactory = IconFactory.getInstance(MoveablePointActivity.this);
-        Icon icon = iconFactory.fromResource(R.drawable.blue_marker);
-        markerViewOptions.getMarker().setIcon(icon);
-        return markerViewOptions.getMarker();
-    }
-
-
-    public Position retrievePositionFromJson(String posJs) {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
-
-        Gson gson = gsonBuilder.create();
-        Position obj = gson.fromJson(posJs, Position.class);
-        return obj;
-    }
-
-
-    private void showAllPointsOfInterest() {
-        /*Reading one time from the database, we get the points of interest map list*/
-
-        points_of_interest.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
-                if(pointsMap == null) {
-
-                    return;
-                }
-                /*Iterating all the coordinates in the list*/
-                for (Map.Entry<String, Object> entry : pointsMap.entrySet())
-                {
-                    /*For each coordinate in the database, we want to create a new marker
-                    * for it and to show the marker on the map*/
-                    Map<String, Object> point = ((Map<String, Object>) entry.getValue());
-                    /*Now the object 'cor' holds a *map* for a specific coordinate*/
-                    String positionJSON = (String) point.get("position");
-                    Position position = retrievePositionFromJson(positionJSON);
-
-                    /*Creating the marker on the map*/
-                    LatLng latlng = new LatLng(
-                            position.getLongitude(),
-                            position.getLatitude());
-
-                    addMarkerForPointOfInterest(latlng, (String)point.get("title"), (String)point.get("snippet"));
-                }
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-
-        });
-    }
-
-
-    private void reverseGeocode(final LatLng point) {
-        // This method is used to reverse geocode where the user has dropped the marker.
-        try {
-            MapboxGeocoding client = new MapboxGeocoding.Builder()
-                    .setAccessToken(getString(R.string.access_token))
-                    .setCoordinates(Position.fromCoordinates(point.getLongitude(), point.getLatitude()))
-                    .setGeocodingType(GeocodingCriteria.TYPE_ADDRESS)
-                    .build();
-
-            client.enqueueCall(new Callback<GeocodingResponse>() {
-                @Override
-                public void onResponse(Call<GeocodingResponse> call, Response<GeocodingResponse> response) {
-
-                    List<CarmenFeature> results = response.body().getFeatures();
-                    if (results.size() > 0) {
-                        CarmenFeature feature = results.get(0);
-                        // If the geocoder returns a result, we take the first in the list and update
-                        // the dropped marker snippet with the information. Lastly we open the info
-                        // window.
-                        if (droppedMarker != null) {
-                            droppedMarker.setSnippet(feature.getPlaceName());
-                         //   mapboxMap.selectMarker(droppedMarker);
-                        }
-
-                    } else {
-                        if (droppedMarker != null) {
-                            droppedMarker.setSnippet("");
-                           // mapboxMap.selectMarker(droppedMarker);
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<GeocodingResponse> call, Throwable throwable) {
-                    Log.e("Moveable", "Geocoding Failure: " + throwable.getMessage());
-                }
-            });
-        } catch (ServicesException servicesException) {
-            Log.e("Moveable", "Error geocoding: " + servicesException.toString());
-            servicesException.printStackTrace();
-        }
-    }
 
 
 
@@ -445,9 +275,9 @@ public class MoveablePointActivity extends AppCompatActivity implements Permissi
                 }
             };
             locationEngine.addLocationEngineListener(locationEngineListener);
-            floatingActionButton.setImageResource(R.drawable.ic_location_disabled_24dp);
+//            floatingActionButton.setImageResource(R.drawable.ic_location_disabled_24dp);
         } else {
-            floatingActionButton.setImageResource(R.drawable.ic_my_location_24dp);
+//            floatingActionButton.setImageResource(R.drawable.ic_my_location_24dp);
         }
         // Enable or disable the location layer on the map
         mapboxMap.setMyLocationEnabled(enabled);
@@ -487,5 +317,7 @@ public class MoveablePointActivity extends AppCompatActivity implements Permissi
     protected void onDestroy() {
         super.onDestroy();
         mapView.onDestroy();
+        navigation.endNavigation();
+        navigation.onDestroy();
     }
 }

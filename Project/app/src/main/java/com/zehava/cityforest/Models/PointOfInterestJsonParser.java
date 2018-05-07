@@ -23,11 +23,12 @@ public class PointOfInterestJsonParser
         String snippet = jsonObject.optString("snippet");
         String type = jsonObject.optString("type");
         String position = jsonObject.optString("position");
+        String userHashkey = jsonObject.optString("userHashkey");
         Position pos = JsonParserManager.getInstance().retrievePositionFromJson(position);
         double lat = pos.getLatitude();
         double longitude = pos.getLongitude();
         if (title != null && snippet != null && lat != 0 && longitude != 0)
-            return new PointOfInterest(lat, longitude,title, snippet,type);
+            return new PointOfInterest(lat, longitude,title, snippet,type, userHashkey);
         return null;
     }
 
