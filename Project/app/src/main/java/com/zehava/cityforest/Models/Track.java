@@ -131,7 +131,7 @@ public class Track {
         result.put("likes", this.likes);
         result.put("points", this.points_of_interest);
         result.put("waypoints", this.waypoints);
-        result.put("user_hashkey", this.userHashkey);
+        result.put("uuid", this.userHashkey);
 
         return result;
     }
@@ -209,9 +209,6 @@ public class Track {
     }
 
     public void setWaypoints(List<String> waypoints) {
-        this.waypoints = waypoints;
-    }
-    public void setWaypoints(ArrayList<String> waypoints) {
         this.waypoints = waypoints;
     }
     public void setRoute(String route){

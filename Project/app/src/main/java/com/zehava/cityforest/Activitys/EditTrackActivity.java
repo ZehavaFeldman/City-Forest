@@ -51,7 +51,7 @@ public class EditTrackActivity extends AppCompatActivity {
     private Button cancel_button;
     private Button addPoints;
 
-    Map<String,String> tracksPointsOfInterest;
+    HashMap<String,String> tracksPointsOfInterest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,7 +100,7 @@ public class EditTrackActivity extends AppCompatActivity {
                 ending_point.setText((String)track.get("endinging_point"));
                 additional_info.clearFocus();
 
-                Map jArray = (HashMap<String,String>)track.get("points");
+                HashMap jArray = (HashMap<String,String>)track.get("points");
                 if (jArray != null)
                     tracksPointsOfInterest.putAll(jArray);
 
@@ -159,7 +159,7 @@ public class EditTrackActivity extends AppCompatActivity {
         edited_track.setPoints_of_interest(tracksPointsOfInterest);
         edited_track.setStarting_point(starting_point.getText().toString());
         edited_track.setEnding_point(starting_point.getText().toString());
-        edited_track.setPoints_of_interest(tracksPointsOfInterest);
+
 
         /*Converting our track object to a map, that makes
         * the track ready to be entered to the JSON tree*/
@@ -176,12 +176,13 @@ public class EditTrackActivity extends AppCompatActivity {
         try {
             super.onActivityResult(requestCode, resultCode, data);
             if (requestCode == PICK_POINTS_REQUEST && resultCode == PICK_POINTS_DONE) {
-                ArrayList<String> keys = data.getStringArrayListExtra("points");
-                ArrayList<String> types = data.getStringArrayListExtra("types");
-                tracksPointsOfInterest.clear();
-                for(int i = 0; i< keys.size(); i++){
-                    tracksPointsOfInterest.put(keys.get(i),types.get(i));
-                }
+//                ArrayList<String> keys = data.getStringArrayListExtra("points");
+//                ArrayList<String> types = data.getStringArrayListExtra("types");
+//                tracksPointsOfInterest.clear();
+//                for(int i = 0; i< keys.size(); i++){
+//                    tracksPointsOfInterest.put(keys.get(i),types.get(i));
+//                }
+                tracksPointsOfInterest = (HashMap<String,String>)data.getSerializableExtra("points");
 
             }
 

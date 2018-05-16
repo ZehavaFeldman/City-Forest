@@ -1,6 +1,8 @@
 package com.zehava.cityforest.Activitys;
 
+import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -9,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -25,6 +28,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -35,6 +39,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -45,8 +50,19 @@ import android.widget.RatingBar;
 import android.widget.LinearLayout;
 
 //import com.mapbox.mapboxsdk.Mapbox;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.GlideDrawable;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.facebook.AccessToken;
+import com.firebase.ui.storage.images.FirebaseImageLoader;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.mapbox.api.directions.v5.DirectionsCriteria;
 import com.mapbox.api.directions.v5.MapboxDirections;
 import com.mapbox.api.directions.v5.models.DirectionsResponse;
@@ -104,17 +120,21 @@ import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
 import com.mapbox.services.commons.geojson.LineString;
 import com.mapbox.services.commons.models.Position;
 
+import com.zehava.cityforest.Models.Image;
 import com.zehava.cityforest.Models.PointOfInterest;
 import com.zehava.cityforest.Models.User;
 import com.zehava.cityforest.MoveablePointActivity;
 import com.zehava.cityforest.R;
 
+import java.sql.Date;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -137,13 +157,17 @@ import static com.zehava.cityforest.Constants.EDITED_COORDINATE_FOR_ZOOM;
 import static com.zehava.cityforest.Constants.EDIT_COORDINATE;
 import static com.zehava.cityforest.Constants.EDIT_COORDINATE_MODE;
 import static com.zehava.cityforest.Constants.FINISH_EDIT_TRACK_MODE;
+import static com.zehava.cityforest.Constants.FROM_ADD_TRACK;
+import static com.zehava.cityforest.Constants.IMAGE_NAME;
 import static com.zehava.cityforest.Constants.LAST_LOCATION_SAVED;
 import static com.zehava.cityforest.Constants.MAX_NUM_OF_TRACK_COORDINATES;
 import static com.zehava.cityforest.Constants.MOVE_MARKER;
 import static com.zehava.cityforest.Constants.NEW_COORDINATE;
 import static com.zehava.cityforest.Constants.NEW_TRACK;
 import static com.zehava.cityforest.Constants.NEW_USER_UPDATE;
+import static com.zehava.cityforest.Constants.PICK_IMAGE_REQUEST;
 import static com.zehava.cityforest.Constants.ROUTE_LINE_WIDTH;
+import static com.zehava.cityforest.Constants.SELECTED_TRACK;
 import static com.zehava.cityforest.Constants.SET_FROM_PREFS;
 import static com.zehava.cityforest.Constants.SHOW_DETAILS_POPUP;
 import static com.zehava.cityforest.Constants.SHOW_TRACK_POPUP;
@@ -165,12 +189,11 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     private MapboxMap map;
     private DirectionsRoute currentRoute;
     private List<DirectionsWaypoint> currentRouteWaypoints;
-    private PolylineOptions routeLine;
     private FirebaseDatabase database;
     private DatabaseReference coordinates;
     private DatabaseReference tracks;
     private DatabaseReference points_of_interest;
-    private DatabaseReference user_updates;
+    private DatabaseReference user_updates, usersRef, images;
     private ImageButton add_coordinate_button;
     private ImageButton delete_coordinate_button;
     private ImageButton edit_coordinate_button;
@@ -192,6 +215,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
     private FloatingActionButton floatingActionButton;
     private FloatingActionButton createUserUpdate;
+    private FloatingActionButton camera, cancle;
+    private FloatingActionButton uploadImage, showAllImages;
     private LocationEngine locationEngine;
     private LocationEngineListener locationEngineListener;
     private PermissionsManager permissionsManager;
@@ -199,7 +224,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     private GoogleApiClient mGoogleApiClient;
 
     private ProgressBar loading_map_progress_bar;
-    private PopupWindow mPopupWindow;
+    private PopupWindow mPopupWindow, mTrackPopupWindow;
     private RelativeLayout mRelativeLayout;
 
     /*marker and imageview nedded for fragging points on map*/
@@ -211,8 +236,30 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     boolean markerIsPointOfInterest;
 
     private HashMap<String, String> stations = new HashMap();
+    private HashMap<String,String> tracksPointsOfInterest = new HashMap();
+    //private HashMap<String,String> points_for_track = new HashMap();
 
-    String uid, userhash;
+    String uid,uname,userhash, owner;
+
+    private PolylineOptions currRouteLine, routeLine;
+    DirectionsRoute currRoute;
+    TextView title;
+    TextView update_owner;
+    TextView discreption;
+    TextView username;
+    Button track_details;
+    Button read_more;
+    ImageView pointOfInterestImageView;
+    Uri filePath;
+    Map<String,Map<String,Marker>> points_for_track;
+    Map<String,Object> u_update;
+
+    Boolean expand=false;
+    Boolean expandable=false;
+
+    private StorageReference reallImgref;
+    private FirebaseStorage storage;
+    private StorageReference storageReference;
 
 
     @Override
@@ -256,6 +303,11 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         points_of_interest = database.getReference("points_of_interest");
         tracks = database.getReference("tracks");
         user_updates = database.getReference("user_updates");
+        usersRef = database.getReference("users");
+        images = database.getReference("storage_images");
+
+        storage = FirebaseStorage.getInstance();
+        storageReference = storage.getReference();
 
 
         /*Buttons for different edit map modes*/
@@ -450,11 +502,12 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 }
                 else{
                     ADD_COORDINATE_MODE = true;
-                    ADD_TRACK_MODE = false;
+                    //ADD_TRACK_MODE = false;
                     SHOW_DETAILS_POPUP = false;
+                    SHOW_TRACK_POPUP = false;
 
                     add_coordinate_button.setBackgroundResource(R.drawable.selected_btn);
-                    add_track_button.setBackgroundResource(R.drawable.not_selected_btn);
+                    //add_track_button.setBackgroundResource(R.drawable.not_selected_btn);
                 }
             }
 
@@ -476,13 +529,14 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     counter_coordinates.setVisibility(View.VISIBLE);
                     finish_edit_track_butt.setVisibility(View.VISIBLE);
                     cancale_track_butt.setVisibility(View.VISIBLE);
-                    add_coordinate_button.setClickable(false);
+                    //add_coordinate_button.setClickable(false);
 
                 }
             }
 //            /*If editor clicked this button, we need to show him the resulted track by creating
 //            * the route object and save it as the class's property*/
             if(v.getId() == finish_edit_track_butt.getId()){
+                ADD_COORDINATE_MODE = false;
                 if(track_markers.size() < 2){
                     Toast.makeText(EditorPanelActivity.this, R.string.not_enough_coordinates_selected, Toast.LENGTH_SHORT).show();
                     return;
@@ -544,6 +598,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             if(v.getId() == continue_editing.getId()){
                 //here we turn on ADD_TRACK_MODE
                 ADD_TRACK_MODE = true;
+                ADD_COORDINATE_MODE = false;
                 add_track_button.setClickable(true);
                 save_track.setVisibility(View.INVISIBLE);
                 continue_editing.setVisibility(View.INVISIBLE);
@@ -568,6 +623,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 i.putExtra(TRACK_ENDING_POINT_NAME, track_markers.get(track_markers.size()-1).getTitle());
                 i.putExtra(CURRENT_USER_NAME, userhash);
                 i.putStringArrayListExtra(TRACK_WAYPOINTS,JsonParserManager.getInstance().castListToJson(currentRouteWaypoints));
+                i.putExtra("points", tracksPointsOfInterest);
                 startActivityForResult(i, NEW_TRACK);
             }
 
@@ -576,12 +632,14 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
     private void cancaleTrack(){
         ADD_TRACK_MODE = false;
+        ADD_COORDINATE_MODE = false;
         add_track_button.setBackgroundResource(R.drawable.not_selected_btn);
 
                     /*
                     Passing on track_coordinates markers
                     * and change their color back to red.
                     * And clearing both arrays for the next time building a new track*/
+        tracksPointsOfInterest.clear();
 
         for(int i=0; i<track_markers.size(); i++){
             final Marker marker = track_markers.get(i);
@@ -652,8 +710,44 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
 
 
+        mTrackPopupWindow = new PopupWindow(
+                inflater.inflate(R.layout.track_details_popup, null),
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+        );
+        if(Build.VERSION.SDK_INT>=21){
+            mTrackPopupWindow.setElevation(5.0f);
+        }
+
+        mTrackPopupWindow.setOutsideTouchable(true);
+        mTrackPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                if(!SHOW_DETAILS_POPUP) {
+                    for (Object o : points_for_track.entrySet()) {
+                        Map.Entry pair = (Map.Entry) o;
+                        HashMap<String,Marker> child = (HashMap<String,Marker>)pair.getValue();
+                        for(Object c: child.entrySet()) {
+                            Map.Entry cpair = (Map.Entry) c;
+                            Marker marker = (Marker) cpair.getValue();
+                            marker.setIcon(IconManager.getInstance().getIconForType((String)pair.getKey()));
+                        }
+
+                    }
+                    map.removePolyline(currRouteLine.getPolyline());
+                    drawRoute(currRoute,Color.RED);
+
+                    SHOW_TRACK_POPUP = false;
+                    //showDefaultLocation();
+                    showCurrentLocation(true);
+                }
+
+            }
+        });
+
+
         mPopupWindow = new PopupWindow(
-                inflater.inflate(R.layout.coordinate_details_popup_view, null),
+                inflater.inflate(R.layout.coordinate_details_popup, null),
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
         );
@@ -661,17 +755,619 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             mPopupWindow.setElevation(5.0f);
         }
 
-
         mPopupWindow.setOutsideTouchable(true);
         mPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @Override
             public void onDismiss() {
-                SHOW_DETAILS_POPUP=false;
+
+                SHOW_DETAILS_POPUP = false;
+                if(!points_for_track.isEmpty()){
+                    //SHOW_TRACK_POPUP = true;
+                    mTrackPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+                }
+                //showDefaultLocation();
+                showCurrentLocation(true);
+
+            }
+        });
+
+    }
+
+
+    private void initTrackPopup(final  Map<String, Object> track, final String userHashkey){
+
+        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+        View view = inflater.inflate(R.layout.track_details_popup, null);
+        mTrackPopupWindow.setContentView(view);
+
+        title = mTrackPopupWindow.getContentView().findViewById(R.id.main_content);
+        discreption = mTrackPopupWindow.getContentView().findViewById(R.id.minor_content);
+//        track_details = mTrackPopupWindow.getContentView().findViewById(R.id.goto_full_des);
+        read_more = mTrackPopupWindow.getContentView().findViewById(R.id.read_more);
+
+        title.setText(track.get("track_name").toString());
+        discreption.setText(track.get("additional_info").toString());
+
+
+//        track_details.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Intent intent = new Intent(EditorPanelActivity.this, SelectedTrackDetailsActivity.class);
+//                intent.putExtra(SELECTED_TRACK, String.valueOf(track.get("db_key")));
+//                startActivity(intent);
+//            }
+//        });
+
+        delete_coordinate_button = (ImageButton)mTrackPopupWindow.getContentView().findViewById(R.id.deleteCoordinateButt);
+        edit_coordinate_button = (ImageButton)mTrackPopupWindow.getContentView().findViewById(R.id.editCoordinateButt);
+
+        //add click listeners for editing and removing track
+        delete_coordinate_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialogDeleteTrack(track);
+            }
+        });
+        edit_coordinate_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialogEditTrack(track);
             }
         });
 
 
+        read_more.setVisibility(View.INVISIBLE);
+        read_more.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+
+                if (!expand) {
+                    expand = true;
+                    ObjectAnimator animation = ObjectAnimator.ofInt(discreption, "maxLines", 40);
+                    animation.setDuration(100).start();
+                    read_more.setText(getString(R.string.read_less_butt));
+                } else {
+                    expand = false;
+                    ObjectAnimator animation = ObjectAnimator.ofInt(discreption, "maxLines",2);
+                    animation.setDuration(100).start();
+                    read_more.setText(getString(R.string.read_more_butt));
+                }
+
+            }
+        });
+
+
+        discreption.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                if(expandable) {
+                    expandable = false;
+                    if (discreption.getLineCount() > 2) {
+                        read_more.setVisibility(View.VISIBLE);
+                        ObjectAnimator animation = ObjectAnimator.ofInt(discreption, "maxLines", 2);
+                        animation.setDuration(0).start();
+                    }
+                }
+            }
+        });
+
+        username = mTrackPopupWindow.getContentView().findViewById(R.id.user_id);
+        DatabaseReference childref = usersRef.child(userHashkey);
+
+        childref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Map<String, Object> userMap = (Map<String, Object>)dataSnapshot.getValue();
+                if(userMap == null) {
+                    return;
+                }
+
+
+                username.setText((String) userMap.get("email"));
+                username.setOnClickListener(new View.OnClickListener(){
+                    public void onClick(View v){
+                        Intent facebookIntent = getOpenFacebookIntent(userHashkey);
+                        startActivity(facebookIntent);
+                    }
+                });
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        RatingBar ratingBar = (RatingBar)mTrackPopupWindow.getContentView().findViewById(R.id.ratingBar);
+        ratingBar.setVisibility(View.VISIBLE);
+
+        //editor can only view current rating
+        ratingBar.setIsIndicator(true);
+        Float d = Float.valueOf(track.get("star_count").toString());
+        Object o = (Object) d;
+        ratingBar.setRating((float) o);
+
+
+        LinearLayout likesWrp = (LinearLayout) mTrackPopupWindow.getContentView().findViewById(R.id.like_wrp);
+        likesWrp.setVisibility(View.VISIBLE);
+
+        likes_count = (TextView) mTrackPopupWindow.getContentView().findViewById(R.id.like_count);
+        likes_count.setText(String.valueOf( track.get("like_count")));
+
+        mTrackPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
     }
+
+    private void initMarkerPopup(final Marker marker, final String type, final String imageUUID, final String userHashkey){
+        expand=false;
+        expandable=true;
+
+        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+        View view = inflater.inflate(R.layout.coordinate_details_popup, null);
+        mPopupWindow.setContentView(view);
+
+        title = mPopupWindow.getContentView().findViewById(R.id.main_content);
+        discreption = mPopupWindow.getContentView().findViewById(R.id.minor_content);
+        username = mPopupWindow.getContentView().findViewById(R.id.user_id);
+        read_more = mPopupWindow.getContentView().findViewById(R.id.read_more);
+        camera = mPopupWindow.getContentView().findViewById(R.id.camera);
+        cancle = mPopupWindow.getContentView().findViewById(R.id.cancle);
+        showAllImages = mPopupWindow.getContentView().findViewById(R.id.show_all_imges);
+        uploadImage = mPopupWindow.getContentView().findViewById(R.id.upload_imge);
+        pointOfInterestImageView = mPopupWindow.getContentView().findViewById(R.id.firebase_storage_image);
+
+        final String imageName = PMethods.getInstance().getMarkerHashKey(marker);
+        if(imageUUID != null) {
+            reallImgref = storageReference.child(imageUUID);
+        }
+
+        if(cancle != null && imageUUID != null) {
+            cancle.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+
+                    Glide.with(EditorPanelActivity.this /* context */)
+                            .using(new FirebaseImageLoader())
+                            .load(reallImgref)
+                            .listener(new RequestListener<StorageReference, GlideDrawable>() {
+                                @Override
+                                public boolean onException(Exception e, StorageReference model, Target<GlideDrawable> target, boolean isFirstResource) {
+                                    mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+                                    return false;
+                                }
+
+                                @Override
+                                public boolean onResourceReady(GlideDrawable resource, StorageReference model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
+                                    mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+                                    return false;
+                                }
+                            })
+                            .into(pointOfInterestImageView);
+                    cancle.setVisibility(View.INVISIBLE);
+                    uploadImage.setVisibility(View.INVISIBLE);
+                    showAllImages.setVisibility(View.VISIBLE);
+                    camera.setVisibility(View.VISIBLE);
+                    showAllImages.setVisibility(View.VISIBLE);
+                }
+
+            });
+        }
+
+        if(camera != null) {
+            camera.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent();
+                    intent.setType("image/*");
+                    intent.setAction(Intent.ACTION_GET_CONTENT);
+                    startActivityForResult(Intent.createChooser(intent, "Select Picture"), PICK_IMAGE_REQUEST);
+                }
+            });
+        }
+
+        if(showAllImages != null){
+            showAllImages.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(EditorPanelActivity.this, PointOfInterestGallary.class);
+                    intent.putExtra(IMAGE_NAME, PMethods.getInstance().getMarkerHashKey(marker));
+                    startActivity(intent);
+                }
+            });
+        }
+
+        if(uploadImage != null) {
+            uploadImage.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    PointOfInterest pointOfInterest = new PointOfInterest(
+                            marker.getPosition().getLongitude(),
+                            marker.getPosition().getLatitude(),
+                            marker.getTitle(),
+                            marker.getSnippet(),
+                            type,
+                            userHashkey);
+                    uploadImage(PMethods.getInstance().getMarkerHashKey(marker), pointOfInterest);
+                }
+            });
+        }
+        title.setText(marker.getTitle());
+        discreption.setText(marker.getSnippet());
+
+        DatabaseReference childref = usersRef.child(userHashkey);
+
+        childref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Map<String, Object> userMap = (Map<String, Object>)dataSnapshot.getValue();
+                if(userMap == null) {
+                    return;
+                }
+
+
+                username.setText((String) userMap.get("email"));
+                username.setOnClickListener(new View.OnClickListener(){
+                    public void onClick(View v){
+                        Intent facebookIntent = getOpenFacebookIntent(userHashkey);
+                        startActivity(facebookIntent);
+                    }
+                });
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
+        read_more.setVisibility(View.INVISIBLE);
+        read_more.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+
+                if (!expand) {
+                    expand = true;
+                    ObjectAnimator animation = ObjectAnimator.ofInt(discreption, "maxLines", 40);
+                    animation.setDuration(100).start();
+                    read_more.setText(getString(R.string.read_less_butt));
+                } else {
+                    expand = false;
+                    ObjectAnimator animation = ObjectAnimator.ofInt(discreption, "maxLines",2);
+                    animation.setDuration(100).start();
+                    read_more.setText(getString(R.string.read_more_butt));
+                }
+
+            }
+        });
+
+
+        discreption.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                if(expandable) {
+                    expandable = false;
+                    if (discreption.getLineCount() > 2) {
+                        read_more.setVisibility(View.VISIBLE);
+                        ObjectAnimator animation = ObjectAnimator.ofInt(discreption, "maxLines", 2);
+                        animation.setDuration(0).start();
+                    }
+                }
+            }
+        });
+
+        delete_coordinate_button = mPopupWindow.getContentView().findViewById(R.id.deleteCoordinateButt);
+        edit_coordinate_button = mPopupWindow.getContentView().findViewById(R.id.editCoordinateButt);
+
+        //add click listeners for editing and removing point of intereset
+        delete_coordinate_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialogDeleteCoordinate(marker, type);
+            }
+        });
+        edit_coordinate_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialogEditCoordinate(marker);
+            }
+        });
+
+
+        if(imageUUID != null) {
+            Glide.with(EditorPanelActivity.this /* context */)
+                    .using(new FirebaseImageLoader())
+                    .load(reallImgref)
+                    .listener(new RequestListener<StorageReference, GlideDrawable>() {
+                        @Override
+                        public boolean onException(Exception e, StorageReference model, Target<GlideDrawable> target, boolean isFirstResource) {
+                            mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onResourceReady(GlideDrawable resource, StorageReference model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
+                            mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+                            return false;
+                        }
+                    })
+                    .into(pointOfInterestImageView);
+        }
+        else{
+            if(pointOfInterestImageView != null)
+                pointOfInterestImageView.setImageResource(android.R.color.transparent);
+            mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+        }
+
+        if(pointOfInterestImageView != null) {
+            pointOfInterestImageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent imagePreview = new Intent(EditorPanelActivity.this, ImageFullScreenPreview.class);
+                    imagePreview.putExtra(IMAGE_NAME, imageUUID);
+                    startActivity(imagePreview);
+
+                }
+            });
+        }
+
+//        mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+
+    }
+
+
+    private void initUpdateInfoWindow(final Marker update){
+
+        LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+        View view = inflater.inflate(R.layout.user_update_infowindow, null);
+        mPopupWindow.setContentView(view);
+
+        TextView title = mPopupWindow.getContentView().findViewById(R.id.update_main_content);
+        title.setText(update.getTitle());
+
+
+        final String key = PMethods.getInstance().getUserUpdateHashKey(update);
+        user_updates.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Map<String, Object> updates = (Map<String, Object>)dataSnapshot.getValue();
+
+
+                u_update = (Map<String,Object>)updates.get(key);
+                if(u_update!=null){
+                    String created;
+                    Date time;
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yy | HH:mm");
+
+                    TextView update_created = mPopupWindow.getContentView().findViewById(R.id.created);
+                    update_owner= mPopupWindow.getContentView().findViewById(R.id.owner);
+                    if(u_update.get("uuid")!=null && u_update.get("updated")!=null) {
+
+                        DatabaseReference childref = usersRef.child((String) u_update.get("uuid"));
+
+                        childref.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                Map<String, Object> userMap = (Map<String, Object>)dataSnapshot.getValue();
+                                if(userMap == null) {
+                                    return;
+                                }
+
+
+                                owner = getResources().getString(R.string.created_by) + ": " + userMap.get("name");
+                                update_owner.setText(owner);
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
+                            }
+                        });
+
+                        time = new Date(((Number) u_update.get("updated")).longValue() * 1000);
+                        created = getResources().getString(R.string.at) + ": " + dateFormat.format(time);
+                        update_created.setText(created);
+
+
+                    }
+
+                    ImageView img = mPopupWindow.getContentView().findViewById(R.id.img);
+                    int res = IconManager.getInstance().getResourceFrType(u_update.get("type").toString());
+                    if(res != -1)
+                        img.setBackgroundResource(IconManager.getInstance().getResourceFrType(u_update.get("type").toString()));
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        TextView discreption = mPopupWindow.getContentView().findViewById(R.id.update_minor_content);
+        discreption.setText(update.getSnippet());
+
+
+
+        Button read_more =  mPopupWindow.getContentView().findViewById(R.id.not_here);
+        read_more.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean enableGps = !map.isMyLocationEnabled();
+                if (enableGps) {
+                    // Check if user has granted location permission
+                    permissionsManager = new PermissionsManager(EditorPanelActivity.this);
+                    if (!PermissionsManager.areLocationPermissionsGranted(EditorPanelActivity.this)) {
+                        permissionsManager.requestLocationPermissions(EditorPanelActivity.this);
+                    } else {
+                        Location lastLocation = getLastLocation();
+                        if(lastLocation!= null) {
+                            LatLng currentLoc = new LatLng(lastLocation);
+                            LatLng updateLoc = new LatLng(update.getPosition());
+                            if(currentLoc.distanceTo(updateLoc) <= 50.0){
+                                user_updates.child(key).removeValue();
+                                Iterator<Marker> allMarkersIterator = map.getMarkers().iterator();
+
+                                while(allMarkersIterator.hasNext()) {
+                                    Marker markerItemAll = allMarkersIterator.next();
+
+                                    if (PMethods.getInstance().getUserUpdateHashKey(markerItemAll).equals(key)) {
+                                        allMarkersIterator.remove();
+                                        map.removeMarker(markerItemAll);
+                                    }
+
+                                }
+                                mPopupWindow.dismiss();
+                                Toast.makeText(EditorPanelActivity.this, "Notification reoved.",
+                                        Toast.LENGTH_LONG).show();
+                            }
+                            else{
+                                Toast.makeText(EditorPanelActivity.this, "Must be with in 50m from  location to send an update.",
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        }
+                        else{
+                            Toast.makeText(EditorPanelActivity.this, "Location not found, cant send update.",
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
+                } else {
+                    Location lastLocation = getLastLocation();
+                    if(lastLocation!= null) {
+                        LatLng currentLoc = new LatLng(lastLocation);
+                        LatLng updateLoc = new LatLng(update.getPosition());
+                        if(currentLoc.distanceTo(updateLoc) <= 50.0){
+                            user_updates.child(key).removeValue();
+                            Iterator<Marker> allMarkersIterator = map.getMarkers().iterator();
+
+                            while(allMarkersIterator.hasNext()) {
+                                Marker markerItemAll = allMarkersIterator.next();
+
+                                if (markerItemAll.toString().equals(update.toString())) {
+                                    allMarkersIterator.remove();
+                                    map.removeMarker(markerItemAll);
+                                }
+
+                            }
+                            Toast.makeText(EditorPanelActivity.this, "Notification removed.",
+                                    Toast.LENGTH_LONG).show();
+                            mPopupWindow.dismiss();
+                        }
+                        else{
+                            Toast.makeText(EditorPanelActivity.this, "Must be with in 50m from  location to send an update.",
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
+                    else{
+                        Toast.makeText(EditorPanelActivity.this, "Location not found, cant send update.",
+                                Toast.LENGTH_LONG).show();
+                    }
+                }
+
+            }
+        });
+
+
+        mPopupWindow.showAtLocation(mRelativeLayout, Gravity.CENTER, 0, 0);
+
+    }
+
+
+    public Intent getOpenFacebookIntent(String uuid) {
+
+        try {
+            getPackageManager()
+                    .getPackageInfo("com.facebook.katana", 0); //Checks if FB is even installed.
+            return new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("fb://profile/"+uuid)); //Trys to make intent with FB's URI
+        } catch (Exception e) {
+            return new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://www.facebook.com/arkverse")); //catches and opens a url to the desired page
+        }
+    }
+
+
+    private void uploadImage(final String imageName, final PointOfInterest pointOfInterest) {
+
+        if(filePath != null)
+        {
+            final ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setTitle("Uploading...");
+            progressDialog.show();
+
+            final String uuid = UUID.randomUUID().toString();
+            StorageReference ref = storageReference.child("images/"+ imageName +"/"+ uuid);
+            ref.putFile(filePath)
+                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            progressDialog.dismiss();
+                            Toast.makeText(EditorPanelActivity.this, "Uploaded", Toast.LENGTH_SHORT).show();
+                            String newPath = storageReference.child("images/"+ imageName +"/"+ uuid).getPath();
+                            pointOfInterest.setImage(newPath);
+                            Map<String, Object> pointMap = pointOfInterest.toMap();
+
+                            Map<String, Object> childUpdates = new HashMap<>();
+                            childUpdates.put(imageName, pointMap);
+                            points_of_interest.updateChildren(childUpdates);
+
+                            Image image = new Image(newPath);
+                            Map<String, Object> imageMap = image.toMap();
+
+                            String key = images.child(imageName).push().getKey();
+                            childUpdates.clear();
+                            childUpdates.put(key, imageMap);
+                            images.child(imageName).updateChildren(childUpdates);
+
+                            uploadImage.setVisibility(View.INVISIBLE);
+                            cancle.setVisibility(View.INVISIBLE);
+                            camera.setVisibility(View.VISIBLE);
+                            showAllImages.setVisibility(View.VISIBLE);
+
+
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            progressDialog.dismiss();
+                            Toast.makeText(EditorPanelActivity.this, "Failed "+e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                            double progress = (100.0*taskSnapshot.getBytesTransferred()/taskSnapshot
+                                    .getTotalByteCount());
+                            progressDialog.setMessage("Uploaded "+(int)progress+"%");
+                        }
+                    });
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     //track popup
     private void initTrackPopup(final  Map<String, Object> track){
@@ -803,7 +1499,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
                     String route_st = (String)track.get("route");
                     DirectionsRoute route = JsonParserManager.getInstance().retrieveRouteFromJson(route_st);
-                    drawRoute(route, false);
+                    drawRoute(route, Color.RED);
                 }
                 loading_map_progress_bar.setVisibility(View.INVISIBLE);
             }
@@ -843,8 +1539,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
                     /*Creating the marker on the map*/
                     LatLng latlng = new LatLng(
-                            position.getLongitude(),
-                            position.getLatitude());
+                            position.getLatitude(),
+                            position.getLongitude());
                     String type = (String)point.get("type");
                     String title = (String) point.get("title");
 
@@ -883,8 +1579,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
                     /*Creating the marker on the map*/
                     LatLng latlng = new LatLng(
-                            position.getLongitude(),
-                            position.getLatitude());
+                            position.getLatitude(),
+                            position.getLongitude());
 
                     addMarkerForUserUpdate(latlng, (String)point.get("title"), (String)point.get("snippet"), (String)point.get("type"));
                 }
@@ -921,8 +1617,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
                     /*Creating the marker on the map*/
                     LatLng latlng = new LatLng(
-                            position.getLongitude(),
-                            position.getLatitude());
+                            position.getLatitude(),
+                            position.getLongitude());
                     addMarkerForCoordinate(latlng, (String)cor.get("title"), (String)cor.get("snippet"));
                 }
 
@@ -976,7 +1672,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                         Toast.LENGTH_LONG).show();
 
                 // Draw the route on the map
-                drawRoute(currentRoute,true);
+                drawRoute(currentRoute,Color.DKGRAY);
             }
 
             @Override
@@ -987,29 +1683,26 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
     }
 
-    private void drawRoute(DirectionsRoute route, boolean newPolyline) {
+
+    private void drawRoute(DirectionsRoute route,int color) {
         // Convert LineString coordinates into LatLng[]
         LineString lineString = LineString.fromPolyline(route.geometry(), com.mapbox.services.Constants.OSRM_PRECISION_V5);
         List<Position> coordinates = lineString.getCoordinates();
         LatLng[] points = new LatLng[coordinates.size()];
         for (int i = 0; i < coordinates.size(); i++) {
             points[i] = new LatLng(
-                    (coordinates.get(i).getLatitude()/10),
-                    (coordinates.get(i).getLongitude()/10));
+                    coordinates.get(i).getLatitude()/10,
+                    coordinates.get(i).getLongitude()/10);
         }
 
         // Draw Points on MapView
-        if(newPolyline){
-            routeLine = new PolylineOptions()
-                    .add(points)
-                    .color(Color.DKGRAY)
-                    .width(ROUTE_LINE_WIDTH);
-        }
-        else  {
-            routeLine = new PolylineOptions()
-                    .add(points)
-                    .color(Color.RED)
-                    .width(ROUTE_LINE_WIDTH);
+        routeLine = new PolylineOptions()
+                .add(points)
+                .color(color)
+                .width(ROUTE_LINE_WIDTH);
+
+        if(color == Color.BLUE) {
+            currRouteLine = routeLine;
         }
         map.addPolyline(routeLine);
 
@@ -1129,17 +1822,20 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         @Override
         public void onMapClick(@NonNull final LatLng point) {
 
-            if(SHOW_DETAILS_POPUP){
+            if(SHOW_DETAILS_POPUP || SHOW_TRACK_POPUP){
                 mPopupWindow.dismiss();
-
+                mTrackPopupWindow.dismiss();
+                return;
             }
 
-            if(ADD_COORDINATE_MODE)
-                dialogAddNewCoordinate(point);
+            if(ADD_COORDINATE_MODE) {
+                dialogAddNewCoordinate(point, ADD_TRACK_MODE);
+                return;
             /*When clicking on a location (which is not a marker!) in the map while
             * being in ADD_COORDINATE_MODE,
             * we want to ask the editor if he wants to add a new coordinate
             * in the database for this specific location*/
+            }
 
             if(ADD_TRACK_MODE && count_coordinates_selected < MAX_NUM_OF_TRACK_COORDINATES) {
 //                if(count_coordinates_selected == 0){
@@ -1161,7 +1857,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             else if(ADD_TRACK_MODE && count_coordinates_selected >= MAX_NUM_OF_TRACK_COORDINATES){
                 Toast.makeText(EditorPanelActivity.this, R.string.reached_limit_of_coordinates, Toast.LENGTH_SHORT).show();
             }
-            else if(!ADD_TRACK_MODE){
+            else if(!ADD_TRACK_MODE && !ADD_COORDINATE_MODE){
                 tracks.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -1175,6 +1871,9 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                             Map<String, Object> track = ((Map<String, Object>) entry.getValue());
 
                             String route_st = (String)track.get("route");
+                            String uuid = (String)track.get("uuid");
+                            uuid = uuid == null ? "" : uuid;
+
                             DirectionsRoute route = JsonParserManager.getInstance().retrieveRouteFromJson(route_st);
                             Polyline polyline = getPolyLineFromRoute(route);
 
@@ -1184,11 +1883,52 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                                 Location.distanceBetween(point.getLatitude(), point.getLongitude(),
                                         polyCoords.getLatitude(), polyCoords.getLongitude(), results);
 
-                                if (results[0] < 100 && !SHOW_DETAILS_POPUP) {
+//                                if (results[0] < 100 && !SHOW_DETAILS_POPUP) {
+//                                    // If distance is less than 100 meters, this is your polyline
+////                                    Log.e(TAG, "Found @ "+clickCoords.latitude+" "+clickCoords.longitude);
+//                                    SHOW_DETAILS_POPUP = true;
+//                                    initTrackPopup(track);
+//                                }
+                                if (results[0] < 100) {
                                     // If distance is less than 100 meters, this is your polyline
 //                                    Log.e(TAG, "Found @ "+clickCoords.latitude+" "+clickCoords.longitude);
-                                    SHOW_DETAILS_POPUP = true;
-                                    initTrackPopup(track);
+                                    if(!SHOW_TRACK_POPUP) {
+                                        List<Polyline> mapPolylines = map.getPolylines();
+                                        for(int i=0; i<mapPolylines.size();i++){
+                                            Polyline map_polyline = mapPolylines.get(i);
+                                            if (polyline.getPoints().toString().equals(map_polyline.getPoints().toString()))
+                                            {
+                                                map.removePolyline(map_polyline);
+                                                i=mapPolylines.size();
+                                            }
+                                        }
+                                        currRoute = route;
+                                        drawRoute(route,Color.BLUE);
+                                        SHOW_TRACK_POPUP = true;
+                                        points_for_track.clear();
+                                        Map<String,String> pointsL =  (HashMap<String,String>)track.get("points");
+                                        if (pointsL != null) {
+
+                                            for (Marker markerItemAll : map.getMarkers()) {
+                                                //                                                for (String point : pointsL) {
+                                                String markerKey = PMethods.getInstance().getMarkerHashKey(markerItemAll);
+                                                if (pointsL.containsKey(markerKey)) {
+                                                    String type = pointsL.get(markerKey);
+                                                    String large = type + " ג";
+                                                    markerItemAll.setIcon(IconManager.getInstance().getIconForType(large));
+                                                    Map<String,Marker> child = points_for_track.get(type);
+                                                    if(child == null)
+                                                        child = new HashMap<>();
+                                                    child.put(markerKey, markerItemAll);
+                                                    points_for_track.put(type,child);
+
+                                                }
+                                            }
+                                        }
+
+                                        initTrackPopup(track, uuid);
+
+                                    }
                                 }
 
                             }
@@ -1210,7 +1950,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         track_coordinates.remove(marker.getPosition().getLongitude());
         track_coordinates.remove(marker.getPosition().getLatitude());
         track_markers.remove(marker);
-        LatLng temp = new LatLng(marker.getPosition().getLongitude(), marker.getPosition().getLatitude());
+        LatLng temp = new LatLng(marker.getPosition().getLatitude(), marker.getPosition().getLongitude());
         track_positions.remove(temp);
 
     }
@@ -1224,8 +1964,8 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             else if(track_coordinates.get(i)==temp.getPosition().getLongitude())
                 track_coordinates.set(i,marker.getPosition().getLongitude());
         }
-        LatLng tempP = new LatLng(temp.getPosition().getLongitude(), temp.getPosition().getLatitude());
-        LatLng newP = new LatLng(marker.getPosition().getLongitude(), marker.getPosition().getLatitude());
+        LatLng tempP = new LatLng(temp.getPosition().getLatitude(), temp.getPosition().getLongitude());
+        LatLng newP = new LatLng(marker.getPosition().getLatitude(), marker.getPosition().getLongitude());
         for(int i=0; i<track_positions.size();i++){
             if(track_positions.get(i).toString().equals(tempP.toString()))
                 track_positions.set(i,newP);
@@ -1302,6 +2042,9 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
         @Override
         public boolean onMarkerClick(@NonNull final Marker marker, @NonNull View view, @NonNull MapboxMap.MarkerViewAdapter adapter) {
 
+            if(points_for_track.isEmpty())
+                mTrackPopupWindow.dismiss();
+
             if(!ADD_TRACK_MODE) {
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(marker.getPosition().getLatitude(),
                         marker.getPosition().getLongitude()), ZOOM_LEVEL_MARKER_CLICK));
@@ -1312,13 +2055,32 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         Map<String, Object> pointsMap = (Map<String, Object>)dataSnapshot.getValue();
                         Map<String, Object> point = ((Map<String, Object>)pointsMap.get(key));
+//                        if(point != null) {
+//                            String type = (String) point.get("type");
+//                            //if (!type.equals("תחנת רכבת")) {
+//                                SHOW_DETAILS_POPUP = true;
+//                                initMarkerPopup(marker, type);
+//                           // }
+//                        }
+
                         if(point != null) {
                             String type = (String) point.get("type");
-                            //if (!type.equals("תחנת רכבת")) {
-                                SHOW_DETAILS_POPUP = true;
-                                initMarkerPopup(marker, type);
-                           // }
+                            String imageUUId = (String) point.get("imagePath");
+                            String uuid = (String) point.get("uuid");
+                            uuid = uuid== null ? "" : uuid;
+//                        if (!type.equals("תחנת רכבת")) {
+                            SHOW_DETAILS_POPUP = true;
+                            mTrackPopupWindow.dismiss();
+                            initMarkerPopup(marker, type,imageUUId, uuid);
+
+//                        }
                         }
+                        else{
+                            SHOW_DETAILS_POPUP = true;
+                            mTrackPopupWindow.dismiss();
+                            initUpdateInfoWindow(marker);
+                        }
+
                     }
 
                     @Override
@@ -1626,6 +2388,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 deleteCoordinateFromDb(marker, true, type);
             }
         });
+
         builder.setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 return;
@@ -1653,7 +2416,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
     /*Dialog function to ask the editor if he wants to add new coordinate with details.
     * if yes, we are directed to the creating new coordinate activity*/
-    private void dialogAddNewCoordinate(final LatLng point) {
+    private void dialogAddNewCoordinate(final LatLng point, final boolean trackMode) {
         AlertDialog.Builder builder = new AlertDialog.Builder(EditorPanelActivity.this);
         builder.setMessage(getResources().getString(R.string.dialog_add_new_coordinate));
 
@@ -1663,11 +2426,15 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 Intent i = new Intent(EditorPanelActivity.this, CreateNewCoordinateActivity.class);
                 i.putExtra(CHOSEN_COORDINATE, JsonParserManager.getInstance().castLatLngToJson(point));
                 i.putExtra(CURRENT_USER_NAME,userhash);
+                i.putExtra(FROM_ADD_TRACK,trackMode);
                 startActivityForResult(i, NEW_COORDINATE);
             }
         });
+
         builder.setNegativeButton(R.string.dialog_cancel, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
+                if(trackMode)
+                    ADD_COORDINATE_MODE = false;
                 return;
             }
         });
@@ -1906,22 +2673,22 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
             }
             if(requestCode == EDIT_COORDINATE && resultCode == COORDINATE_EDITED){
                 LatLng createdCoordinateLatLng = JsonParserManager.getInstance().retreiveLatLngFromJson(data.getStringExtra(EDITED_COORDINATE_FOR_ZOOM));
-                String key = hashFunction(createdCoordinateLatLng.getLatitude());
+                String key = hashFunction(createdCoordinateLatLng.getLongitude());
                 updateScreenCoordinates(key, createdCoordinateLatLng, EDIT_COORDINATE);
 
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                        new LatLng(createdCoordinateLatLng.getLongitude(),
-                                createdCoordinateLatLng.getLatitude()), ZOOM_LEVEL_MARKER_CLICK));
+                        new LatLng(createdCoordinateLatLng.getLatitude(),
+                                createdCoordinateLatLng.getLongitude()), ZOOM_LEVEL_MARKER_CLICK));
             }
 
             if(requestCode == NEW_USER_UPDATE && resultCode == USER_UPDATE_CREATED){
                 LatLng createdUpdateCoordinateLatLang = JsonParserManager.getInstance().retreiveLatLngFromJson(data.getStringExtra(CREATED_UPDATE_FOR_ZOOM));
-                String key = userUpdateHashFunction(createdUpdateCoordinateLatLang.getLatitude(),data.getIntExtra("id",0));
+                String key = userUpdateHashFunction(createdUpdateCoordinateLatLang.getLongitude(),data.getIntExtra("id",0));
                 updateScreenUserUpdatesValue(key, createdUpdateCoordinateLatLang, NEW_USER_UPDATE);
 
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                        new LatLng(createdUpdateCoordinateLatLang.getLongitude(),
-                                createdUpdateCoordinateLatLang.getLatitude()), ZOOM_LEVEL_MARKER_CLICK));
+                        new LatLng(createdUpdateCoordinateLatLang.getLatitude(),
+                                createdUpdateCoordinateLatLang.getLongitude()), ZOOM_LEVEL_MARKER_CLICK));
             }
 
         } catch (Exception ex) {
@@ -1959,9 +2726,10 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
                                 map.removeMarker(markers.get(i));
                             }
-                            LatLng tempLatLng = new LatLng(createdCoordinate.getLongitude(), createdCoordinate.getLatitude());
+                            LatLng tempLatLng = new LatLng(createdCoordinate.getLatitude(), createdCoordinate.getLongitude());
                             addMarkerForCoordinate(tempLatLng,
                                     (String)cor.get("title"), (String)cor.get("snippet"));
+
                         }
 
                     }
@@ -1995,9 +2763,10 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
                 Map<String, Object> point = ((Map<String, Object>)pointsMap.get(key));
                 if(point == null){
                     Toast.makeText(EditorPanelActivity.this, "point is null", Toast.LENGTH_SHORT).show();
+                    return;
                 }
 
-
+                tracksPointsOfInterest.put(key, (String)point.get("type"));
                 if(mode == NEW_COORDINATE){
                     addMarkerForPointOfInterest(createdCoordinate,
                             (String)point.get("title"), (String)point.get("snippet"),
@@ -2011,7 +2780,7 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
 
                             map.removeMarker(markers.get(i));
                         }
-                        LatLng tempLatLng = new LatLng(createdCoordinate.getLongitude(), createdCoordinate.getLatitude());
+                        LatLng tempLatLng = new LatLng(createdCoordinate.getLatitude(), createdCoordinate.getLongitude());
                         addMarkerForPointOfInterest(tempLatLng,
                                 (String)point.get("title"), (String)point.get("snippet"),
                                 (String)point.get("type"));
@@ -2196,12 +2965,9 @@ public class EditorPanelActivity extends AppCompatActivity implements Permission
     @Override
     public void onBackPressed() {
         if(SHOW_DETAILS_POPUP)
-        {
-
             mPopupWindow.dismiss();
-//            mPopupWindow = null;
-            showCurrentLocation(true);
-        }
+        else if(SHOW_TRACK_POPUP)
+            mTrackPopupWindow.dismiss();
         else {
 
             new AlertDialog.Builder(this)

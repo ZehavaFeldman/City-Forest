@@ -156,7 +156,14 @@ public class JsonParserManager {
     }
 
 
+    public String castPositionToJson(Position position){
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.serializeSpecialFloatingPointValues();
 
+        Gson gson = gsonBuilder.create();
+        String json = gson.toJson(position, Position.class);
+        return json;
+    }
 
 
 }

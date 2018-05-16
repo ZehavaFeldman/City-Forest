@@ -46,7 +46,7 @@ import static com.zehava.cityforest.Constants.TRACK_EDIT;
 
 public class ChoosePointsOfInterestForTrack extends AppCompatActivity {
 
-    private  Map<String, String> tracksPointsOfInterest;
+    private  HashMap<String, String> tracksPointsOfInterest;
     FirebasePointsListAdapter adapter;
     private FirebaseDatabase database;
     private DatabaseReference tracks, points_of_interest;
@@ -94,6 +94,7 @@ public class ChoosePointsOfInterestForTrack extends AppCompatActivity {
                 else
                     tracksPointsOfInterest.put(pointkey,pointOfInterest.getType());
 
+
                 adapter.setSelectedIndex(pointkey,pointkey);
 
 
@@ -126,6 +127,14 @@ public class ChoosePointsOfInterestForTrack extends AppCompatActivity {
 
             }
         });
+    } else{
+
+        HashMap<String,String> t = (HashMap<String,String>)i.getSerializableExtra("points");
+        if(t!=null){
+            adapter.setSelectedIndex(t);
+            tracksPointsOfInterest.putAll(t);
+        }
+
     }
 
 
@@ -133,25 +142,24 @@ public class ChoosePointsOfInterestForTrack extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                ArrayList<String> Keylist = new ArrayList<>();
-                ArrayList<String> Typelist = new ArrayList<>();
-
-                Iterator<Map.Entry<String, String>> iterator = tracksPointsOfInterest.entrySet().iterator();
-                while (iterator.hasNext()) {
-                    Map.Entry<String, String> key = iterator.next();
-                    Keylist.add(key.getKey());
-                    Typelist.add(key.getValue());
-                }
+//
+//                ArrayList<String> Keylist = new ArrayList<>();
+//                ArrayList<String> Typelist = new ArrayList<>();
+//
+//                Iterator<Map.Entry<String, String>> iterator = tracksPointsOfInterest.entrySet().iterator();
+//                while (iterator.hasNext()) {
+//                    Map.Entry<String, String> key = iterator.next();
+//                    Keylist.add(key.getKey());
+//                    Typelist.add(key.getValue());
+//                }
 
                 Intent intent = getIntent();
-                intent.putStringArrayListExtra("points", Keylist);
-                intent.putStringArrayListExtra("types", Typelist);
+                intent.putExtra("points", tracksPointsOfInterest);
+//                intent.putStringArrayListExtra("types", Typelist);
                 setResult(PICK_POINTS_DONE, intent);
                 finish();
             }
         });
-
         Button buttonCnl = findViewById(R.id.cancelButton);
         buttonCnl.setOnClickListener(new View.OnClickListener() {
             @Override

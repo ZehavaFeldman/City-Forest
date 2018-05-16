@@ -64,7 +64,7 @@ public class CreateNewTrackActivity extends AppCompatActivity {
     private Button cancel_button;
     private Button addPoints;
 
-    private Map<String,String> trackPointsOfInterest;
+    private HashMap<String,String> trackPointsOfInterest;
     private List<String> waypoints;
     private String userHashkey;
     Intent i;
@@ -78,6 +78,8 @@ public class CreateNewTrackActivity extends AppCompatActivity {
         tracks = database.getReference("tracks");
         points_of_interest = database.getReference("points_of_interest");
 
+        trackPointsOfInterest = new HashMap<>();
+
         i = getIntent();
         current_route = JsonParserManager.getInstance().retrieveRouteFromJson(i.getStringExtra(CHOSEN_TRACK));
         waypoints = i.getStringArrayListExtra(TRACK_WAYPOINTS);
@@ -86,6 +88,7 @@ public class CreateNewTrackActivity extends AppCompatActivity {
         starting_point_name = i.getStringExtra(TRACK_STARTING_POINT_NAME);
         ending_point_name = i.getStringExtra(TRACK_ENDING_POINT_NAME);
         userHashkey = i.getStringExtra(CURRENT_USER_NAME);
+        trackPointsOfInterest = (HashMap<String, String>) i.getSerializableExtra("points");
 
         track_name_field = findViewById(R.id.trackNameField);
 
@@ -109,9 +112,6 @@ public class CreateNewTrackActivity extends AppCompatActivity {
         ending_point.setText(ending_point_name);
         starting_point.setText(starting_point_name);
 
-        trackPointsOfInterest = new HashMap<>();
-
-
         addPoints.setOnClickListener(new MyClickListener());
         save_button.setOnClickListener(new MyClickListener());
         cancel_button.setOnClickListener(new MyClickListener());
@@ -133,6 +133,7 @@ public class CreateNewTrackActivity extends AppCompatActivity {
             if(v.getId() == addPoints.getId()){
                 Intent i = new Intent(CreateNewTrackActivity.this,ChoosePointsOfInterestForTrack.class);
                 i.putExtra(TRACK_EDIT, "NO_NAME");
+                i.putExtra("points",   trackPointsOfInterest);
                 startActivityForResult(i,PICK_POINTS_REQUEST);
             }
         }
@@ -178,12 +179,12 @@ public class CreateNewTrackActivity extends AppCompatActivity {
         try {
             super.onActivityResult(requestCode, resultCode, data);
             if (requestCode == PICK_POINTS_REQUEST && resultCode == PICK_POINTS_DONE) {
-                ArrayList<String> keys = data.getStringArrayListExtra("points");
-                ArrayList<String> types = data.getStringArrayListExtra("types");
-                trackPointsOfInterest.clear();
-                for(int i = 0; i< keys.size(); i++){
-                    trackPointsOfInterest.put(keys.get(i),types.get(i));
-                }
+                trackPointsOfInterest = (HashMap<String,String>) data.getSerializableExtra("points");
+//                ArrayList<String> types = data.getStringArrayListExtra("types");
+//                trackPointsOfInterest.clear();
+//                for(int i = 0; i< keys.size(); i++){
+//                    trackPointsOfInterest.put(keys.get(i),types.get(i));
+//                }
 
             }
 

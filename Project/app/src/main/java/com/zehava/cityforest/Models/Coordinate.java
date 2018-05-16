@@ -23,6 +23,8 @@ public class Coordinate {
                       String title, String snippet){
 
         this.position = Position.fromCoordinates(coY, coX);
+
+
         this.title = title;
         this.snippet = snippet;
     }
@@ -39,7 +41,7 @@ public class Coordinate {
     /*building the JSON branch in the database that will include the coordinate*/
     public Map<String, Object> toMap(){
         HashMap<String, Object> result = new HashMap<>();
-        result.put("position", castPositionToJson());
+        result.put("position", JsonParserManager.getInstance().castPositionToJson(this.position));
         result.put("title", this.title);
         result.put("snippet", this.snippet);
 
@@ -72,13 +74,6 @@ public class Coordinate {
     }
     //========================= END =========================//
 
-    public String castPositionToJson(){
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.serializeSpecialFloatingPointValues();
 
-        Gson gson = gsonBuilder.create();
-        String json = gson.toJson(this.position, Position.class);
-        return json;
-    }
 
 }

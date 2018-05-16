@@ -28,7 +28,7 @@ public class PointOfInterestJsonParser
         double lat = pos.getLatitude();
         double longitude = pos.getLongitude();
         if (title != null && snippet != null && lat != 0 && longitude != 0)
-            return new PointOfInterest(lat, longitude,title, snippet,type, userHashkey);
+            return new PointOfInterest(longitude,lat,title, snippet,type, userHashkey);
         return null;
     }
 

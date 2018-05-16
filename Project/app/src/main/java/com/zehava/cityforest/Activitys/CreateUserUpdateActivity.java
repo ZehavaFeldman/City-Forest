@@ -107,8 +107,8 @@ public class CreateUserUpdateActivity extends AppCompatActivity {
                 userhash,
                 type,
                 snippet,
-                chosenCoordinateLatLng.getLongitude(),
-                chosenCoordinateLatLng.getLatitude()
+                chosenCoordinateLatLng.getLatitude(),
+                chosenCoordinateLatLng.getLongitude()
         );
 
         String key = hashFunction();

@@ -1,5 +1,6 @@
 package com.zehava.cityforest.Models;
 
+import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Models.Coordinate;
 import com.zehava.cityforest.R;
 
@@ -53,7 +54,7 @@ public class PointOfInterest extends Coordinate {
     /*building the JSON branch in the database that will include the coordinate*/
     public Map<String, Object> toMap(){
         HashMap<String, Object> result = new HashMap<>();
-        result.put("position", castPositionToJson());
+        result.put("position", JsonParserManager.getInstance().castPositionToJson(this.position));
         result.put("title", this.title);
         result.put("snippet", this.snippet);
         result.put("type", this.type);

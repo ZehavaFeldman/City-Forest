@@ -192,8 +192,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
     private FirebaseStorage storage;
     private StorageReference storageReference;
-    
-    private IconFactory iconFactory;
+
 
     private TextView likes_count;
 
@@ -225,7 +224,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     Button read_more;
     ImageView pointOfInterestImageView;
     Uri filePath;
-    Map<String,Marker> points_for_track;
+    Map<String,Map<String,Marker>> points_for_track;
     Map<String,Object> u_update;
     DirectionsRoute currRoute;
 
@@ -265,7 +264,6 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         usersRef = database.getReference("users");
         images = database.getReference("storage_images");
 
-        iconFactory = IconFactory.getInstance(HomeActivity.this);
 
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
@@ -719,8 +717,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
                     /*Creating the marker on the map*/
                     LatLng latlng = new LatLng(
-                            position.getLongitude(),
-                            position.getLatitude());
+                            position.getLatitude(),
+                            position.getLongitude());
 
                     addMarkerForPointOfInterest(latlng, (String)point.get("title"), (String)point.get("snippet"), (String) point.get("type"));
                 }
@@ -796,24 +794,24 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         mTrackPopupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @Override
             public void onDismiss() {
-                    if(!SHOW_DETAILS_POPUP) {
-                        Iterator it = points_for_track.entrySet().iterator();
-                        while (it.hasNext()) {
-                            Map.Entry pair = (Map.Entry) it.next();
-                            
-
-                            Marker marker = (Marker) pair.getValue();
-                            marker.setIcon(IconManager.getInstance().getIconForType((String) pair.getKey()));
-                            it.remove();
-                        }
-                        map.removePolyline(currRouteLine.getPolyline());
-                        drawRoute(currRoute,Color.RED);
-
-                        SHOW_TRACK_POPUP = false;
-                        //showDefaultLocation();
-                        showCurrentLocation(true);
+            if(!SHOW_DETAILS_POPUP) {
+                for (Object o : points_for_track.entrySet()) {
+                    Map.Entry pair = (Map.Entry) o;
+                    HashMap<String,Marker> child = (HashMap<String,Marker>)pair.getValue();
+                    for(Object c: child.entrySet()) {
+                        Map.Entry cpair = (Map.Entry) c;
+                        Marker marker = (Marker) cpair.getValue();
+                        marker.setIcon(IconManager.getInstance().getIconForType((String)pair.getKey()));
                     }
 
+                }
+                map.removePolyline(currRouteLine.getPolyline());
+                drawRoute(currRoute,Color.RED);
+
+                SHOW_TRACK_POPUP = false;
+                //showDefaultLocation();
+                showCurrentLocation(true);
+            }
 
             }
         });
@@ -846,7 +844,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
     }
 
-    private void initTrackPopup(final  Map<String, Object> track){
+    private void initTrackPopup(final  Map<String, Object> track, final String userHashkey){
 
         LayoutInflater inflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
         View view = inflater.inflate(R.layout.track_details_popup_view, null);
@@ -905,6 +903,32 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             }
         });
 
+        username = mTrackPopupWindow.getContentView().findViewById(R.id.user_id);
+        DatabaseReference childref = usersRef.child(userHashkey);
+
+        childref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Map<String, Object> userMap = (Map<String, Object>)dataSnapshot.getValue();
+                if(userMap == null) {
+                    return;
+                }
+
+
+                username.setText((String) userMap.get("email"));
+                username.setOnClickListener(new View.OnClickListener(){
+                    public void onClick(View v){
+                        Intent facebookIntent = getOpenFacebookIntent(userHashkey);
+                        startActivity(facebookIntent);
+                    }
+                });
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
         RatingBar ratingBar = mTrackPopupWindow.getContentView().findViewById(R.id.ratingBar);
        
@@ -1056,6 +1080,12 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
 
                 username.setText((String) userMap.get("email"));
+                username.setOnClickListener(new View.OnClickListener(){
+                        public void onClick(View v){
+                            Intent facebookIntent = getOpenFacebookIntent(userHashkey);
+                            startActivity(facebookIntent);
+                        }
+                });
             }
 
             @Override
@@ -1461,6 +1491,9 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                             Map<String, Object> track = ((Map<String, Object>) entry.getValue());
 
                             String route_st = (String)track.get("route");
+                            String uuid = (String)track.get("uuid");
+                            uuid = uuid == null ? "" : uuid;
+
                             DirectionsRoute route = JsonParserManager.getInstance().retrieveRouteFromJson(route_st);
                             Polyline polyline = getPolyLineFromRoute(route);
 
@@ -1490,23 +1523,24 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                                         Map<String,String> pointsL =  (HashMap<String,String>)track.get("points");
                                         if (pointsL != null) {
 
-                                            Iterator<Marker> allMarkersIterator = map.getMarkers().iterator();
-
-                                            while(allMarkersIterator.hasNext()) {
-                                                Marker markerItemAll = allMarkersIterator.next();
-
-//                                                for (String point : pointsL) {
+                                            for (Marker markerItemAll : map.getMarkers()) {
+                                                //                                                for (String point : pointsL) {
                                                 String markerKey = PMethods.getInstance().getMarkerHashKey(markerItemAll);
                                                 if (pointsL.containsKey(markerKey)) {
-                                                    String large = pointsL.get(markerKey)+ " ג";
+                                                    String type = pointsL.get(markerKey);
+                                                    String large = type + " ג";
                                                     markerItemAll.setIcon(IconManager.getInstance().getIconForType(large));
-                                                    points_for_track.put(pointsL.get(markerKey), markerItemAll);
+                                                    Map<String,Marker> child = points_for_track.get(type);
+                                                    if(child == null)
+                                                        child = new HashMap<>();
+                                                    child.put(markerKey, markerItemAll);
+                                                    points_for_track.put(type,child);
 
                                                 }
                                             }
                                         }
 
-                                        initTrackPopup(track);
+                                        initTrackPopup(track, uuid);
 
                                     }
                                 }
@@ -1614,6 +1648,20 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                     Toast.LENGTH_LONG).show();
             enableLocation(false);
             finish();
+        }
+    }
+
+
+    public Intent getOpenFacebookIntent(String uuid) {
+
+        try {
+            getPackageManager()
+                    .getPackageInfo("com.facebook.katana", 0); //Checks if FB is even installed.
+            return new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("fb://profile/"+uuid)); //Trys to make intent with FB's URI
+        } catch (Exception e) {
+            return new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://www.facebook.com/arkverse")); //catches and opens a url to the desired page
         }
     }
 

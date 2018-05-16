@@ -80,6 +80,7 @@ public final class Constants {
     public static final String UPDATE_POSITION = "update position";
     public static final String IMAGE_NAME = "image name";
     public static final String IMAGE_EXTRA = "image extra";
+    public static final String FROM_ADD_TRACK = "from add truck";
 
     public static final String LAST_LOCATION_SAVED = "last location saved";
 

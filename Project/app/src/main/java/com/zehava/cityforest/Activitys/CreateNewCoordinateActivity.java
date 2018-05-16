@@ -32,6 +32,7 @@ import static com.zehava.cityforest.Constants.CHOSEN_COORDINATE;
 import static com.zehava.cityforest.Constants.COORDINATE_CREATED;
 import static com.zehava.cityforest.Constants.CREATED_COORDINATE_FOR_ZOOM;
 import static com.zehava.cityforest.Constants.CURRENT_USER_NAME;
+import static com.zehava.cityforest.Constants.FROM_ADD_TRACK;
 
 public class CreateNewCoordinateActivity extends AppCompatActivity {
 
@@ -47,6 +48,7 @@ public class CreateNewCoordinateActivity extends AppCompatActivity {
     private CheckBox isPointOfInterest;
     private Spinner typeOfPoint;
     private String userhash;
+    private boolean fromAddTrack;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,6 +123,7 @@ public class CreateNewCoordinateActivity extends AppCompatActivity {
 
                 Intent intent = getIntent();
                 intent.putExtra(CREATED_COORDINATE_FOR_ZOOM, JsonParserManager.getInstance().castLatLngToJson(chosenCoordinateLatLng));
+                intent.putExtra(FROM_ADD_TRACK, intent.getBooleanExtra(FROM_ADD_TRACK,false));
                 setResult(COORDINATE_CREATED, intent);
                 finish();
             }
@@ -171,8 +174,8 @@ public class CreateNewCoordinateActivity extends AppCompatActivity {
     private void writeNewPointOfInterest() {
         String key = hashFunction();
         PointOfInterest point_of_interest = new PointOfInterest(
-                chosenCoordinateLatLng.getLongitude(),
                 chosenCoordinateLatLng.getLatitude(),
+                chosenCoordinateLatLng.getLongitude(),
                 titleField.getText().toString(),
                 snippetField.getText().toString(),
                 typeOfPoint.getSelectedItem().toString(),

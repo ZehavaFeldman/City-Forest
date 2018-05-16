@@ -3,6 +3,7 @@ package com.zehava.cityforest.Models;
 import com.mapbox.mapboxsdk.annotations.Icon;
 import com.mapbox.mapboxsdk.annotations.IconFactory;
 import com.zehava.cityforest.Managers.IconManager;
+import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.R;
 import com.mapbox.services.commons.models.Position;
 
@@ -36,7 +37,7 @@ public class UserUpdate extends PointOfInterest{
 
     public Map<String, Object> toMap(){
         HashMap<String, Object> result = new HashMap<>();
-        result.put("position", castPositionToJson());
+        result.put("position", JsonParserManager.getInstance().castPositionToJson(this.position));
         result.put("title", this.title);
         result.put("snippet", this.snippet);
         result.put("type", this.type);

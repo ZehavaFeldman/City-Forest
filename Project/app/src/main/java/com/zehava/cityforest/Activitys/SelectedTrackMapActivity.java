@@ -218,8 +218,8 @@ public class SelectedTrackMapActivity extends AppCompatActivity implements Permi
 
                     /*Creating the marker on the map*/
                     LatLng latlng = new LatLng(
-                            position.getLongitude(),
-                            position.getLatitude());
+                            position.getLatitude(),
+                            position.getLongitude());
 
 
                     addMarkerForPointOfInterest(latlng, (String)point.get("title"), (String)point.get("snippet"), (String)point.get("type"));
