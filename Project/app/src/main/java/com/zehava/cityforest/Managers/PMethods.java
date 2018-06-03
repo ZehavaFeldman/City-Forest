@@ -94,10 +94,14 @@ public class PMethods {
     public String getUserUpdateHashKey(final Marker marker) {
         int id =IconManager.getInstance().getIdForType(marker.getTitle());
         double longitude = marker.getPosition().getLongitude();
-        //double latitude = chosenCoordinateLatLng.getLatitude();
 
-        long hash = ((long) (100000000*longitude))+id;
+        long longlng = (long) (100000000 * longitude);
+        long removelastint = longlng / 10;
+        long roundedlng = removelastint * 10;
+        long hash = roundedlng + id;
+
         return "" + hash;
+
     }
 
     public String getMarkerHashKey(final double longitude) {
@@ -108,9 +112,13 @@ public class PMethods {
     }
 
     public String getUserUpdateHashKey(final double longitude, String type) {
-        int id =IconManager.getInstance().getIdForType(type);
-        long hash = ((long) (100000000*longitude))+id;
+        int id = IconManager.getInstance().getIdForType(type);
+        long longlng = (long) (100000000 * longitude);
+        long removelastint = longlng / 10;
+        long roundedlng = removelastint * 10;
+        long hash = roundedlng + id;
         return "" + hash;
     }
+
 
 }

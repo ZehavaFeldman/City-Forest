@@ -27,6 +27,7 @@ import com.mapbox.mapboxsdk.annotations.MarkerView;
 import com.mapbox.mapboxsdk.annotations.MarkerViewOptions;
 import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.services.commons.models.Position;
+import com.zehava.cityforest.Activities.HomeActivity;
 import com.zehava.cityforest.Managers.IconManager;
 import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Models.UserUpdate;
@@ -51,6 +52,8 @@ public class UpdatesManagerService extends Service {
     private DatabaseReference updates;
     private ICallback iCallback;
     private long lastupdated;
+    String dirkey;
+
 
     private ArrayList<Marker> newmarkers,oldmarkers;
 
@@ -83,14 +86,16 @@ public class UpdatesManagerService extends Service {
         //when service started set lastupdated to 0 inorder to get all updates
         lastupdated=0;
 
+
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
 
-        stopCounter();
 
+        //Toast.makeText(UpdatesManagerService.this, "onServiceDisconnected called destroy", Toast.LENGTH_SHORT).show();
+        stopCounter();
 
     }
 
@@ -111,54 +116,70 @@ public class UpdatesManagerService extends Service {
     }
 
     private void LoopThroughUpdates() {
-
+     //   Toast.makeText(UpdatesManagerService.this, "loop", Toast.LENGTH_SHORT).show();
         /* using query to get only old updates from database*/
-        long cutoff = (System.currentTimeMillis() - (1000 * 60 * 60*24)) / 1000;
-        Query oldItems = updates.orderByChild("updated").endAt(cutoff);
-        oldItems.addListenerForSingleValueEvent(new ValueEventListener() {
+        final long cutoff = (System.currentTimeMillis() - (1000 * 60 * 60*24)) / 1000;
+//        Query oldItems = updates.orderByChild("updated").endAt(cutoff);
+        updates.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                for (DataSnapshot itemSnapshot : snapshot.getChildren()) {
-                    Map<String, Object> point = ((Map<String, Object>) itemSnapshot.getValue());
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot itemSnapshot : dataSnapshot.getChildren()) {
+                    dirkey = itemSnapshot.getKey();
 
-                    if (point != null) {
+                    Query oldItems = itemSnapshot.getRef().orderByChild("updated").endAt(cutoff);
+                    oldItems.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot snapshot) {
+                            for (DataSnapshot itemSnapshot : snapshot.getChildren()) {
+                                Map<String, Object> point = ((Map<String, Object>) itemSnapshot.getValue());
 
-                        createAndAddMarker(point, true);
+                                if (point != null) {
 
-                        //remove data from database
-                        String key = itemSnapshot.getKey();
-                        updates.child(key).removeValue();
+                                    createAndAddMarker(point, true);
 
-                    }
+                                    //remove data from database
+                                    String key = itemSnapshot.getKey();
+                                    updates.child(dirkey).child(key).removeValue();
 
+                                }
+
+                            }
+
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            throw databaseError.toException();
+                        }
+                    });
+
+                    Query newItems = itemSnapshot.getRef().orderByChild("updated").startAt(lastupdated);
+                    newItems.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot snapshot) {
+                            for (DataSnapshot itemSnapshot : snapshot.getChildren()) {
+                                Map<String, Object> point = ((Map<String, Object>) itemSnapshot.getValue());
+
+                                if (point != null) {
+                                    createAndAddMarker(point, false);
+                                }
+
+                            }
+
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            throw databaseError.toException();
+                        }
+                    });
                 }
 
-                /*notifay activity on updates removed and then clear array
+                 /*notifay activity on updates removed and then clear array
                 activity will remove marker from map
                 */
                 iCallback.onUserUpdateNotify(ICallback.USER_UPDATES_CLASS.UPDATE_REMOVED, oldmarkers);
                 oldmarkers.clear();
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                throw databaseError.toException();
-            }
-        });
-
-
-        Query newItems = updates.orderByChild("updated").startAt(lastupdated);
-        newItems.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                for (DataSnapshot itemSnapshot : snapshot.getChildren()) {
-                    Map<String, Object> point = ((Map<String, Object>) itemSnapshot.getValue());
-
-                    if (point != null) {
-                        createAndAddMarker(point, false);
-                    }
-
-                }
 
                 /*notifay activity on new updates and then clear array
                 and update lastupdates to insure that next time we will recive only updates we havent recived previsly
@@ -172,7 +193,7 @@ public class UpdatesManagerService extends Service {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                throw databaseError.toException();
+
             }
         });
 
@@ -191,7 +212,7 @@ public class UpdatesManagerService extends Service {
     }
 
     public void startCounter(){
-
+        lastupdated=0;
         handler.postDelayed(serviceRunnable, 0);
 
     }
@@ -206,16 +227,11 @@ public class UpdatesManagerService extends Service {
     private void createAndAddMarker(Map<String, Object> point, boolean old){
 
         String positionJSON = (String) point.get("position");
-        Position position = JsonParserManager.getInstance().retrievePositionFromJson(positionJSON);
 
-        /*Creating the marker*/
-        LatLng latlng = new LatLng(
-                position.getLongitude(),
-                position.getLatitude());
 
 
         MarkerViewOptions markerViewOptions = new MarkerViewOptions()
-                .position(latlng)
+                .position(JsonParserManager.getInstance().retreiveLatLngFromJson(positionJSON))
                 .title((String)point.get("title"))
                 .snippet((String)point.get("snippet"));
 
@@ -231,6 +247,13 @@ public class UpdatesManagerService extends Service {
 
     }
 
+    //creating a marker for user_updates and sending ready markers to activity
+    public void removeMarkerFromActivity(Marker marker){
+        ArrayList<Marker> markers = new ArrayList<>();
+        markers.add(marker);
+        iCallback.onUserUpdateNotify(ICallback.USER_UPDATES_CLASS.UPDATE_REMOVED, markers);
 
+
+    }
 
 }

@@ -25,6 +25,10 @@
     <group>
 
         <item
+            android:id="@+id/home"
+            android:title="@string/menu_home" />
+
+        <item
             android:id="@+id/tracksActivity"
             android:title="@string/tracks_menu" />
 

@@ -59,6 +59,8 @@
             android:layout_gravity="end"
             />
 
+
+
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -82,10 +84,12 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:paddingEnd="5dp"
+            android:paddingStart="5dp"
             android:layout_alignParentEnd="true"
             android:columnCount="1"
             android:layout_alignParentRight="true"
-            android:paddingRight="5dp">
+            android:paddingRight="5dp"
+            >
 
             <ImageButton
                 android:id="@+id/deleteCoordinateButt"

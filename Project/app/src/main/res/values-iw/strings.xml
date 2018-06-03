@@ -53,7 +53,7 @@
     <string name="choose_distance_empty">אנא הוסף מרחק למסלול</string>
     <string name="choose_level_empty">אנא בחר רמת קושי של המסלול</string>
     <string name="title_field_empty">שקול להוסיף כותרת לנקודה שלך</string>
-    <string name="choose_type_of_point_empty">אנא בחר את סוג הנקודה שלך</string>
+    <string name="choose_type_of_point_empty">אותרו מספר התראות במקום זה</string>
     <string name="toast_starting_point">מסלול חייב להסתיים בתחנת רכבת</string>
     <string name="toast_ending_point">מסלול חייב להתחיל בתחנת רכבת</string>
     <string name="continue_edit_butt">המשך עריכה</string>
@@ -140,4 +140,22 @@
     <string name="add_points_butt">שייך נקודות עניין למסלול</string>
     <string name="location">מיקום-</string>
     <string name="start_navigation">התחל ניווט</string>
+    <string name="Type_your_post">הקלד פוסט</string>
+    <string name="Type_comment">&#8230;הקלד תגובה</string>
+    <string name="posts_page">פוסטים</string>
+    <string name="not_connected">לא מחובר</string>
+    <string name="choose_an_update">אותרו מספר התראות במקום זה, בחר אחד להצגת פרטים</string>
+    <string name="choose_update_message">בחר אחד להצגת פרטים</string>
+    <string name="database_error">ארע שגיאה בעת שליפת נתונים</string>
+    <string name="authentication_failed">אימות נכשל</string>
+    <string name="notification_removed">התראה הוסרה</string>
+    <string name="location_not_found">מיקום לא אותר, לא ניתן לשלוח עדכון</string>
+    <string name="signin_success">התחברות בוצע בהצלחה</string>
+    <string name="uploaded">העלה</string>
+    <string name="uploading">מעלה נתונים...</string>
+    <string name="remove_update_alert">יש להיות במרחק מקסימלי של  50 מ\' כדי לשלוח עדכון</string>
+    <string name="noppsts">אין פוסטים, שלח פוסט חדש להיות הראשון שמעלה</string>
+    <string name="bike">אופניים</string>
+    <string name="water">מים</string>
+    <string name="dog">כלב</string>
 </resources>

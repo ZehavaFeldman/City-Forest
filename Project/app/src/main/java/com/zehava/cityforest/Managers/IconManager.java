@@ -46,6 +46,12 @@ public class IconManager {
         icons.put("אין כניסה", iconFactory.fromResource(R.drawable.ic_key));
         icons.put("אין תצפית", iconFactory.fromResource(R.drawable.ic_no_vision));
         icons.put("יצירת מסלול", iconFactory.fromResource(R.drawable.blue_marker));
+        icons.put("נופים", iconFactory.fromResource(R.drawable.ic_mountain));
+        icons.put("לא קיים", iconFactory.fromResource(R.drawable.ic_nothing_here));
+        icons.put("אזהרה", iconFactory.fromResource(R.drawable.ic_problem));
+        icons.put("אחר", iconFactory.fromResource(R.drawable.ic_flag));
+        icons.put("עומס", iconFactory.fromResource(R.drawable.ic_group));
+        icons.put("אין חניה", iconFactory.fromResource(R.drawable.ic_parking));
         icons.put("default", iconFactory.defaultMarker());
         icons.put("Train Station", icons.get("תחנת רכבת"));
         icons.put("Train Station ג", icons.get("תחנת רכבת ג"));
@@ -70,6 +76,24 @@ public class IconManager {
         }
         else if(type.equals("אין תצפית")){
             return R.drawable.ic_no_vision;
+        }
+        else if(type.equals("אין חניה") ){
+            return R.drawable.ic_parking;
+        }
+        else if(type.equals("עומס")){
+            return R.drawable.ic_group;
+        }
+        else if(type.equals("אחר")){
+            return R.drawable.ic_flag;
+        }
+        else if(type.equals("אזהרה") ){
+            return R.drawable.ic_problem;
+        }
+        else if(type.equals("לא קיים")){
+            return R.drawable.ic_nothing_here;
+        }
+        else if(type.equals("נופים")){
+            return R.drawable.ic_mountain;
         }
 
         else if(type.equals("Train Station") ){
@@ -128,6 +152,7 @@ public class IconManager {
     }
 
     public int getIdForType(String type){
+
         if(type.equals("מזג אויר")){
             return 0;
         }
@@ -137,8 +162,25 @@ public class IconManager {
         else if(type.equals("אין תצפית")){
             return 2;
         }
-
-        else  return  -1;
+        else if(type.equals("אזהרה")){
+            return 3;
+        }
+        else if(type.equals("אין חניה")){
+            return 4;
+        }
+        else if(type.equals("עומס")){
+            return 5;
+        }
+        else if(type.equals("אחר")){
+            return 6;
+        }
+        else if(type.equals("נופים")){
+            return 7;
+        }
+        else if(type.equals("לא קיים")){
+            return 8;
+        }
+        else { return  -1;}
     }
 
     public Icon toggaleIcon(Icon icon, boolean big){

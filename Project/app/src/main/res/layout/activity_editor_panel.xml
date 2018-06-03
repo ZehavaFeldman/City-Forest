@@ -9,7 +9,7 @@
     android:weightSum="1"
     android:background="#ffff00"
     android:padding="10dp"
-    tools:context="com.zehava.cityforest.Activitys.EditorPanelActivity">
+    tools:context="com.zehava.cityforest.Activities.EditorPanelActivity">
 
 
     <RelativeLayout

@@ -5,6 +5,11 @@
 
 
 
+    <item
+        android:id="@+id/spinner"
+        android:title="my propile"
+        app:actionViewClass="android.widget.Spinner"
+        app:showAsAction="always" />
 
 
     <item
@@ -16,6 +21,10 @@
 
 
     <group>
+
+        <item
+            android:title="@string/menu_home"
+            android:id="@+id/home"/>
         <item
             android:id="@+id/tracksActivity"
             android:title="@string/tracks_menu" />

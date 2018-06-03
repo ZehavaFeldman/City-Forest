@@ -4,6 +4,7 @@ import com.google.firebase.auth.FirebaseAuthProvider;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserInfo;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,7 +12,7 @@ import java.util.Map;
  * Created by avigail on 04/05/18.
  */
 
-public class User {
+public class User implements Serializable {
 
     private String name;
     private String email;
@@ -19,6 +20,9 @@ public class User {
     private String userAccessToken;
     private String image;
 
+    public User(){
+
+    }
 
     public User(FirebaseUser firebaseUser, String accessToken){
 

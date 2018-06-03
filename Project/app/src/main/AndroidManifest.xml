@@ -40,12 +40,12 @@
             android:name="com.facebook.FacebookContentProvider"
             android:exported="true" />
         <activity
-            android:name=".Activitys.CreateNewCoordinateActivity"
+            android:name=".Activities.CreateNewCoordinateActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="New Coordinate" -->
 
         <activity
-            android:name=".Activitys.EditorPanelActivity"
+            android:name=".Activities.EditorPanelActivity"
             android:screenOrientation="portrait">
 
             <!-- <intent-filter> -->
@@ -58,12 +58,12 @@
         <!-- android:label="Editor Panel" -->
 
         <activity
-            android:name=".Activitys.EditCoordinateActivity"
+            android:name=".Activities.EditCoordinateActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="Edit Coordinate" -->
 
         <activity
-            android:name=".Activitys.CreateNewTrackActivity"
+            android:name=".Activities.CreateNewTrackActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="New Track" -->
 
@@ -71,15 +71,15 @@
         <!-- android:label="Edit Tracks" -->
 
         <activity
-            android:name=".Activitys.EditTrackActivity"
+            android:name=".Activities.EditTrackActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="Edit Track" -->
 
         <activity
-            android:name=".Activitys.HomeActivity"
+            android:name=".Activities.HomeActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".Activitys.SplashActivity"
+            android:name=".Activities.SplashActivity"
             android:screenOrientation="portrait"
             android:theme="@style/SplashTheme">
             <intent-filter>
@@ -89,53 +89,53 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".Activitys.AdvancedSearchTracksActivity"
+            android:name=".Activities.AdvancedSearchTracksActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="חיפוש מתקדם" -->
 
         <activity
-            android:name=".Activitys.SearchTracksResultsActivity"
+            android:name=".Activities.SearchTracksResultsActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="תוצאות חיפוש" -->
 
         <activity
-            android:name=".Activitys.SelectedTrackMapActivity"
+            android:name=".Activities.SelectedTrackMapActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".Activitys.SelectedTrackDetailsActivity"
+            android:name=".Activities.SelectedTrackDetailsActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="יצירת מסלול חדש" -->
 
         <activity
-            android:name=".Activitys.AboutUsActivity"
+            android:name=".Activities.AboutUsActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="אודות" -->
 
         <activity
-            android:name=".Activitys.ContactUsActivity"
+            android:name=".Activities.ContactUsActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="צור קשר" -->
 
         <activity
-            android:name=".Activitys.UserGuideActivity"
+            android:name=".Activities.UserGuideActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="מדריך למשתמש" -->
 
         <activity
-            android:name=".Activitys.TracksActivity"
+            android:name=".Activities.TracksActivity"
             android:screenOrientation="portrait" />
         <!-- android:label="רשימת מסלולים" -->
 
         <activity
-            android:name=".Activitys.CreateUserUpdateActivity"
+            android:name=".Activities.CreateUserUpdateActivity"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Dialog" />
         <activity
-            android:name=".Activitys.ChoosePointsOfInterestForTrack"
+            android:name=".Activities.ChoosePointsOfInterestForTrack"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Dialog" />
         <activity
-            android:name=".Activitys.ImageFullScreenPreview"
+            android:name=".Activities.ImageFullScreenPreview"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Dialog" />
         <activity
@@ -149,13 +149,16 @@
             <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
             <!-- </intent-filter> -->
         </activity>
-
+        <activity android:name=".Activities.PostListActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".Activities.PostActivity"
+            android:screenOrientation="portrait"/>
         <service
             android:name=".UpdatesManagerService"
             android:exported="false" />
         <!-- android:label="" -->
         <activity
-            android:name=".Activitys.AlgoliaSearchActivity"
+            android:name=".Activities.AlgoliaSearchActivity"
             android:screenOrientation="portrait">
 
             <!-- <intent-filter> -->
@@ -164,12 +167,12 @@
             <!-- </intent-filter> -->
         </activity>
         <activity
-            android:name=".Activitys.MyNavigationActivity"
+            android:name=".Activities.MyNavigationActivity"
             android:screenOrientation="portrait"></activity>
         <activity
-            android:name=".Activitys.PointOfInterestGallary"
+            android:name=".Activities.PointOfInterestGallary"
             android:screenOrientation="portrait" />
-        <activity android:name=".Activitys.MainActivity">
+        <activity android:name=".Activities.MainActivity">
              <!--<intent-filter>-->
              <!--<action android:name="android.intent.action.MAIN" />-->
 

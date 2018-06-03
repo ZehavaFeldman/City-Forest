@@ -51,6 +51,8 @@
     <string name="track_name_txt">Track Name</string>
     <string name="track_summary_txt">Track Summary</string>
     <string name="choose_a_station">Choose a station</string>
+    <string name="choose_an_update">Multiple Updates detected, choose one to view details</string>
+    <string name="choose_update_message">Choose one to view details</string>
     <string name="choose_type_of_point">Choose type</string>
     <string name="choose_a_level">Choose track level</string>
     <string name="choose_station_empty">Please choose starting and ending train stations</string>
@@ -132,6 +134,11 @@
     <string name="language">language</string>
     <string name="sign_in_message">You must sign in first</string>
     <string name="success_message">Your rating was save in the system</string>
+    <string name="signin_success">Signed in successfully</string>
+    <string name="noppsts">No post uploaded yet. Be the first one to send</string>
+    <string name="dog">dog</string>
+    <string name="water">water</string>
+    <string name="bike">bike</string>
 
 
     <string name="permitted_editor" translatable="false">CA9iawp3uZd05WFqjQyERN5hu5R2</string>
@@ -159,4 +166,15 @@
 
     <string name="facebook_app_id" translatable="false">452071661893714</string>
     <string name="fb_login_protocol_scheme" translatable="false">fb452071661893714</string>
+    <string name="Type_your_post">Type your post</string>
+    <string name="Type_comment">Type comment&#8230;</string>
+    <string name="posts_page">Posts</string>
+    <string name="not_connected">Not Connected</string>
+    <string name="database_error">Error occurred while fetching data</string>
+    <string name="remove_update_alert">Must be with in 50m from location to send an update.</string>
+    <string name="location_not_found">Location not found, cant send update.</string>
+    <string name="notification_removed">Notification removed</string>
+    <string name="uploading">Uploading&#8230;"</string>
+    <string name="uploaded">Uploaded</string>
+    <string name="authentication_failed">Authentication failed</string>
 </resources>

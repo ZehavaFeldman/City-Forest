@@ -21,11 +21,10 @@
             android:layout_marginStart="10dp"
             android:layout_marginEnd="10dp"
             android:layout_marginTop="5dp"
-            android:layout_alignParentEnd="true"
-            android:text="@string/not_here_butt"
+            android:layout_alignParentStart="true"
             android:id="@+id/img"
 
-            android:layout_alignParentRight="true"
+            android:layout_alignParentLeft="true"
             android:layout_marginLeft="10dp" />
 
         <TextView
@@ -33,26 +32,30 @@
             android:layout_height="wrap_content"
             android:id="@+id/update_main_content"
             android:layout_centerHorizontal="true"
+            android:paddingLeft="40dp"
+            android:paddingStart="40dp"
             android:paddingEnd="10dp"
-            android:paddingStart="10dp"
+            android:paddingRight="10dp"
             android:paddingTop="5dp"
             android:paddingBottom="5dp"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentLeft="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
             tools:ignore="HardcodedText,RtlHardcoded"/>
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingEnd="10dp"
             android:paddingStart="10dp"
             android:paddingTop="5dp"
             android:paddingBottom="5dp"
             android:textSize="20sp"
+            android:gravity="start"
             android:id="@+id/update_minor_content"
-            android:layout_centerHorizontal="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
             android:layout_below="@+id/update_main_content"
             tools:ignore="HardcodedText"/>
 
@@ -63,9 +66,11 @@
             android:paddingStart="10dp"
             android:paddingTop="5dp"
             android:paddingBottom="5dp"
-            android:textSize="20sp"
+            android:layout_marginTop="20dp"
+            android:textSize="16sp"
             android:id="@+id/owner"
-            android:layout_centerHorizontal="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
             android:layout_below="@+id/update_minor_content"
             tools:ignore="HardcodedText"/>
         <TextView
@@ -75,9 +80,10 @@
             android:paddingStart="10dp"
             android:paddingTop="5dp"
             android:paddingBottom="5dp"
-            android:textSize="20sp"
+            android:textSize="16sp"
             android:id="@+id/created"
-            android:layout_centerHorizontal="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
             android:layout_below="@+id/owner"
             tools:ignore="HardcodedText"/>
 
@@ -85,49 +91,49 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/created"
-            android:layout_marginEnd="10dp"
-            android:layout_alignParentEnd="true"
+            android:layout_below="@+id/owner"
+            android:layout_marginStart="10dp"
+            android:layout_alignParentStart="true"
             android:text="@string/not_here_butt"
             android:id="@+id/not_here"
             android:background="@color/colorPrimaryDark"
-            android:layout_marginRight="10dp"
-            android:layout_alignParentRight="true"
+            android:layout_marginLeft="10dp"
+            android:layout_alignParentLeft="true"
             style="?android:attr/borderlessButtonStyle"/>
 
 
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="60dp"
-            android:orientation="horizontal"
-            android:paddingStart="20dp"
-            android:paddingEnd="20dp"
-            android:id="@+id/like_wrp"
-            android:gravity="center"
-            android:layout_below="@+id/created"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentLeft="true">
+        <!--<LinearLayout-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="60dp"-->
+            <!--android:orientation="horizontal"-->
+            <!--android:paddingStart="20dp"-->
+            <!--android:paddingEnd="20dp"-->
+            <!--android:id="@+id/like_wrp"-->
+            <!--android:gravity="center"-->
+            <!--android:layout_below="@+id/created"-->
+            <!--android:layout_alignParentStart="true"-->
+            <!--android:layout_alignParentLeft="true">-->
 
 
-            <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:background="@color/colorPrimaryDark"
-                android:contentDescription="@string/delete_coordinates_button"
-                app:srcCompat="@drawable/like"
-                android:id="@+id/likes"
-                />
+            <!--<ImageView-->
+                <!--android:layout_width="30dp"-->
+                <!--android:layout_height="30dp"-->
+                <!--android:background="@color/colorPrimaryDark"-->
+                <!--android:contentDescription="@string/delete_coordinates_button"-->
+                <!--app:srcCompat="@drawable/like"-->
+                <!--android:id="@+id/likes"-->
+                <!--/>-->
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="12dp"
-                android:layout_gravity="end|center"
-                android:layout_marginStart="10dp"
-                android:id="@+id/update_like_count"
-                android:layout_marginLeft="10dp" />
-        </LinearLayout>
+            <!--<TextView-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:textSize="12dp"-->
+                <!--android:layout_gravity="end|center"-->
+                <!--android:layout_marginStart="10dp"-->
+                <!--android:id="@+id/update_like_count"-->
+                <!--android:layout_marginLeft="10dp" />-->
+        <!--</LinearLayout>-->
 
     </RelativeLayout>
 </LinearLayout>
