@@ -48,32 +48,22 @@
             android:name=".Activities.EditorPanelActivity"
             android:screenOrientation="portrait">
 
-            <!-- <intent-filter> -->
-            <!-- <action android:name="android.intent.action.MAIN" /> -->
-
-
-            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
-            <!-- </intent-filter> -->
         </activity>
-        <!-- android:label="Editor Panel" -->
 
         <activity
             android:name=".Activities.EditCoordinateActivity"
             android:screenOrientation="portrait" />
-        <!-- android:label="Edit Coordinate" -->
+
 
         <activity
             android:name=".Activities.CreateNewTrackActivity"
             android:screenOrientation="portrait" />
-        <!-- android:label="New Track" -->
 
-
-        <!-- android:label="Edit Tracks" -->
 
         <activity
             android:name=".Activities.EditTrackActivity"
             android:screenOrientation="portrait" />
-        <!-- android:label="Edit Track" -->
+
 
         <activity
             android:name=".Activities.HomeActivity"
@@ -88,15 +78,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".Activities.AdvancedSearchTracksActivity"
-            android:screenOrientation="portrait" />
-        <!-- android:label="חיפוש מתקדם" -->
+
 
         <activity
             android:name=".Activities.SearchTracksResultsActivity"
             android:screenOrientation="portrait" />
-        <!-- android:label="תוצאות חיפוש" -->
+
 
         <activity
             android:name=".Activities.SelectedTrackMapActivity"
@@ -104,27 +91,26 @@
         <activity
             android:name=".Activities.SelectedTrackDetailsActivity"
             android:screenOrientation="portrait" />
-        <!-- android:label="יצירת מסלול חדש" -->
+
 
         <activity
             android:name=".Activities.AboutUsActivity"
             android:screenOrientation="portrait" />
-        <!-- android:label="אודות" -->
+
 
         <activity
             android:name=".Activities.ContactUsActivity"
             android:screenOrientation="portrait" />
-        <!-- android:label="צור קשר" -->
+
 
         <activity
             android:name=".Activities.UserGuideActivity"
             android:screenOrientation="portrait" />
-        <!-- android:label="מדריך למשתמש" -->
 
         <activity
             android:name=".Activities.TracksActivity"
             android:screenOrientation="portrait" />
-        <!-- android:label="רשימת מסלולים" -->
+
 
         <activity
             android:name=".Activities.CreateUserUpdateActivity"
@@ -138,17 +124,7 @@
             android:name=".Activities.ImageFullScreenPreview"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Dialog" />
-        <activity
-            android:name=".MoveablePointActivity"
-            android:screenOrientation="portrait">
 
-            <!-- <intent-filter> -->
-            <!-- <action android:name="android.intent.action.MAIN" /> -->
-
-
-            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
-            <!-- </intent-filter> -->
-        </activity>
         <activity android:name=".Activities.PostListActivity"
             android:screenOrientation="portrait"/>
         <activity android:name=".Activities.PostActivity"
@@ -156,30 +132,16 @@
         <service
             android:name=".UpdatesManagerService"
             android:exported="false" />
-        <!-- android:label="" -->
         <activity
             android:name=".Activities.AlgoliaSearchActivity"
             android:screenOrientation="portrait">
-
-            <!-- <intent-filter> -->
-            <!-- <action android:name="android.intent.action.MAIN" /> -->
-            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
-            <!-- </intent-filter> -->
         </activity>
         <activity
             android:name=".Activities.MyNavigationActivity"
-            android:screenOrientation="portrait"></activity>
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".Activities.PointOfInterestGallary"
             android:screenOrientation="portrait" />
-        <activity android:name=".Activities.MainActivity">
-             <!--<intent-filter>-->
-             <!--<action android:name="android.intent.action.MAIN" />-->
-
-
-             <!--<category android:name="android.intent.category.LAUNCHER" />-->
-             <!--</intent-filter>-->
-        </activity>
     </application>
 
 </manifest>

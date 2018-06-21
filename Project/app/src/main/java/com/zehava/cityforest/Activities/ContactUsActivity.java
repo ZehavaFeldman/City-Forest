@@ -10,17 +10,12 @@ import android.view.MenuItem;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.login.LoginManager;
-import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.zehava.cityforest.R;
 
 public class ContactUsActivity extends AppCompatActivity {
 
-    private GoogleApiClient mGoogleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,39 +23,11 @@ public class ContactUsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_contact_us);
     }
 
-    /*In order to be able to sign out from the logged in account, I have to
-        * check who is the logged in user.*/
+
     @Override
     protected void onStart() {
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build();
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
-        mGoogleApiClient.connect();
         super.onStart();
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     @Override
@@ -93,7 +60,7 @@ public class ContactUsActivity extends AppCompatActivity {
                 return true;
 
             case R.id.searchTracksActivity:
-                i = new Intent(this, AdvancedSearchTracksActivity.class);
+                i = new Intent(this, AlgoliaSearchActivity.class);
                 startActivity(i);
                 return true;
 
@@ -132,11 +99,6 @@ public class ContactUsActivity extends AppCompatActivity {
                 }
             }
         };
-        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
-                new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(Status status) {
-                        invalidateOptionsMenu();
-                    }});
+
     }
 }

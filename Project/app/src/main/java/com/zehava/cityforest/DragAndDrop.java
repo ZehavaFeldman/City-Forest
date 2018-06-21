@@ -25,7 +25,7 @@ public class DragAndDrop extends ImageView implements View.OnTouchListener {
     float dX;
     float dY;
 
-    //comunicate with activity via callbacks
+    //communicate with activity via callbacks
     private ICallback iCallback;
 
 

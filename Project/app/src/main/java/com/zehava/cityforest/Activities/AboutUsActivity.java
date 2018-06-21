@@ -20,7 +20,6 @@ import com.zehava.cityforest.R;
 
 public class AboutUsActivity extends AppCompatActivity {
 
-    private GoogleApiClient mGoogleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,37 +27,11 @@ public class AboutUsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_about_us);
     }
 
-    /*In order to be able to sign out from the logged in account, I have to
-        * check who is the logged in user.*/
+
     @Override
     protected void onStart() {
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build();
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
-        mGoogleApiClient.connect();
         super.onStart();
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     @Override
@@ -88,7 +61,7 @@ public class AboutUsActivity extends AppCompatActivity {
                 return true;
 
             case R.id.searchTracksActivity:
-                i = new Intent(this, AdvancedSearchTracksActivity.class);
+                i = new Intent(this, AlgoliaSearchActivity.class);
                 startActivity(i);
                 return true;
 
@@ -132,11 +105,6 @@ public class AboutUsActivity extends AppCompatActivity {
                 }
             }
         };
-        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
-                new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(Status status) {
-                        invalidateOptionsMenu();
-                    }});
+
     }
 }

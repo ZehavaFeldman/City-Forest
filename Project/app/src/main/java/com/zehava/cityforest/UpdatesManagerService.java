@@ -48,7 +48,6 @@ import java.util.ArrayList;
 
 public class UpdatesManagerService extends Service {
 
-    private FirebaseDatabase database;
     private DatabaseReference updates;
     private ICallback iCallback;
     private long lastupdated;
@@ -76,8 +75,7 @@ public class UpdatesManagerService extends Service {
         super.onCreate();
 
         //firebase refs
-        database = FirebaseDatabase.getInstance();
-        updates = database.getReference("user_updates");
+        updates = FirebaseUtils.getUserUpdatesRef();
 
         //mrakers arrays to send to activity
         newmarkers=new ArrayList<>();
@@ -236,7 +234,7 @@ public class UpdatesManagerService extends Service {
                 .snippet((String)point.get("snippet"));
 
 
-        markerViewOptions.getMarker().setIcon(IconManager.getInstance().getIconForType((String)point.get("type")));
+        markerViewOptions.getMarker().setIcon(IconManager.getInstance().getIconForType((String)point.get("type"),false));
 
 
         if(old)

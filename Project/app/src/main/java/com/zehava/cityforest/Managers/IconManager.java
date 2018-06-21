@@ -49,7 +49,7 @@ public class IconManager {
         icons.put("נופים", iconFactory.fromResource(R.drawable.ic_mountain));
         icons.put("לא קיים", iconFactory.fromResource(R.drawable.ic_nothing_here));
         icons.put("אזהרה", iconFactory.fromResource(R.drawable.ic_problem));
-        icons.put("אחר", iconFactory.fromResource(R.drawable.ic_flag));
+        icons.put("שונה", iconFactory.fromResource(R.drawable.ic_flag));
         icons.put("עומס", iconFactory.fromResource(R.drawable.ic_group));
         icons.put("אין חניה", iconFactory.fromResource(R.drawable.ic_parking));
         icons.put("default", iconFactory.defaultMarker());
@@ -61,6 +61,16 @@ public class IconManager {
         icons.put("Historic Site ג", icons.get("אתר היסטורי ג"));
         icons.put("Coffee Shop", icons.get("בית קפה"));
         icons.put("Coffee Shop ג", icons.get("בית קפה ג"));
+        icons.put("Weaterh", icons.get("מזג אויר"));
+        icons.put("No Entrance", icons.get("אין כניסה"));
+        icons.put("No View", icons.get("אין תצפית"));
+        icons.put("Create Track", icons.get("יצירת מסלול"));
+        icons.put("Scenery", icons.get("נופים"));
+        icons.put("Does not Exist", icons.get("לא קיים"));
+        icons.put("Warning", icons.get("אזהרה"));
+        icons.put("Different", icons.get("שונה"));
+        icons.put("Crowded", icons.get("עומס"));
+        icons.put("No Parking", icons.get("אין חניה"));
 
     }
     public Icon getIconForEdit(){
@@ -68,31 +78,31 @@ public class IconManager {
     }
 
     public int getResourceFrType(String type){
-        if(type.equals("מזג אויר") ){
+        if(type.equals("מזג אויר")||type.equalsIgnoreCase("Weather") ){
             return R.drawable.ic_cloud_1;
         }
-        else if(type.equals("אין כניסה")){
+        else if(type.equals("אין כניסה")||type.equalsIgnoreCase("No Entrance")){
             return R.drawable.ic_key;
         }
-        else if(type.equals("אין תצפית")){
+        else if(type.equals("אין תצפית")||type.equalsIgnoreCase("No View")){
             return R.drawable.ic_no_vision;
         }
-        else if(type.equals("אין חניה") ){
+        else if(type.equals("אין חניה")||type.equalsIgnoreCase("No Parking") ){
             return R.drawable.ic_parking;
         }
-        else if(type.equals("עומס")){
+        else if(type.equals("עומס")||type.equalsIgnoreCase("Crowded")){
             return R.drawable.ic_group;
         }
-        else if(type.equals("אחר")){
+        else if(type.equals("שונה")||type.equalsIgnoreCase("Different")){
             return R.drawable.ic_flag;
         }
-        else if(type.equals("אזהרה") ){
+        else if(type.equals("אזהרה")||type.equalsIgnoreCase("Warning") ){
             return R.drawable.ic_problem;
         }
-        else if(type.equals("לא קיים")){
+        else if(type.equals("לא קיים")||type.equalsIgnoreCase("Does not Exist")){
             return R.drawable.ic_nothing_here;
         }
-        else if(type.equals("נופים")){
+        else if(type.equals("נופים")||type.equalsIgnoreCase("Scenery")){
             return R.drawable.ic_mountain;
         }
 
@@ -125,78 +135,49 @@ public class IconManager {
         else  return  -1;
     }
 
-    public Icon getIconForType(String type){
+    public Icon getIconForType(String type, boolean isPointOfInterest){
+        if( isPointOfInterest && (type.equalsIgnoreCase("אחר")||type.equalsIgnoreCase("Other")))
+            return icons.get("default");
         if(icons.containsKey(type))
             return icons.get(type);
         return icons.get("default");
     }
 
-    public String getTypeForIcon(Icon icon){
 
-        for (Map.Entry<String, Icon> entry : icons.entrySet()) {
-            if (entry.getValue().equals(icon))
-                return entry.getKey();
-        }
 
-        return "default";
-    }
 
-    public int getIdForIcon(Icon icon){
-
-        for (Map.Entry<String, Icon> entry : icons.entrySet()) {
-            if (entry.getValue().equals(icon))
-                return getIdForType(entry.getKey());
-        }
-
-        return -1;
-    }
 
     public int getIdForType(String type){
 
-        if(type.equals("מזג אויר")){
+        if(type.equals("מזג אויר")||type.equalsIgnoreCase("Weather") ){
             return 0;
         }
-        else if(type.equals("אין כניסה")){
+        else if(type.equals("אין כניסה")||type.equalsIgnoreCase("No Entrance")){
             return 1;
         }
-        else if(type.equals("אין תצפית")){
+        else if(type.equals("אין תצפית")||type.equalsIgnoreCase("No View")){
             return 2;
         }
-        else if(type.equals("אזהרה")){
+        else if(type.equals("אין חניה")||type.equalsIgnoreCase("No Parking") ){
             return 3;
         }
-        else if(type.equals("אין חניה")){
+        else if(type.equals("עומס")||type.equalsIgnoreCase("Crowded")){
             return 4;
         }
-        else if(type.equals("עומס")){
+        else if(type.equals("שונה")||type.equalsIgnoreCase("Different")){
             return 5;
         }
-        else if(type.equals("אחר")){
+        else if(type.equals("אזהרה")||type.equalsIgnoreCase("Warning") ){
             return 6;
         }
-        else if(type.equals("נופים")){
+        else if(type.equals("לא קיים")||type.equalsIgnoreCase("Does not Exist")){
             return 7;
         }
-        else if(type.equals("לא קיים")){
+        else if(type.equals("נופים")||type.equalsIgnoreCase("Scenery")){
             return 8;
         }
         else { return  -1;}
     }
 
-    public Icon toggaleIcon(Icon icon, boolean big){
-        String type;
-        for (Map.Entry<String, Icon> entry : icons.entrySet()) {
-            Icon i = entry.getValue();
-            if (i.equals(icon)) {
-                type = entry.getKey();
-                type = big? type.substring(0,type.indexOf('ג')-1):type + " ג";
-                if(icons.containsKey(type))
-                    return icons.get(type);
-                return icon;
 
-            }
-
-        }
-        return icon;
-    }
 }

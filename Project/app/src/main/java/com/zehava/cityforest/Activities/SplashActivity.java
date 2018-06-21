@@ -41,7 +41,6 @@ public class SplashActivity extends AppCompatActivity {
             public void run() {
 
                 Intent intent = new Intent(SplashActivity.this,HomeActivity.class);
-//                Intent intent = new Intent(SplashActivity.this,MyNavigationActivity.class);
                 startActivity(intent);
                 finish();
 

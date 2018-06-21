@@ -42,7 +42,7 @@ public class SeparatedListAdapter extends BaseAdapter {
     }
 
     public int getCount() {
-        // total together all sections, plus one for each section header
+        // total together all sections
         int total = 0;
         for(Adapter adapter : this.sections.values())
             total += adapter.getCount();

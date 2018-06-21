@@ -54,8 +54,8 @@
     <string name="choose_level_empty">אנא בחר רמת קושי של המסלול</string>
     <string name="title_field_empty">שקול להוסיף כותרת לנקודה שלך</string>
     <string name="choose_type_of_point_empty">אותרו מספר התראות במקום זה</string>
-    <string name="toast_starting_point">מסלול חייב להסתיים בתחנת רכבת</string>
-    <string name="toast_ending_point">מסלול חייב להתחיל בתחנת רכבת</string>
+    <string name="toast_starting_point">מסלול חייב להתחיל בתחנת רכבת</string>
+    <string name="toast_ending_point">מסלול חייב להסתיים בתחנת רכבת</string>
     <string name="continue_edit_butt">המשך עריכה</string>
     <string name="finish_editing_track_butt">סיים עריכת מסלול</string>
     <string name="save_track_butt">שמור מסלול</string>
@@ -126,8 +126,8 @@
     <string name="title_activity_main">ראשי</string>
     <string name="welcome_back">"ברוך שובך, "</string>
     <string name="hello">שלום</string>
-    <string name="new_update">עדכון חדש</string>
-    <string name="send_update">שלח</string>
+    <string name="new_update">הוסף תאור אישי</string>
+    <string name="send_update">שלח התראה</string>
     <string name="at">ב</string>
     <string name="created_by">פורסם ע\"י</string>
     <string name="read_less_butt">צמצם</string>
@@ -158,4 +158,13 @@
     <string name="bike">אופניים</string>
     <string name="water">מים</string>
     <string name="dog">כלב</string>
+    <string name="crowded">עומס</string>
+    <string name="different">שונה</string>
+    <string name="doesnt_exist">לא קיים</string>
+    <string name="no_entrance">אין כניסה</string>
+    <string name="no_parking">אין חניה</string>
+    <string name="no_view">אין תצפית</string>
+    <string name="scenery">נופים</string>
+    <string name="warning">אזהרה</string>
+    <string name="weather">מזג אויר</string>
 </resources>

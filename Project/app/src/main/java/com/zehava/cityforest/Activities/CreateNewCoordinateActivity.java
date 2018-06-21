@@ -11,6 +11,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.zehava.cityforest.FirebaseUtils;
 import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Models.Coordinate;
 import com.zehava.cityforest.Models.PointOfInterest;
@@ -34,7 +35,6 @@ import static com.zehava.cityforest.Constants.FROM_ADD_TRACK;
 public class CreateNewCoordinateActivity extends AppCompatActivity {
 
     private static final String TAG = "db_on_change";
-    private FirebaseDatabase database;
     private DatabaseReference coordinates;
     private DatabaseReference points_of_interest;
     private LatLng chosenCoordinateLatLng;
@@ -52,9 +52,8 @@ public class CreateNewCoordinateActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_new_coordinate);
 
-        database = FirebaseDatabase.getInstance();
-        coordinates = database.getReference("coordinates");
-        points_of_interest = database.getReference("points_of_interest");
+        coordinates = FirebaseUtils.getCoordinatesRef();
+        points_of_interest = FirebaseUtils.getPointsRef();
 
         Intent i = getIntent();
         chosenCoordinateLatLng = JsonParserManager.getInstance().retreiveLatLngFromJson(i.getStringExtra(CHOSEN_COORDINATE));

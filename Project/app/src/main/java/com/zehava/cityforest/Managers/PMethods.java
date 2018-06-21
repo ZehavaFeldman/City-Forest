@@ -8,6 +8,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.mapbox.mapboxsdk.annotations.Marker;
+import com.zehava.cityforest.FirebaseUtils;
 import com.zehava.cityforest.Models.User;
 
 import java.util.HashMap;
@@ -69,7 +70,7 @@ public class PMethods {
 
 
 
-    public String createNewUser(DatabaseReference ref, FirebaseUser fuser, String accessToken){
+    public String createNewUser(FirebaseUser fuser, String accessToken){
 
         String key = fuser.getUid();
         User user = new User(fuser, accessToken);
@@ -77,7 +78,7 @@ public class PMethods {
         Map<String, Object> userMap = user.toMap();
         Map<String, Object> childUpdates = new HashMap<>();
         childUpdates.put(key, userMap);
-        ref.updateChildren(childUpdates);
+        FirebaseUtils.getUserRef().updateChildren(childUpdates);
 
         return key;
 

@@ -163,7 +163,7 @@
             android:id="@+id/firebase_storage_image"
             android:layout_width="120dp"
             android:layout_height="120dp"
-
+            android:src="@drawable/placeholder_image_upload"
             android:layout_marginStart="10dp"
             android:layout_alignParentStart="true"
 

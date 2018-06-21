@@ -27,10 +27,31 @@ public class FirebaseUtils {
                 .child(uid);
     }
 
-//    public static DatabaseReference getPostRef(){
-//        return FirebaseDatabase.getInstance()
-//                .getReference(Constants.POST_KEY);
-//    }
+    public static DatabaseReference getUserRef(){
+        return FirebaseDatabase.getInstance()
+                .getReference(Constants.USERS_KEY);
+    }
+
+    public static DatabaseReference getPointsRef(){
+        return FirebaseDatabase.getInstance()
+                .getReference(Constants.POINTS_KEY);
+    }
+    public static DatabaseReference getUserUpdatesRef(){
+        return FirebaseDatabase.getInstance()
+                .getReference(Constants.UPDATES_KEY);
+    }
+    public static DatabaseReference getTracksRef(){
+        return FirebaseDatabase.getInstance()
+                .getReference(Constants.TRACK_KEY);
+    }
+    public static DatabaseReference getCoordinatesRef(){
+        return FirebaseDatabase.getInstance()
+                .getReference(Constants.COORDINATES_KEY);
+    }
+    public static DatabaseReference getImagesRef(){
+        return FirebaseDatabase.getInstance()
+                .getReference(Constants.IMAGE_KEY);
+    }
 
     public static DatabaseReference getPostRef(String modelId){
         return FirebaseDatabase.getInstance().getReference(Constants.POST_KEY)

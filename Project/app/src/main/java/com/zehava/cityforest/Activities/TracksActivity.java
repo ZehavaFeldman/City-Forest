@@ -15,6 +15,7 @@ import com.facebook.AccessTokenTracker;
 import com.facebook.login.LoginManager;
 import com.firebase.ui.database.FirebaseListOptions;
 import com.google.firebase.database.Query;
+import com.zehava.cityforest.FirebaseUtils;
 import com.zehava.cityforest.Models.Track;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -31,10 +32,7 @@ import static com.zehava.cityforest.Constants.SELECTED_TRACK;
 
 public class TracksActivity extends AppCompatActivity {
 
-    private FirebaseDatabase database;
-    private DatabaseReference tracks;
     private ListView track_list;
-    private GoogleApiClient mGoogleApiClient;
     private FirebaseTrackListAdapter adapter;
 
     @Override
@@ -42,15 +40,13 @@ public class TracksActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tracks);
 
-        database = FirebaseDatabase.getInstance();
-        tracks = database.getReference("tracks");
 
         track_list = (ListView) findViewById(R.id.tracksList);
 
         track_list.setOnItemClickListener(new ItemClickListener());
 
 
-        Query query = database.getReference("tracks");
+        Query query = FirebaseUtils.getTracksRef();
         FirebaseListOptions<Track> options =
                 new FirebaseListOptions.Builder<Track>()
                         .setQuery(query, Track.class)
@@ -64,13 +60,6 @@ public class TracksActivity extends AppCompatActivity {
         * check who is the logged in user.*/
     @Override
     protected void onStart() {
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build();
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
-        mGoogleApiClient.connect();
         adapter.startListening();
         super.onStart();
     }
@@ -117,7 +106,7 @@ public class TracksActivity extends AppCompatActivity {
                 return true;
 
             case R.id.searchTracksActivity:
-                i = new Intent(this, AdvancedSearchTracksActivity.class);
+                i = new Intent(this, AlgoliaSearchActivity.class);
                 startActivity(i);
                 return true;
 
@@ -157,12 +146,7 @@ public class TracksActivity extends AppCompatActivity {
                 }
             }
         };
-        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
-                new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(Status status) {
-                        invalidateOptionsMenu();
-                    }});
+
     }
 
 

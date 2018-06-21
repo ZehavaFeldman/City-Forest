@@ -42,6 +42,7 @@ import com.mapbox.services.android.telemetry.permissions.PermissionsListener;
 import com.mapbox.services.android.telemetry.permissions.PermissionsManager;
 import com.mapbox.services.commons.geojson.LineString;
 import com.mapbox.services.commons.models.Position;
+import com.zehava.cityforest.FirebaseUtils;
 import com.zehava.cityforest.Managers.IconManager;
 import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.R;
@@ -59,7 +60,7 @@ import static com.zehava.cityforest.Constants.ZOOM_LEVEL_LOCATION;
 
 public class SelectedTrackMapActivity extends AppCompatActivity implements PermissionsListener {
 
-    private FirebaseDatabase database;
+
     private DatabaseReference tracks;
     private DatabaseReference points_of_interest;
     private String track_db_key;
@@ -92,14 +93,12 @@ public class SelectedTrackMapActivity extends AppCompatActivity implements Permi
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(new myOnMapReadyCallback());
 
-        database = FirebaseDatabase.getInstance();
-        tracks = database.getReference("tracks");
-        points_of_interest = database.getReference("points_of_interest");
+        tracks = FirebaseUtils.getPointsRef();
+        points_of_interest = FirebaseUtils.getPointsRef();
 
         Intent i = getIntent();
         track_db_key = i.getStringExtra(SELECTED_TRACK);
 
-//        track_name_field = (TextView) findViewById(R.id.trackNameField);
 
         ProgressBar loading_map_progress_bar = (ProgressBar)findViewById(R.id.loadingMapProgress);
         loading_map_progress_bar.setVisibility(View.INVISIBLE);
@@ -237,7 +236,7 @@ public class SelectedTrackMapActivity extends AppCompatActivity implements Permi
                 .snippet(snippet);
         map.addMarker(markerViewOptions);
 
-        markerViewOptions.getMarker().setIcon(IconManager.getInstance().getIconForType(type));
+        markerViewOptions.getMarker().setIcon(IconManager.getInstance().getIconForType(type,true));
 
         return markerViewOptions.getMarker();
     }
@@ -394,7 +393,7 @@ public class SelectedTrackMapActivity extends AppCompatActivity implements Permi
                 return true;
 
             case R.id.searchTracksActivity:
-                i = new Intent(this, AdvancedSearchTracksActivity.class);
+                i = new Intent(this, AlgoliaSearchActivity.class);
                 startActivity(i);
                 return true;
 

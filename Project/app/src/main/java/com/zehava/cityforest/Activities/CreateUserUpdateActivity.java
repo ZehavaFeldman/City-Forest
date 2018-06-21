@@ -17,6 +17,7 @@ import android.widget.Button;
 
 import com.google.firebase.database.DatabaseError;
 import com.mapbox.mapboxsdk.annotations.IconFactory;
+import com.zehava.cityforest.FirebaseUtils;
 import com.zehava.cityforest.Managers.IconManager;
 import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Managers.PMethods;
@@ -47,7 +48,6 @@ public class CreateUserUpdateActivity extends AppCompatActivity {
     private String snippet;
     private ViewFlipper vf;
 
-    private FirebaseDatabase database;
     private DatabaseReference user_updates;
 
     private LatLng chosenCoordinateLatLng;
@@ -66,8 +66,7 @@ public class CreateUserUpdateActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_notifications);
         IconManager.getInstance().generateIcons(IconFactory.getInstance(this));
-        database = FirebaseDatabase.getInstance();
-        user_updates = database.getReference("user_updates");
+        user_updates = FirebaseUtils.getUserUpdatesRef();
 
         i = getIntent();
 
@@ -153,6 +152,7 @@ public class CreateUserUpdateActivity extends AppCompatActivity {
             }
             else if(v instanceof TextView) {
                 type = ((TextView) v).getText().toString();
+
                 userhash = i.getStringExtra(CURRENT_USER_NAME);
                 chosenCoordinateLatLng = JsonParserManager.getInstance().retreiveLatLngFromJson(i.getStringExtra(UPDATE_POSITION));
 

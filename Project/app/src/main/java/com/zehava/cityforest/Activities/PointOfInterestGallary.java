@@ -22,6 +22,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.zehava.cityforest.FirebaseUtils;
 import com.zehava.cityforest.Models.Image;
 import com.zehava.cityforest.R;
 
@@ -35,7 +36,6 @@ import static com.zehava.cityforest.Constants.IMAGE_NAME;
 
 public class PointOfInterestGallary extends AppCompatActivity {
 
-    private FirebaseDatabase database;
     private DatabaseReference images;
 
     private StorageReference reallImgref;
@@ -55,8 +55,8 @@ public class PointOfInterestGallary extends AppCompatActivity {
         String directoryName = intent.getStringExtra(IMAGE_NAME);
         //linearLayout = findViewById(R.id.innerLayout);
 
-        database = FirebaseDatabase.getInstance();
-        images = database.getReference("storage_images");
+
+        images = FirebaseUtils.getImagesRef();
 
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();

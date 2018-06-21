@@ -22,6 +22,7 @@ import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.Query;
+import com.zehava.cityforest.FirebaseUtils;
 import com.zehava.cityforest.Models.Track;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -34,24 +35,19 @@ import static com.zehava.cityforest.Constants.SELECTED_TRACK;
 
 public class SearchTracksResultsActivity extends AppCompatActivity {
 
-    private FirebaseDatabase database;
-    private DatabaseReference tracks;
+
     private ListView tracks_list;
     FirebaseListAdapter adapter;
 
     private String q_starting_point;
     private String q_ending_point;
 
-    private GoogleApiClient mGoogleApiClient;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search_tracks_results);
-
-        database = FirebaseDatabase.getInstance();
-        tracks = database.getReference("tracks");
 
         tracks_list = (ListView)findViewById(R.id.tracks_list);
 
@@ -63,7 +59,7 @@ public class SearchTracksResultsActivity extends AppCompatActivity {
         //Query query = tracks.orderByChild("starting_point").equalTo("הר הרצל");
         //Query q2 = tracks.orderByChild("suitable_for_dogs").equalTo(true);
 
-        Query query = database.getReference("tracks");
+        Query query = FirebaseUtils.getTracksRef();
         FirebaseListOptions<Track> options =
                 new FirebaseListOptions.Builder<Track>()
                         .setQuery(query, Track.class)
@@ -97,14 +93,7 @@ public class SearchTracksResultsActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .build();
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
-        mGoogleApiClient.connect();
-        adapter.startListening();
+
         super.onStart();
 
     }
@@ -142,7 +131,7 @@ public class SearchTracksResultsActivity extends AppCompatActivity {
                 return true;
 
             case R.id.searchTracksActivity:
-                i = new Intent(this, AdvancedSearchTracksActivity.class);
+                i = new Intent(this, AlgoliaSearchActivity.class);
                 startActivity(i);
                 return true;
 
@@ -180,12 +169,7 @@ public class SearchTracksResultsActivity extends AppCompatActivity {
                 }
             }
         };
-        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
-                new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(Status status) {
-                        invalidateOptionsMenu();
-                    }});
+
     }
 
 }

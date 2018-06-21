@@ -107,6 +107,7 @@
             android:layout_marginTop="30dp"
             android:orientation="horizontal"
             android:gravity="start"
+            android:minHeight="30dp"
             android:weightSum="2">
 
             <TextView
@@ -126,7 +127,7 @@
                 android:gravity="start"
                 android:ems="10"
                 tools:ignore="LabelFor"
-                android:inputType="number"
+
                 />
         </LinearLayout>
 
@@ -135,6 +136,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
+
             android:orientation="horizontal"
             android:weightSum="2"
             android:gravity="start">
@@ -146,6 +148,7 @@
                 android:layout_weight="1"
                 android:textSize="20sp"
                 android:text="@string/distance_km_txt"
+                android:layout_gravity="start"
                 android:gravity="start"/>
 
             <TextView
@@ -155,7 +158,7 @@
                 android:layout_weight="1"
                 android:ems="10"
                 android:gravity="start"
-                android:inputType="number"
+                android:layout_gravity="end"
                 tools:ignore="LabelFor" />
         </LinearLayout>
 
@@ -192,17 +195,20 @@
         <LinearLayout
             android:id="@+id/buttonLayout"
             android:layout_width="match_parent"
-            android:layout_height="30dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
+            android:minHeight="30dp"
             android:orientation="horizontal">
 
             <Button
                 android:id="@+id/addPointsButton"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="5dp"
                 android:layout_marginRight="5dp"
+
                 android:layout_weight="1"
+                android:padding="15dp"
                 android:text="@string/add_points_butt"
                 tools:ignore="ButtonOrder,ButtonStyle,RtlHardcoded" />
 
@@ -212,26 +218,29 @@
         <LinearLayout
         android:id="@+id/buttonsLayout"
         android:layout_width="match_parent"
-        android:layout_height="30dp"
+        android:layout_height="wrap_content"
+            android:minHeight="30dp"
         android:layout_marginTop="30dp"
         android:orientation="horizontal">
 
         <Button
             android:id="@+id/cancelButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_marginStart="5dp"
             android:layout_marginEnd="5dp"
             android:layout_weight="1"
             android:text="@string/cancel_butt"
+            android:padding="15dp"
             tools:ignore="ButtonOrder,ButtonStyle,RtlHardcoded" />
 
         <Button
             android:id="@+id/saveButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_marginStart="5dp"
             android:layout_marginEnd="5dp"
+            android:padding="15dp"
             android:layout_weight="1"
             android:text="@string/save_butt"
             tools:ignore="ButtonStyle" />

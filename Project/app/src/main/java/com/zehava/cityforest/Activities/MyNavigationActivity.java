@@ -63,6 +63,7 @@ import android.view.View;
 import android.widget.Button;
 
 import com.mapbox.services.android.navigation.ui.v5.NavigationLauncher;
+import com.zehava.cityforest.FirebaseUtils;
 import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.R;
 
@@ -128,6 +129,7 @@ public class MyNavigationActivity extends AppCompatActivity implements LocationE
                         .directionsProfile(DirectionsCriteria.PROFILE_WALKING)
 //                        .awsPoolId(awsPoolId)
                         .shouldSimulateRoute(simulateRoute)
+
                         .build();
 
                 // Call this method with Context from within an Activity
@@ -159,38 +161,6 @@ public class MyNavigationActivity extends AppCompatActivity implements LocationE
                     getRouteFromFirebase(track_db);
                 }
 
-//                originCoord = new LatLng(originLocation.getLatitude(), originLocation.getLongitude());
-//                mapboxMap.setOnMapClickListener(new MapboxMap.OnMapClickListener() {
-//                    @Override
-//                    public void onMapClick(@NonNull LatLng point) {
-//
-//
-//                        if(destinationMarker != null) {
-//                            mapboxMap.removeMarker(destinationMarker);
-//                        }
-//                        destinationCoord = point;
-//                        destinationMarker = mapboxMap.addMarker(new MarkerOptions()
-//                                .position(destinationCoord)
-//                        );
-//
-//
-//                        destinationPosition = Point.fromLngLat(destinationCoord.getLongitude(), destinationCoord.getLatitude());
-//                        originPosition = Point.fromLngLat(originCoord.getLongitude(), originCoord.getLatitude());
-//                        getRoute(originPosition, destinationPosition);
-//
-//                        button.setEnabled(true);
-//                        button.setBackgroundResource(R.color.mapboxBlue);
-//
-//
-//                    }
-//
-//
-//                });
-
-
-
-
-
 
             }
 
@@ -200,12 +170,8 @@ public class MyNavigationActivity extends AppCompatActivity implements LocationE
     }
 
     private void getRouteFromFirebase(final String key){
-//        ArrayList<String> trackwaypoints = new ArrayList<>();
 
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-//        DatabaseReference tracks = "https://fir-cityforest.firebaseio.com/tracks";
-        DatabaseReference tracks = database.getReference("tracks");
-
+        DatabaseReference tracks = FirebaseUtils.getTracksRef();
         tracks.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

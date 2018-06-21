@@ -18,6 +18,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.zehava.cityforest.FirebasePointsListAdapter;
+import com.zehava.cityforest.FirebaseUtils;
 import com.zehava.cityforest.Models.PointOfInterest;
 import com.zehava.cityforest.Models.Track;
 import com.zehava.cityforest.R;
@@ -37,8 +38,6 @@ public class ChoosePointsOfInterestForTrack extends AppCompatActivity {
 
     private  HashMap<String, String> tracksPointsOfInterest;
     FirebasePointsListAdapter adapter;
-    private FirebaseDatabase database;
-    private DatabaseReference tracks, points_of_interest;
     String track_key;
     private Track edit_track;
 
@@ -53,14 +52,11 @@ public class ChoosePointsOfInterestForTrack extends AppCompatActivity {
 
         setContentView(R.layout.activity_choose_points_for_track);
 
-        database = FirebaseDatabase.getInstance();
-        tracks = database.getReference("tracks");
-//        points_of_interest = database.getReference("points_of_interest");
 
         tracksPointsOfInterest = new  HashMap<>();
 
 
-        Query query = database.getReference("points_of_interest");
+        Query query = FirebaseUtils.getPointsRef();
         FirebaseListOptions<PointOfInterest> options =
                 new FirebaseListOptions.Builder<PointOfInterest>()
                         .setQuery(query, PointOfInterest.class)
@@ -93,7 +89,7 @@ public class ChoosePointsOfInterestForTrack extends AppCompatActivity {
         points_list.setAdapter(adapter);
 
     if(!track_key.equalsIgnoreCase("NO_NAME")) {
-        tracks.addListenerForSingleValueEvent(new ValueEventListener() {
+        FirebaseUtils.getTracksRef().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Map<String, Object> tracksMap = (Map<String, Object>) dataSnapshot.getValue();
@@ -131,20 +127,9 @@ public class ChoosePointsOfInterestForTrack extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//
-//                ArrayList<String> Keylist = new ArrayList<>();
-//                ArrayList<String> Typelist = new ArrayList<>();
-//
-//                Iterator<Map.Entry<String, String>> iterator = tracksPointsOfInterest.entrySet().iterator();
-//                while (iterator.hasNext()) {
-//                    Map.Entry<String, String> key = iterator.next();
-//                    Keylist.add(key.getKey());
-//                    Typelist.add(key.getValue());
-//                }
 
                 Intent intent = getIntent();
                 intent.putExtra("points", tracksPointsOfInterest);
-//                intent.putStringArrayListExtra("types", Typelist);
                 setResult(PICK_POINTS_DONE, intent);
                 finish();
             }
@@ -160,7 +145,6 @@ public class ChoosePointsOfInterestForTrack extends AppCompatActivity {
     }
     private String getMarkerHashKey(final double key) {
         double longitude = key;
-        //double latitude = chosenCoordinateLatLng.getLatitude();
 
         int hash = (int) (10000000*longitude);
         return "" + hash;

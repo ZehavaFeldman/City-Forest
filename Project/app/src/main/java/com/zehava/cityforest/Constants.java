@@ -23,20 +23,13 @@ public final class Constants {
     public static final String TRACK_ENDING_POINT_NAME = "Track Ending name";
     public static final String TRACK_WAYPOINTS = "Trak waypoints";
 
-    public static final String SEARCH_RESULT_QUERY = "Search Result query";
     public static final String Q_STARTING_POINT = "Starting point";
     public static final String Q_ENDING_POINT = "Ending point";
-    public static final String Q_LEVEL = "Level";
-    public static final String Q_SEASON = "Season";
-    public static final String Q_HAS_WATER = "Has water";
-    public static final String Q_SUITABLE_FOR_BIKES = "Suitable for bikes";
-    public static final String Q_SUITABLE_FOR_DOGS = "Suitable for dogs";
-    public static final String Q_SUITABLE_FOR_FAMILIES = "Suitable for families";
-    public static final String Q_IS_ROMANTIC = "Is romantic";
+
 
     public static final String LANGUAGE_TO_LOAD = "languageToLoad";
     public static final String LANGUAGE = "language";
-    public static final String HEBREW = "he";
+    public static final String HEBREW = "iw";
     public static final String ENGLISH = "en";
     public static final String SET_FROM_PREFS = "set from prefs";
 
@@ -95,5 +88,11 @@ public final class Constants {
     public static final String USERS_KEY = "users";
     public static final String NUM_COMMENTS_KEY = "numComments";
     public static final String EXTRA_MODEL_KEY = "model_name";
+    public static final String POINTS_KEY = "points_of_interest";
+    public static final String COORDINATES_KEY = "coordinates";
+    public static final String TRACK_KEY = "tracks";
+    public static final String UPDATES_KEY = "user_updates";
+    public static final String IMAGE_KEY = "storage_images";
+
 
 }

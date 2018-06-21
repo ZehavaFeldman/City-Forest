@@ -112,7 +112,6 @@ public class FirebasePointsListAdapter extends FirebaseListAdapter<PointOfIntere
             lat = (TextView) v.findViewById(R.id.lat);
             pointDis = (TextView) v.findViewById(R.id.pointDis);
             view = v;
-//                subcategoryName.setOnClickListener(this);
 
         }
     }

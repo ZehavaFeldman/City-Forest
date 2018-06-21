@@ -102,8 +102,8 @@
     <string name="edit_options_choose_track">See track details</string>
     <string name="title_activity_main">MainActivity</string>
 
-    <string name="new_update">new update</string>
-    <string name="send_update">send</string>
+    <string name="new_update">Add personal description</string>
+    <string name="send_update">Send notification</string>
 
 
     <string name="title_activity_home">Home</string>
@@ -177,4 +177,14 @@
     <string name="uploading">Uploading&#8230;"</string>
     <string name="uploaded">Uploaded</string>
     <string name="authentication_failed">Authentication failed</string>
+
+    <string name="weather">Weather</string>
+    <string name="no_entrance">No Entrance</string>
+    <string name="no_view">No View</string>
+    <string name="no_parking">No Parking</string>
+    <string name="scenery">Scenery</string>
+    <string name="crowded">Crowded</string>
+    <string name="different">different</string>
+    <string name="doesnt_exist">Does not Exist</string>
+    <string name="warning">Warning</string>
 </resources>

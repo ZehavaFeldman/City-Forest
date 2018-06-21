@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.zehava.cityforest.FirebaseUtils;
 import com.zehava.cityforest.Managers.JsonParserManager;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -31,7 +32,6 @@ import static com.zehava.cityforest.Constants.EDITED_COORDINATE_FOR_ZOOM;
 public class EditCoordinateActivity extends AppCompatActivity {
 
     private static final String TAG = "db_on_change";
-    private FirebaseDatabase database;
     private DatabaseReference coordinates;
     private DatabaseReference points_of_interest;
     private String coordinateKey;
@@ -52,9 +52,8 @@ public class EditCoordinateActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_coordinate);
 
-        database = FirebaseDatabase.getInstance();
-        coordinates = database.getReference("coordinates");
-        points_of_interest = database.getReference("points_of_interest");
+        coordinates = FirebaseUtils.getCoordinatesRef();
+        points_of_interest = FirebaseUtils.getPointsRef();
 
         Intent i = getIntent();
         coordinateKey = i.getStringExtra(COORDINATE_KEY);

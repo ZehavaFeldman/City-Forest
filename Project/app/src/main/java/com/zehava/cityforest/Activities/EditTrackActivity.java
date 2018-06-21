@@ -9,6 +9,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.zehava.cityforest.FirebaseUtils;
 import com.zehava.cityforest.Models.Track;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -27,7 +28,6 @@ import static com.zehava.cityforest.Constants.TRACK_EDIT;
 
 public class EditTrackActivity extends AppCompatActivity {
 
-    private FirebaseDatabase database;
     private DatabaseReference tracks;
     private String track_db_key;
     private Track edited_track;
@@ -50,8 +50,7 @@ public class EditTrackActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_track);
 
-        database = FirebaseDatabase.getInstance();
-        tracks = database.getReference("tracks");
+        tracks = FirebaseUtils.getTracksRef();
 
         Intent i = getIntent();
         track_db_key = i.getStringExtra(TRACK_EDIT);
@@ -89,7 +88,7 @@ public class EditTrackActivity extends AppCompatActivity {
                 distance_field.setText(track.get("length").toString());
                 additional_info.setText((String)track.get("additional_info"));
                 starting_point.setText((String)track.get("starting_point"));
-                ending_point.setText((String)track.get("endinging_point"));
+                ending_point.setText((String)track.get("ending_point"));
                 additional_info.clearFocus();
 
                 HashMap jArray = (HashMap<String,String>)track.get("points");

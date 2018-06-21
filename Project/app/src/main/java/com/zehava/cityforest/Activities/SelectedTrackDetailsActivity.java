@@ -30,15 +30,11 @@ import static com.zehava.cityforest.Constants.TRACK_WAYPOINTS;
 
 public class SelectedTrackDetailsActivity extends AppCompatActivity {
 
-    private FirebaseDatabase database;
-    private DatabaseReference tracks;
-    private DatabaseReference points_of_interest;
+
     private String track_db_key;
 
     private FloatingActionButton floatingActionButton;
-    private LocationEngine locationEngine;
-    private LocationEngineListener locationEngineListener;
-    private PermissionsManager permissionsManager;
+
 
    private ArrayList<String> waypointsString;
     String routeString;
@@ -157,7 +153,7 @@ public class SelectedTrackDetailsActivity extends AppCompatActivity {
                 return true;
 
             case R.id.searchTracksActivity:
-                i = new Intent(this, AdvancedSearchTracksActivity.class);
+                i = new Intent(this, AlgoliaSearchActivity.class);
                 startActivity(i);
                 return true;
 

@@ -10,6 +10,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mapbox.api.directions.v5.models.DirectionsRoute;
+import com.zehava.cityforest.FirebaseUtils;
 import com.zehava.cityforest.Managers.JsonParserManager;
 import com.zehava.cityforest.Models.Track;
 import com.google.firebase.database.DatabaseReference;
@@ -36,7 +37,6 @@ import static com.zehava.cityforest.Constants.TRACK_WAYPOINTS;
 
 public class CreateNewTrackActivity extends AppCompatActivity {
 
-    private FirebaseDatabase database;
     private DatabaseReference tracks, points_of_interest;
     private DirectionsRoute current_route;
 
@@ -66,9 +66,8 @@ public class CreateNewTrackActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_new_track);
 
-        database = FirebaseDatabase.getInstance();
-        tracks = database.getReference("tracks");
-        points_of_interest = database.getReference("points_of_interest");
+        tracks = FirebaseUtils.getTracksRef();
+        points_of_interest = FirebaseUtils.getPointsRef();
 
         trackPointsOfInterest = new HashMap<>();
 

@@ -372,7 +372,7 @@ public class AlgoliaSearchActivity extends AppCompatActivity implements View.OnC
                 cell.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        Intent i = new Intent(AlgoliaSearchActivity.this, MyNavigationActivity.class);
+                        Intent i = new Intent(AlgoliaSearchActivity.this, SelectedTrackDetailsActivity.class);
                         i.putExtra(SELECTED_TRACK, result.getResult().getDb_key());
                         startActivity(i);
                     }

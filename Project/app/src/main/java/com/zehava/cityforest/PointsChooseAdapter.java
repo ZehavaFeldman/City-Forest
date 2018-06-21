@@ -45,16 +45,6 @@ public class PointsChooseAdapter extends ArrayAdapter<String> {
         int resource = IconManager.getInstance().getResourceFrType(pointsList.get(position));
         if(resource != -1)
             image.setImageResource(resource);
-//        row.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//
-//                ChooseEventActivity.chooseEventActivity.event_list.setSelection(position);
-//                ChooseEventActivity.chooseEventActivity.event_list.onDetachedFromWindow();
-//                ChooseEventActivity.chooseEventActivity.goToNextPage();
-//
-//            }
-//        });
 
         return  row;
     }

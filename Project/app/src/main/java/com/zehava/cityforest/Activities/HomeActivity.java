@@ -66,8 +66,6 @@ import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.firebase.ui.storage.images.FirebaseImageLoader;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -75,19 +73,15 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
-import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-//import com.mapbox.mapboxsdk.Mapbox;
-//import com.mapbox.mapboxsdk.plugins.cluster.clustering.ClusterItem;
-//import com.mapbox.mapboxsdk.plugins.cluster.clustering.ClusterManagerPlugin;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.UploadTask;
 import com.mapbox.api.directions.v5.models.DirectionsRoute;
-//import com.mapbox.mapboxsdk.MapboxAccountManager;
 
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.camera.CameraPosition;
+import com.zehava.cityforest.FirebaseUtils;
 import com.zehava.cityforest.ICallback;
 import com.zehava.cityforest.Managers.IconManager;
 import com.zehava.cityforest.Managers.ImagePicker;
@@ -97,11 +91,7 @@ import com.zehava.cityforest.Managers.PMethods;
 import com.zehava.cityforest.Models.Image;
 import com.zehava.cityforest.Models.PointOfInterest;
 import com.zehava.cityforest.Models.Track;
-import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
+
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -173,18 +163,15 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     private LocationEngineListener locationEngineListener;
     private PermissionsManager permissionsManager;
 
-    private GoogleApiClient mGoogleApiClient;
     private ProgressBar loading_map_progress_bar;
 
     private MapView mapView;
     private MapboxMap map;
 
     private PolylineOptions routeLine,currRouteLine;
-    private FirebaseDatabase database;
     private DatabaseReference tracks;
     private DatabaseReference points_of_interest;
     private DatabaseReference user_updates;
-    private DatabaseReference usersRef;
     private DatabaseReference images;
 
     private FirebaseStorage storage;
@@ -259,12 +246,10 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(new myOnMapReadyCallback());
 
-        database = FirebaseDatabase.getInstance();
-        points_of_interest = database.getReference("points_of_interest");
-        tracks = database.getReference("tracks");
-        user_updates = database.getReference("user_updates");
-        usersRef = database.getReference("users");
-        images = database.getReference("storage_images");
+        points_of_interest = FirebaseUtils.getPointsRef();
+        tracks = FirebaseUtils.getTracksRef();
+        user_updates = FirebaseUtils.getUserUpdatesRef();
+        images = FirebaseUtils.getImagesRef();
 
 
         storage = FirebaseStorage.getInstance();
@@ -300,21 +285,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             }
         });
 
-        // Configure sign-in to request the user's ID, email address, and basic
-        // profile. ID and basic profile are included in DEFAULT_SIGN_IN.
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build();
-
-        // Build a GoogleApiClient with access to the Google Sign-In API and the
-        // options specified by gso.
-
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
-
+        // Configure sign-in with facebook
         callbackManager = CallbackManager.Factory.create();
 
         LoginManager.getInstance().registerCallback(callbackManager,
@@ -356,27 +327,11 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
 
     private void signIn() {
-//
-//        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-//        signInIntent.putExtra(SET_FROM_PREFS,true);
-//        startActivityForResult(signInIntent, RC_SIGN_IN);
 
         LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("public_profile", "email"));
 
     }
 
-
-    private void handleSignInResult(GoogleSignInResult result) {
-
-        if (result.isSuccess()) {
-            // Google Sign In was successful, authenticate with Firebase
-            GoogleSignInAccount account = result.getSignInAccount();
-            firebaseAuthWithGoogle(account);
-        } else {
-            Toast.makeText(HomeActivity.this, getString(R.string.authentication_failed),
-                    Toast.LENGTH_SHORT).show();
-        }
-    }
 
 
     private void handleFacebookAccessToken(AccessToken token) {
@@ -391,7 +346,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                             Toast.makeText(HomeActivity.this, getString(R.string.signin_success),
                                     Toast.LENGTH_SHORT).show();
 
-                            userhash = PMethods.getInstance().createNewUser(usersRef,
+                            userhash = PMethods.getInstance().createNewUser(
                                     FirebaseAuth.getInstance().getCurrentUser(),
                                     AccessToken.getCurrentAccessToken().getToken());
 
@@ -408,25 +363,6 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                 });
     }
 
-    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
-
-        AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
-        mAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(HomeActivity.this, getString(R.string.signin_success),
-                                    Toast.LENGTH_SHORT).show();
-                            invalidateOptionsMenu();
-
-                        } else {
-                            Toast.makeText(HomeActivity.this, getString(R.string.authentication_failed),
-                                    Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -444,64 +380,62 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
             uname = currentUser.getDisplayName();
             uid = currentUser.getUid();
-//            if (userhash == null) {
             userhash = uid;
-//            }
 
 
         }
 
-            MenuItem item = menu.findItem(R.id.spinner);
-            final Spinner spinner = (Spinner) MenuItemCompat.getActionView(item);
+        MenuItem item = menu.findItem(R.id.spinner);
+        final Spinner spinner = (Spinner) MenuItemCompat.getActionView(item);
 
-            ArrayList<String> temp = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.spinner_list_item_array)));
+        ArrayList<String> temp = new ArrayList<>(Arrays.asList(getResources().getStringArray(R.array.spinner_list_item_array)));
 
-            temp.add(0, uname);
-            String carArr[] = temp.toArray(new String[temp.size()]);
+        temp.add(0, uname);
+        String carArr[] = temp.toArray(new String[temp.size()]);
 
 
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                    R.layout.propfile_spinner_item, carArr);
-            adapter.setDropDownViewResource(R.layout.propfile_spinner_item);
-            spinner.setAdapter(adapter);
-            spinner.setSelection(0, false);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                R.layout.propfile_spinner_item, carArr);
+        adapter.setDropDownViewResource(R.layout.propfile_spinner_item);
+        spinner.setAdapter(adapter);
+        spinner.setSelection(0, false);
 
-            spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-                public void onItemSelected(
-                        AdapterView<?> parent, View view, int position, long id) {
+        spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+            public void onItemSelected(
+                    AdapterView<?> parent, View view, int position, long id) {
 
-                    //user name  nothing to do on click
-                    if (position == 0) {
-
-                    }
-
-                    //switch to editor mode
-                    if (position == 1) {
-                        if(uid == null){
-                            Toast.makeText(HomeActivity.this,getString(R.string.sign_in_message),Toast.LENGTH_LONG).show();
-                            spinner.setSelection(0);
-                        }
-                        else {
-                            Intent intent = new Intent(HomeActivity.this, EditorPanelActivity.class);
-                            saveCameraPositionToPrefs();
-                            startActivity(intent);
-                            spinner.setSelection(0);
-                        }
-
-                    }
-                }
-
-                public void onNothingSelected(AdapterView<?> parent) {
+                //user name  nothing to do on click
+                if (position == 0) {
 
                 }
-            });
-        //}
-            return true;
+
+                //switch to editor mode
+                if (position == 1) {
+                    if(uid == null){
+                        Toast.makeText(HomeActivity.this,getString(R.string.sign_in_message),Toast.LENGTH_LONG).show();
+                        spinner.setSelection(0);
+                    }
+                    else {
+                        Intent intent = new Intent(HomeActivity.this, EditorPanelActivity.class);
+                        saveCameraPositionToPrefs();
+                        startActivity(intent);
+                        spinner.setSelection(0);
+                    }
+
+                }
+            }
+
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        return true;
 
 
     }
 
-
+    // side menu options
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         Intent i;
@@ -584,8 +518,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     }
 
     /*override Icallbacks methods
-    here ue use icallback to detect user_updates updates
-    add and remove update marker from map accurdingly
+    here we use icallback to detect user_updates updates
+    add and remove update marker from map accordingly
     */
     @Override
     public void onDraggableNotify(DRAGGABLE_CALSS draggableIcall) {
@@ -643,7 +577,6 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             if(intent!= null && intent.getBooleanExtra(SET_FROM_PREFS,false)) {
                 setCameraPositionFromPrefs();
             }
-//            showDefaultLocation();
             else {
                 showCurrentLocation(true);
             }
@@ -821,7 +754,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                     for(Object c: child.entrySet()) {
                         Map.Entry cpair = (Map.Entry) c;
                         Marker marker = (Marker) cpair.getValue();
-                        marker.setIcon(IconManager.getInstance().getIconForType((String)pair.getKey()));
+                        marker.setIcon(IconManager.getInstance().getIconForType((String)pair.getKey(),true));
                     }
 
                 }
@@ -934,7 +867,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         });
 
         username = mTrackPopupWindow.getContentView().findViewById(R.id.user_id);
-        DatabaseReference childref = usersRef.child(userHashkey);
+        DatabaseReference childref = FirebaseUtils.getUserRef(userHashkey);
 
         childref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -1027,28 +960,32 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             reallImgref = storageReference.child(imageUUID);
         }
 
-        if(cancle != null && imageUUID != null) {
+        if(cancle != null) {
             cancle.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    if(imageUUID != null && !imageUUID.isEmpty()) {
+                        Glide.with(HomeActivity.this /* context */)
+                                .using(new FirebaseImageLoader())
+                                .load(reallImgref)
+                                .listener(new RequestListener<StorageReference, GlideDrawable>() {
+                                    @Override
+                                    public boolean onException(Exception e, StorageReference model, Target<GlideDrawable> target, boolean isFirstResource) {
+                                        mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+                                        return false;
+                                    }
 
-                    Glide.with(HomeActivity.this /* context */)
-                            .using(new FirebaseImageLoader())
-                            .load(reallImgref)
-                            .listener(new RequestListener<StorageReference, GlideDrawable>() {
-                                @Override
-                                public boolean onException(Exception e, StorageReference model, Target<GlideDrawable> target, boolean isFirstResource) {
-                                    mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
-                                    return false;
-                                }
-
-                                @Override
-                                public boolean onResourceReady(GlideDrawable resource, StorageReference model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
-                                    mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
-                                    return false;
-                                }
-                            })
-                            .into(pointOfInterestImageView);
+                                    @Override
+                                    public boolean onResourceReady(GlideDrawable resource, StorageReference model, Target<GlideDrawable> target, boolean isFromMemoryCache, boolean isFirstResource) {
+                                        mPopupWindow.showAtLocation(mRelativeLayout, Gravity.BOTTOM, 0, 0);
+                                        return false;
+                                    }
+                                })
+                                .into(pointOfInterestImageView);
+                    }
+                    else{
+                        pointOfInterestImageView.setImageResource(R.drawable.placeholder_image_upload);
+                    }
                     cancle.setVisibility(View.INVISIBLE);
                     uploadImage.setVisibility(View.INVISIBLE);
                     showAllImages.setVisibility(View.VISIBLE);
@@ -1112,9 +1049,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         title.setText(marker.getTitle());
         discreption.setText(marker.getSnippet());
 
-        DatabaseReference childref = usersRef.child(userHashkey);
 
-        childref.addListenerForSingleValueEvent(new ValueEventListener() {
+        FirebaseUtils.getUserRef(userHashkey).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Map<String, Object> userMap = (Map<String, Object>)dataSnapshot.getValue();
@@ -1229,6 +1165,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Map<String, Object> updates = (Map<String, Object>)dataSnapshot.getValue();
+                if(updates == null)
+                    return;
 
                     u_update = (Map<String,Object>)updates.get(key);
                     if(u_update!=null){
@@ -1241,7 +1179,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                         update_owner= mPopupWindow.getContentView().findViewById(R.id.owner);
                         if(u_update.get("uuid")!=null ) {
 
-                            DatabaseReference childref = usersRef.child((String) u_update.get("uuid"));
+                            DatabaseReference childref = FirebaseUtils.getUserRef((String) u_update.get("uuid"));
 
                             childref.addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
@@ -1581,7 +1519,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                                                 if (pointsL.containsKey(markerKey)) {
                                                     String type = pointsL.get(markerKey);
                                                     String large = type + " ג";
-                                                    markerItemAll.setIcon(IconManager.getInstance().getIconForType(large));
+                                                    markerItemAll.setIcon(IconManager.getInstance().getIconForType(large, true));
                                                     Map<String,Marker> child = points_for_track.get(type);
                                                     if(child == null)
                                                         child = new HashMap<>();
@@ -1673,7 +1611,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         map.addMarker(markerViewOptions);
             
 
-        markerViewOptions.getMarker().setIcon(IconManager.getInstance().getIconForType(type));
+        markerViewOptions.getMarker().setIcon(IconManager.getInstance().getIconForType(type, true));
         MarkerView m = markerViewOptions.getMarker();
         return m;
 
@@ -1778,7 +1716,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                         DEFAULT_JERUSALEM_COORDINATE.getLongitude()), ZOOM_LEVEL_CURRENT_LOCATION));
     }
 
-
+    // when returning from different activity load map with settings from hared prefs
     public void setCameraPositionFromPrefs() {
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -1796,6 +1734,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                         .build()));
     }
 
+    // save map setting  to hared prefs before switching activities to get a smooth trans
     public void saveCameraPositionToPrefs() {
 
         CameraPosition cameraP = map.getCameraPosition();
@@ -1923,7 +1862,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
 
 
-    /*Method signs out user's google account*/
+    /*Method signs out user's facebook account*/
     private void signOut() {
         FirebaseAuth.getInstance().signOut();
 
@@ -1937,19 +1876,19 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                     //User logged out
 
                     LoginManager.getInstance().logOut();
+                    userhash = null;
+                    uid = null;
                     invalidateOptionsMenu();
                 }
             }
         };
-        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(
-                new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(Status status) {
-                        invalidateOptionsMenu();
-                    }});
+
     }
 
-
+    /*
+     upload user image to fire store
+     the image is saved in bytes to decrease size
+    */
     private void uploadImage(final String imageName, final PointOfInterest pointOfInterest) {
 
         if(filePath != null || bmp != null)
@@ -2021,15 +1960,8 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         try {
-//            super.onActivityResult(requestCode, resultCode, data);
 
-            // Result returned from launching the Intent from GoogleSignInApi.getSignInIntent(...);
-            if (requestCode == RC_SIGN_IN) {
-            /*Getting the result and sending it to method handleSignInResult*/
-                GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-                handleSignInResult(result);
-            }
-            else if(requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK
+            if(requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK
                     && data != null && data.getData() != null )
             {
                 bmp = ImagePicker.getImageFromResult(this, resultCode, data);//your compressed bitmap here
@@ -2039,7 +1971,6 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
                 camera.setVisibility(View.INVISIBLE);
                 cancle.setVisibility(View.VISIBLE);
                 showAllImages.setVisibility(View.INVISIBLE);
-
 
             }
             else{
@@ -2058,37 +1989,30 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
     private void dialogChooseanUpdate(final ArrayList<String> updates_names){
 
+        AlertDialog.Builder builder = new AlertDialog.Builder(HomeActivity.this);
 
-                AlertDialog.Builder builder = new AlertDialog.Builder(HomeActivity.this);
-
-                builder.setTitle(getString(R.string.choose_an_update));
-              //  builder.setMessage(R.string.choose_update_message);
-                final String[] names = updates_names.toArray(new String[updates_names.size()]);
-                builder.setSingleChoiceItems(names, -1,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                // dialog.dismiss();
-                                findmarkerforupdate(dirUpdates.get(names[which]));
-                                dialog.dismiss();
-                            }
-                        });
-                builder.setNegativeButton(R.string.cancel,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        });
-                AlertDialog alert = builder.create();
-                alert.show();
+        builder.setTitle(getString(R.string.choose_an_update));
+        final String[] names = updates_names.toArray(new String[updates_names.size()]);
+        builder.setSingleChoiceItems(names, -1,
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        findmarkerforupdate(dirUpdates.get(names[which]));
+                        dialog.dismiss();
+                    }
+                });
+        builder.setNegativeButton(R.string.dialog_cancel,
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        AlertDialog alert = builder.create();
+        alert.show();
 
 
-            }
-
-
-
-
+    }
 
     private void detectUpdtesAtpoint(final Marker marker){
         String dirkey = PMethods.getInstance().getMarkerHashKey(marker);
@@ -2125,7 +2049,6 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
 
     private void findmarkerforupdate(String key) {
 
-
         Iterator<Marker> allMarkersIterator = map.getMarkers().iterator();
 
         while(allMarkersIterator.hasNext()) {
@@ -2142,7 +2065,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         dirUpdates.clear();
     }
 
-
+    //unbind service to activity when activity starts
     @Override
     protected void onStop() {
         super.onStop();
@@ -2150,23 +2073,11 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
         mBound = false;
     }
 
-    /*In order to be able to sign out from the logged in account, I have to
-        * check who is the logged in user.*/
+    //bind service to activity when activity starts
     @Override
     protected void onStart() {
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id))
-                .requestEmail()
-                .build();
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
-        mGoogleApiClient.connect();
-
         serviceIntent = new Intent(HomeActivity.this, UpdatesManagerService.class);
         bindService(serviceIntent, mConnection, Context.BIND_AUTO_CREATE); //Binding to the service!
-
-
         super.onStart();
     }
 
@@ -2199,122 +2110,7 @@ public class HomeActivity extends AppCompatActivity implements PermissionsListen
     protected void onDestroy() {
         super.onDestroy();
         mapView.onDestroy();
-
-        //Stoping the service on activity desotry
-//        stopService(serviceIntent);
-//        unbindService(mConnection);
-//        Toast.makeText(HomeActivity.this, "onServiceDisconnected called stop", Toast.LENGTH_SHORT).show();
-//        myService.stopCounter();
-
     }
-
-//    protected void initCameraListener() {
-//        map.addOnCameraIdleListener(clusterManagerPlugin);
-//        try {
-//            addItemsToClusterPlugin(R.raw.points);
-//        } catch (JSONException exception) {
-//            Toast.makeText(this, "Problem reading list of markers.", Toast.LENGTH_LONG).show();
-//        }
-//    }
-
-//    private void addItemsToClusterPlugin(int rawResourceFile) throws JSONException {
-//        InputStream inputStream = getResources().openRawResource(rawResourceFile);
-//        List<MyItem> items = new MyItemReader().read(inputStream);
-//        clusterManagerPlugin.addItems(items);
-//        clusterManagerPlugin.cluster();
-//    }
-
-    /**
-     * Custom class for use by the marker cluster plugin
-     */
-//    public static class MyItem implements ClusterItem {
-//        private final LatLng position;
-//        private String title;
-//        private String snippet;
-//
-//        public MyItem(double lat, double lng) {
-//            position = new LatLng(lat, lng);
-//            title = null;
-//            snippet = null;
-//        }
-//
-//        public MyItem(double lat, double lng, String title, String snippet) {
-//            position = new LatLng(lat, lng);
-//            this.title = title;
-//            this.snippet = snippet;
-//        }
-//
-//        @Override
-//        public LatLng getPosition() {
-//            return position;
-//        }
-//
-//        @Override
-//        public String getTitle() {
-//            return title;
-//        }
-//
-//        @Override
-//        public String getSnippet() {
-//            return snippet;
-//        }
-//
-//        public void setTitle(String title) {
-//            this.title = title;
-//        }
-//
-//        public void setSnippet(String snippet) {
-//            this.snippet = snippet;
-//        }
-//    }
-
-    /**
-     * Custom class which reads JSON data and creates a list of MyItem objects
-     */
-//    public static class MyItemReader {
-//
-//        private static final String REGEX_INPUT_BOUNDARY_BEGINNING = "\\A";
-//
-//        public List<MyItem> read(InputStream inputStream) throws JSONException {
-//            List<MyItem> items = new ArrayList<MyItem>();
-//            String json = new Scanner(inputStream).useDelimiter(REGEX_INPUT_BOUNDARY_BEGINNING).next();
-//            JSONArray array = new JSONArray(json);
-//            for (int i = 0; i < array.length(); i++) {
-//                String title = null;
-//                String snippet = null;
-//                JSONObject object = array.getJSONObject(i);
-//
-//                 String position = object.getString("position");
-//                 Position position = retrievePositionFromJson(position);
-//
-//                double lat = position.getLatitude();
-//                double lng = position.getLongitude();
-//                if (!object.isNull("title")) {
-//                    title = object.getString("title");
-//                }
-//                if (!object.isNull("snippet")) {
-//                    snippet = object.getString("snippet");
-//                }
-//                items.add(new MyItem(lat, lng, title, snippet));
-//
-//            }
-//            return items;
-//        }
-//        public Position retrievePositionFromJson(String posJs) {
-//            GsonBuilder gsonBuilder = new GsonBuilder();
-//            gsonBuilder.serializeSpecialFloatingPointValues();
-//
-//            Gson gson = gsonBuilder.create();
-//            Position obj = gson.fromJson(posJs, Position.class);
-//            return obj;
-//        }
-//    }
-
-
-
-
-
-
 
 
 }
